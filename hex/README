@@ -1,11 +1,14 @@
 To build:
+
 install g++
 
-make
-(uses python integrated flags but you can comment the flags out if you dont
-have python3 installed)
+Makefile:
+Code has some optional demo features that use python that have been
+commented out.
+If you want to put them back in, you will need to comment in the python
+things in the Makefile
 
-To run:
+To play hex:
 ./graph_class_pimpl --help
 --play:              Play Hex   AI vs AI
 --playhuman:         Play Hex   AI vs Human
@@ -18,7 +21,7 @@ To run:
 --help:              Show help
 
 AI vs AI:
-./grap_class_pimpl --play
+./graph_class_pimpl --play
 
 AI vs Human:
-./grap_class_pimpl --playhuman
+./graph_class_pimpl --playhuman

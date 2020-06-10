@@ -1,7 +1,4 @@
 // Copyright Philip Miloslavsky 2020
-#include <getopt.h>
-#include <signal.h>
-
 #include <algorithm>
 #include <chrono>
 #include <fstream>
@@ -9,10 +6,8 @@
 #include <iterator>
 #include <limits>
 #include <list>
-#include <map>
 #include <queue>
 #include <random>
-#include <sstream>
 #include <string>
 #include <thread>
 #include <unordered_map>
@@ -151,7 +146,7 @@ inline ostream& operator<<(ostream& out, const s_weight_color wc) {
   return out;
 }
 
-// Hex only
+// Used in Hex only, not base
 struct s_placed_piece : public s_position {
  public:
   c_color color;
@@ -193,6 +188,7 @@ void Union(vector<s_subset>& subsets, int x, int y) {
   int xroot = find(subsets, x);
   int yroot = find(subsets, y);
 
+  //more advanced union find code:
   // if (subsets[xroot].rank < subsets[yroot].rank)
   // subsets[xroot].parent = yroot;
   // else if (subsets[yroot].rank < subsets[xroot].rank)
@@ -278,7 +274,7 @@ class c_graph {
     }
   }
 
-  // not WHITE which is the default uninitialized. NONE is default initialized
+  // not WHITE which is the default uninitialized after connection. NONE is default initialized
   void add_edge(int source_ix, int destination_ix, int weight,
                 c_color color = c_color::NONE) {
     if (source_ix == destination_ix) return;
@@ -664,18 +660,12 @@ class c_graph {
 
   }  // display_graph_in_python
 
-  // friend void graph_difference(c_graph& g1, c_graph& g2);
-  // friend ostream& operator<< (ostream& out, const c_graphI::c_graph& g);
-
 };  // c_graph
 
 ostream& operator<<(ostream& out, const c_graph& g) {
   out << endl
       << "Printing " << g.name << " with " << g.node_max << " nodes" << endl;
   out << "Nodes:" << endl;
-
-  // for_each (g.verts.begin(), g.verts.end(), [&out](pair<int, s_vertex>
-  // element){out << element.second.name << "    ";}); out<< endl;
 
   unordered_map<int, s_weighted_colored_node>::const_iterator it =
       g.nodes.begin();
@@ -901,6 +891,9 @@ class c_hex_game : public c_graph {
   }  // connect_board
 
   void print_board(bool backup, bool min_path_costs = false) {
+    //
+    // WARNING THIS ROUTINE MOVES CURSOR
+    //
     // Status 2 lines (this part scrolls up)
     // Board (edge_length lines)
     // Human Input 3 lines (dont make mistakes)
@@ -1028,7 +1021,7 @@ class c_hex_game : public c_graph {
         }
 
         int neighbordistance = 0;
-        // only do zero cost from blue to blue - not from white to blue
+        // only do zero cost from blue to blue - not from NONE to BLUE
         // dont use edge->weight
         if ((placed_copy[neighbor] == color) &&
             (placed_copy[cur.node_ix] == color)) {
@@ -1056,7 +1049,7 @@ class c_hex_game : public c_graph {
       return false;
     }
 
-    // save off distances via deep copy for prints of board (to see the pattern)
+    // TODO save off distances via deep copy for prints of board (to see the pattern)
     // int color_ix = static_cast<int>(color) - 1;
 
     // auto vit = verts.begin(); //existence is same as vert
@@ -1330,7 +1323,6 @@ void c_hex_gameI::get_human_move(c_color color, s_position* p_move = nullptr) {
   s_position cur_pos(0, 0, pImplh->edge_length);
 
   // skip the board (dont erase it)
-  // string blank(80, ' ');
   for (int i = 0; i < pImplh->edge_length; ++i) cout << endl;
 
   // Erase the input lines
@@ -1348,7 +1340,7 @@ void c_hex_gameI::get_human_move(c_color color, s_position* p_move = nullptr) {
     int y = -1;
     char dummy = ' ';
 
-    // bad input sucks
+    // bad input sucks - weird mumbo jumbo
     if (cin.fail()) {
       cin.clear();
       cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -1395,7 +1387,7 @@ void c_hex_gameI::get_human_move(c_color color, s_position* p_move = nullptr) {
   }
 }  // get_human_move
 
-// the placed map has the currently taken hex tiles
+// the placed map has the currently colored BLUE/RED hex tiles
 // we want to randomly fill the remainder with valid moves and then run
 // the min_path algorithm to see who won
 // for each possible move, record how many winning and how many loosing
@@ -1458,6 +1450,7 @@ void c_hex_gameI::monte_carlo_move(c_color color, s_position* p_move = nullptr,
 
     //this is what each thread will shuffle
     //to do the monte carlo simulation
+    //We should prob just pass the numbers of BLUES and REDs
     vector<c_color> open_colors;
     
     open_colors.resize(oc);
@@ -1475,13 +1468,6 @@ void c_hex_gameI::monte_carlo_move(c_color color, s_position* p_move = nullptr,
     // thread:
     // input: placed, open_spot, color, open_colors
     // needs to pass back won[open_spot]
-    // auto monte_carlo_move_subthread = [](c_hex_board *graph,
-    // unordered_map<int, c_color> placed_copy, int open_spot, c_color color)
-    // {
-    // 	//cout << "subthread running on " << s_position(open_spot) << endl;
-    // };
-
-    // weak_ptr<c_hex_game> weakph = pImplh;
     threads[open_spot] = thread(&c_hex_game::monte_carlo_move_subthread, pImplh,
                                 pImplh->placed, open_spot, color, open_colors,
                                 &(num_wins[open_spot]), start, algorithm);

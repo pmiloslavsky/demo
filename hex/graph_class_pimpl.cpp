@@ -1,21 +1,11 @@
 // Copyright Philip Miloslavsky 2020
 #include <getopt.h>
 #include <signal.h>
-
 #include <algorithm>
 #include <chrono>
-#include <fstream>
 #include <iostream>
-#include <iterator>
-#include <limits>
-#include <list>
-#include <map>
-#include <queue>
 #include <random>
-#include <string>
 #include <thread>
-#include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 #include "graph_class_interface.h"
@@ -244,28 +234,19 @@ int main(int argc, char** argv) {
   s_position dest(sourcetop);
   s_position pos(uniform_dist(el), uniform_dist(el), edge_length);
   while (1) {
-    while (1) {
-      // init to random element (not used)
-      pos = {uniform_dist(el), uniform_dist(el)};
+    // init to random element (not used)
+    pos = {uniform_dist(el), uniform_dist(el)};
 
-      if ((next_player == c_color::BLUE) && (true == play_hex_human)) {
-        h.get_human_move(next_player, &pos);
-      } else {
-        // find highest winning probability move using monte carlo simulation
-        h.monte_carlo_move(next_player, &pos, hex_algorithm);
-      }
+    if ((next_player == c_color::BLUE) && (true == play_hex_human)) {
+      h.get_human_move(next_player, &pos);
+    } else {
+      // find highest winning probability move using monte carlo simulation
+      h.monte_carlo_move(next_player, &pos, hex_algorithm);
+    }
 
-      // if  (h.placed[pos.get_ix(h.edge_length)] != c_color::NONE)
-      // {
-      //   cout << pos << "Algorithm generated wrong move, aborting" << endl;
-      // 	abort();
-      // }
-
-      h.add_piece(pos, next_player);
-      h.print_board(true, false);
-      this_thread::sleep_for(chrono::milliseconds(50));
-      break;
-    };
+    h.add_piece(pos, next_player);
+    h.print_board(true, false);
+    this_thread::sleep_for(chrono::milliseconds(50));
 
     bool player_won = false;
     if (hex_algorithm == 0)
@@ -276,6 +257,7 @@ int main(int argc, char** argv) {
           h.min_path_hex_uf(source.get_ix(edge_length),
                             dest.get_ix(edge_length), next_player, false);
 
+    //if someone actually won, make the winning path blink
     if (player_won == true) {
       string blank(80, ' ');
       cout << next_player << " won!" << blank << endl;
@@ -300,7 +282,7 @@ int main(int argc, char** argv) {
       source = sourcebot;
       dest = sourcetop;
     }
-  }
+  } //place another piece
 
   cout << "exiting..." << endl;
 }

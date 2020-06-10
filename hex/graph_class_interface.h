@@ -2,21 +2,21 @@
 #pragma once
 #ifndef GCI_INCLUDED
 #define GCI_INCLUDED
-#include <chrono>
-#include <fstream>
-#include <memory>
+
 #include <string>
-#include <unordered_map>
-#include <vector>
+
 using namespace std;
 
-// edge,node, placed piece, winning placed piece color used in base graph and hex game
+// Color for:
+// edge, node, placed piece, or winning placed piece
+//
+// c_color used in base graph and hex game
 enum class c_color {
   WHITE = 0,
   RED = 1,
   BLUE,
   GREEN,
-  NONE,
+  NONE, //actually yellow
   RED_BLINK,
   BLUE_BLINK,
   GREEN_BLINK,
@@ -64,7 +64,7 @@ enum class c_color {
 ostream& operator<<(ostream& out, const c_color color);
 
 // Hex board position
-// NOTE edge_length for hex is actually 2 more than the
+// NOTE edge_length below for hex is actually 2 more than the
 // length of the Player board to make the algorithms easier
 struct s_position {
   // alternative coordinate system for pretty printing
@@ -99,7 +99,6 @@ inline bool operator==(const s_position a, const s_position b) {
 
 inline ostream& operator<<(ostream& out, const s_position position) {
   out << "(" << position.x << " " << position.y << ")";
-  // out << "[" << position.position_ix << "]";
   return out;
 }
 
@@ -107,8 +106,8 @@ inline ostream& operator<<(ostream& out, const s_position position) {
 // or the weighted and colored edges
 
 class c_graph;  // private but standalone
-// This supports undirected, directed, edges with [weight,color], nodes with
-// [wieght,color]
+// c_graph supports undirected, directed, edges with [weight,color], nodes with
+// [weight,color]
 class c_graphI {
  public:
   ~c_graphI();

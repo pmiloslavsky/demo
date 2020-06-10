@@ -23,7 +23,7 @@ $(obj): %: %.cpp
 
 #no main in library
 graph_class_pimpl: graph_class_pimpl.cpp graph_class_implementation.cpp graph_class_interface.h
-	$(CC) -g -pthread graph_class_implementation.cpp $< -o graph_class_pimpl
+	$(CC) -fstack-protector -Wformat -Werror=format-security -DNDEBUG -g -fwrapv -O3 -Wall -pthread graph_class_implementation.cpp $< -o graph_class_pimpl
 #	$(CC) -g -pthread $(PYTHONCFLAGS) graph_class_implementation.cpp $< -o graph_class_pimpl $(PYTHONLDFLAGS)
 
 clean:

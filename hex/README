@@ -1,0 +1,24 @@
+To build:
+install g++
+
+make
+(uses python integrated flags but you can comment the flags out if you dont
+have python3 installed)
+
+To run:
+./graph_class_pimpl --help
+--play:              Play Hex   AI vs AI
+--playhuman:         Play Hex   AI vs Human
+--hex_board <val>:   Hex board edge length
+--hex_sim <val>:     Hex Monte Carlo simulations for AI
+--hex_alg <val>:     Hex Algorithm 0=Traversal 1=Union Find
+--graph_demo         Demo basic graph functionality  graph_demo options:
+--graph_size <val>   nodes in randomly generated graph
+--nx                 print graph in python networkx
+--help:              Show help
+
+AI vs AI:
+./grap_class_pimpl --play
+
+AI vs Human:
+./grap_class_pimpl --playhuman

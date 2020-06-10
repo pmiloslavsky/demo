@@ -21,11 +21,11 @@
 
 //#define DTRACE_INTEGRATION (1)
 // DTRACE
-#include <sys/sdt.h>
+//#include <sys/sdt.h>
 
-#define PYTHON_INTEGRATION (1)
+//#define PYTHON_INTEGRATION (1)
 // PYTHON
-#include <python3.8/Python.h>
+//#include <python3.8/Python.h>
 
 #include "graph_class_interface.h"
 

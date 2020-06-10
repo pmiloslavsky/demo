@@ -18,11 +18,13 @@ all: $(obj) graph_class_pimpl
 .PHONY: all clean
 
 $(obj): %: %.cpp
-	$(CC) -g -pthread $(PYTHONCFLAGS) -o $@ $< $(PYTHONLDFLAGS)
+	$(CC) -g -pthread -o $@ $<
+#	$(CC) -g -pthread $(PYTHONCFLAGS) -o $@ $< $(PYTHONLDFLAGS)
 
 #no main in library
 graph_class_pimpl: graph_class_pimpl.cpp graph_class_implementation.cpp graph_class_interface.h
-	$(CC) -g -pthread $(PYTHONCFLAGS) graph_class_implementation.cpp $< -o graph_class_pimpl $(PYTHONLDFLAGS)
+	$(CC) -g -pthread graph_class_implementation.cpp $< -o graph_class_pimpl
+#	$(CC) -g -pthread $(PYTHONCFLAGS) graph_class_implementation.cpp $< -o graph_class_pimpl $(PYTHONLDFLAGS)
 
 clean:
 	rm -f $(obj) graph_class_pimpl 

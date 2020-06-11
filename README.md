@@ -3,6 +3,6 @@
 
 graph algorithms implemented:
  - Kruskal Minimum Spanning Tree
- - Prim MST
- - graph traversal
- - union find
+ - Prim Minimum Spanning Tree
+ - Dijkstra’s shortest path
+ - Union Find

@@ -1,4 +1,4 @@
-# hex subdirectory has a c++ implementation of the game hex using Monte Carlo simulation
+# hex subdirectory has a c++ implementation of the game hex using threaded Monte Carlo simulation
 ======================
 
 graph algorithms implemented:

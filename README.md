@@ -1,5 +1,5 @@
 # Demonstration code
-This contains several individual and larget programs for demonstration purposes
+This contains several programs for demonstration purposes
 
 ## hex directory
 has a c++ implementation of the game hex

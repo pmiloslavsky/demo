@@ -1,3 +1,11 @@
+c++ implementation of the game hex
+using threaded Monte Carlo simulation.
+Concepts include these graph algorithms:
+* Kruskal Minimum Spanning Tree
+* Prim Minimum Spanning Tree
+* Dijkstra’s shortest path
+* Union Find
+
 To build:
 
 install g++

@@ -6,7 +6,7 @@ has a c++ implementation of the game hex
 using threaded Monte Carlo simulation
 Concepts include these graph algorithms:
 * Kruskal Minimum Spanning Tree
-* Prim MST
+* Prim Minimum Spanning Tree
 * Dijkstra’s shortest path
 * Union Find
 

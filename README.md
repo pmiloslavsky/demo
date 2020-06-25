@@ -9,6 +9,7 @@ Concepts include these graph algorithms:
 * Prim Minimum Spanning Tree
 * Dijkstra’s shortest path
 * Union Find
+![Hex Screenshot](hex/hex.png?raw=true "Hex")
 
 ## maximum_path_sum directory
 Has a solution to the maximum sum of a non forked path in a binary tree.

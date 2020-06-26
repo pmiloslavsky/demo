@@ -1,0 +1,7 @@
+"C++17 STL parallel and vectorizable algorithms"
+Looks at C++17 STL sort and reduce using par,seq,par_unseq execution policies.
+Also looks at ways of writing code that make algorithms unparallelizable
+and unvectorizable.
+Conclusion:
+* time your code any time you use an execution policy
+* vector size may affect whether or not there is an improvement

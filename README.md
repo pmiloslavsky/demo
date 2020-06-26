@@ -17,3 +17,12 @@ I found it interesting because some of the solutions on the internet are deficie
 Concepts include:
 * pretty printing binary tree
 * testing for maximum sum invariance under left right symmetry and tree rotation
+
+## parallel_algorithms directory
+Looks at C++17 STL sort and reduce using par,seq,par_unseq execution policies.
+Also looks at ways of writing code that make algorithms unparallelizable
+and unvectorizable.
+Conclusion:
+* time your code any time you use an execution policy
+* vector size may affect whether or not there is an improvement
+![Parallel Algorithms Screenshot](parallel_algorithms/parallel.png?raw=true "Hex")

@@ -14,10 +14,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: make
-      run: |
-cd hex; make;
-cd ../maximum_path_sum; make;
-cd ../parallel_algorithms; make;
-            
-      
-            
+      run: >
+         cd hex; make;
+         cd ../maximum_path_sum; make;
+         cd ../parallel_algorithms; make;
+         

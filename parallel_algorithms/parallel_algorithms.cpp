@@ -11,30 +11,54 @@
 #include <random>
 #include <tuple>
 #include <vector>
+#include <thread>
 
 using namespace std;
+
+#define WHITE_ESCAPE ("\e[1;37m")
+#define RED_ESCAPE ("\e[1;31m")
+#define BLUE_ESCAPE ("\e[1;34m")
+#define GREEN_ESCAPE ("\e[1;32m")
+#define YEL_ESCAPE (static_cast<string>("\e[1;33m"))
+#define RED_BLINK_ESCAPE ("\e[5;31m")
+#define BLUE_BLINK_ESCAPE ("\e[5;34m")
+#define GREEN_BLINK_ESCAPE ("\e[5;32m")
+#define RESET_ESCAPE (static_cast<string>("\e[0m"))
 
 const long unsigned int num_elements = 100'000'000;
 const long unsigned int min_num_elements = num_elements / pow(2, 12);
 double time_results[12][4];  // no policy, seq, par, par_unseq
 const auto policies =
     make_tuple(0, execution::seq, execution::par, execution::par_unseq);
-const vector<string> policies_string{"Not Specified", "seq", "par", "par_unseq"};
-enum c_execution_policy { NOT_SPECIFIED = 0, SEQ, PAR, PAR_UNSEQ };
+const vector<string> policies_string{(YEL_ESCAPE + "(no_policy)  " + RESET_ESCAPE),
+                                     (YEL_ESCAPE + "(seq      )  " + RESET_ESCAPE),
+                                     (YEL_ESCAPE + "(par      )  " + RESET_ESCAPE),
+                                     (YEL_ESCAPE + "(par_unseq)  " + RESET_ESCAPE)};
+enum c_execution_policy { NO_POLICY = 0, SEQ, PAR, PAR_UNSEQ };
 const int num_iterations = 1;
+const bool debug = false;
 
-#define RED_ESCAPE ("\e[1;31m")
-#define RESET_ESCAPE ("\e[0m")
+
+
+string pr_algo_name(const string &algo_name) {
+  return (GREEN_ESCAPE + algo_name + RESET_ESCAPE);
+}
+
+string pr_policy_name(const string &policy_name) {
+  return (YEL_ESCAPE + policy_name + RESET_ESCAPE);
+}
+    
 
 //Analyze the results for each execution policy and for num of element in vector
 //raise alerts if the execution policies are not working
-void print_time_results(double (&time_results)[12][4], string header) {
-  cout << endl << header << " times in ms:" << endl;
+void print_time_results(double (&time_results)[12][4], string algo_name) {
+  cout << endl << algo_name << " times in ms:" << endl;
   cout << "execution policy:" << endl;
-  cout << left << setw(13) << "no_policy";
-  cout << left << setw(13) << "seq";
-  cout << left << setw(13) << "par";
-  cout << left << setw(13) << "par_unseq" << endl;
+  //setw doesnt work on escape sequences
+  cout << left << setw(13) << policies_string[NO_POLICY];
+  cout << left << setw(13) << policies_string[SEQ];
+  cout << left << setw(13) << policies_string[PAR];
+  cout << left << setw(13) << policies_string[PAR_UNSEQ] << endl;
 
   for (int i = 0; i < 12; i++) {
     for (int j = 0; j < 4; j++) {
@@ -44,11 +68,11 @@ void print_time_results(double (&time_results)[12][4], string header) {
     cout << "ms"
          << "  num_elements: " << right << setw(11)
          << static_cast<long unsigned int>(num_elements / pow(2, i));
-    if (time_results[i][NOT_SPECIFIED] < time_results[i][SEQ])
+    if (time_results[i][NO_POLICY] < time_results[i][SEQ])
       cout << RED_ESCAPE << "  (no policy) faster than (seq) by "
            << setprecision(0) << fixed
            << 100.0 *
-                  (time_results[i][SEQ] / time_results[i][NOT_SPECIFIED] - 1)
+                  (time_results[i][SEQ] / time_results[i][NO_POLICY] - 1)
            << "\%" << RESET_ESCAPE;
     if (time_results[i][SEQ] < time_results[i][PAR])
       cout << RED_ESCAPE << "  (seq) faster than (par) by " << setprecision(0)
@@ -67,13 +91,15 @@ int main() {
 
   // Its prob possible to encapsulate these test generically
   // but we would need setup and teardown for tracking sanity check stuff
-  
+
+  cout << "Machine supports "<< thread::hardware_concurrency() << " simultaneous threads" << endl;
   //
   // vector reduce
   //
+  string algo_name = pr_algo_name("reduce(accumulate int)");
   cout << endl
-       << "Comparing different number of elements vector reduce(accumulate) "
-          "for different execution policies:"
+       << "Timing " << algo_name
+       << " vs num_elements and execution policies:"
        << endl
        << endl;
 
@@ -82,11 +108,13 @@ int main() {
   for (long unsigned int ne = num_elements; ne > min_num_elements;
        ne = ne / 2) {
     vector<int> v(ne, 1);
-    cout << endl
-         << "Comparing " << v.size()
-         << " element vector accumulate for different execution policies:"
-         << endl
-         << endl;
+    if (debug) {
+      cout << endl
+           << "Comparing " << v.size()
+           << " element vector accumulate for different execution policies:"
+           << endl
+           << endl;
+    }
     for (long unsigned int policy = 0;
          policy < tuple_size<decltype(policies)>::value; policy++) {
       auto start = chrono::high_resolution_clock::now();
@@ -105,27 +133,30 @@ int main() {
 
       auto end = chrono::high_resolution_clock::now();
       chrono::duration<double, std::milli> time = end - start;
-      cout << fixed << "reduce(" << policies_string[policy]
-                << ") took " << time.count() << "ms" << endl;
-      cout << " sum = " << result << endl;
+      if (debug) {
+        cout << fixed << algo_name << " " << policies_string[policy]
+             << " took " << time.count() << "ms" << endl;
+        cout << " sum = " << result << endl;
+      }
       time_results[result_ix][policy] = time.count();
     }
     result_ix++;
   }
 
-  print_time_results(time_results, "reduce");
+  print_time_results(time_results, algo_name);
 
   //
   // vector sort
   //
-
+  algo_name = pr_algo_name("sort(double)");
   cout << endl
-       << "comparing vector sort of different number of elements with "
-          "different execution policies:"
+       << "Timing " << algo_name
+       << " vs num_elements and execution policies:"
        << endl
        << endl;
+  
 
-  cout << "starting creating vector of " << num_elements << " elements" << endl;
+  cout << "starting create vector of " << num_elements << " elements" << endl;
   random_device rd;
   vector<double> doubles(num_elements);
   for (auto& d : doubles) {
@@ -137,10 +168,12 @@ int main() {
   // vector sort
   for (long unsigned int ne = num_elements; ne > min_num_elements; ne = ne / 2) {
     vector<double> v(doubles.begin(), ne + doubles.begin());
-    cout << endl
-         << "Comparing " << v.size()
-         << " element vector sort for different execution policies:" << endl
-         << endl;
+    if (debug) {
+      cout << endl
+           << "Comparing " << v.size()
+           << " element vector " << algo_name << " for different execution policies:" << endl
+           << endl;
+    }
     for (long unsigned int policy = 0; policy < tuple_size<decltype(policies)>::value; policy++) {
       vector<double> sorted(v);
       auto start = chrono::high_resolution_clock::now();
@@ -158,14 +191,18 @@ int main() {
 
       auto end = chrono::high_resolution_clock::now();
       chrono::duration<double, std::milli> time = end - start;
-      cout << fixed << "sort(" << policies_string[policy] << ") took "
-           << time.count() << "ms" << endl;
-      cout << " front():" << sorted.front() << " back():" << sorted.back()
-           << endl;
+      if (debug) {
+        cout << fixed << algo_name << " " << policies_string[policy]
+             << " took " << time.count() << "ms" << endl;
+        cout << " front():" << sorted.front() << " back():" << sorted.back()
+             << endl;
+      }
       time_results[result_ix][policy] = time.count();
+      cout << "." << flush;
     }
     result_ix++;
   }
+  cout << endl;
 
   print_time_results(time_results, "sort");
 
@@ -175,12 +212,68 @@ int main() {
 
   vector<int> v(num_elements, 1);
   cout << endl
-       << "Demonstrating bugs with unparellizable and unvectorizable code:"
+       << "Demonstrating issues with unparellizable and unvectorizable code:"
        << endl
        << endl;
-  string header("for each sum(i.e. accumulate of ints)");
-  cout << "correct "<< header <<" result:" << endl;
+  cout << "Baseline:" << endl;
+  algo_name = pr_algo_name("accumulate(ints)");
+  cout << "correct " << policies_string[NO_POLICY] << algo_name << " result:" << endl;
   int sum = 0;
+  {
+    auto start = chrono::high_resolution_clock::now();
+    sum = 0;
+    sum = accumulate(v.begin(), v.end(), 0.0);
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double, milli> time = end - start;
+    cout << "sum = " << sum << " " << fixed << algo_name << policies_string[NO_POLICY] << " took " << time.count() << "ms"
+         << endl;
+  }
+  algo_name = pr_algo_name("reduce(ints)");
+  cout << "correct " << policies_string[NO_POLICY] << algo_name << " result:" << endl;
+  {
+    auto start = chrono::high_resolution_clock::now();
+    sum = 0;
+    sum = reduce(v.begin(), v.end(), 0.0);
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double, milli> time = end - start;
+    cout << "sum = " << sum << " " << fixed << algo_name << policies_string[NO_POLICY] << " took " << time.count() << "ms"
+         << endl;
+  }
+  cout << "correct " << policies_string[SEQ] << algo_name << " result:" << endl;
+  {
+    auto start = chrono::high_resolution_clock::now();
+    sum = 0;
+    sum = reduce(get<1>(policies), v.begin(), v.end(), 0.0);
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double, milli> time = end - start;
+    cout << "sum = " << sum << " " << fixed << algo_name << policies_string[SEQ] << " took " << time.count() << "ms"
+         << endl;
+  }
+    cout << "correct " << policies_string[PAR_UNSEQ] << algo_name << " result:" << endl;
+  {
+    auto start = chrono::high_resolution_clock::now();
+    sum = 0;
+    sum = reduce(get<3>(policies), v.begin(), v.end(), 0.0);
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double, milli> time = end - start;
+    cout << "sum = " << sum << " " << fixed << algo_name << policies_string[PAR_UNSEQ] << " took " << time.count() << "ms"
+         << endl;
+  }
+
+  cout << "End Baseline:" << endl << endl;
+
+  algo_name = pr_algo_name("for_each(sum ints)");
+  cout << "correct: ";
+  {
+    auto start = chrono::high_resolution_clock::now();
+    sum = 0;
+    for_each(begin(v), end(v),
+             [&](int i) { sum += i; });
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double, milli> time = end - start;
+    cout << "sum = " << sum << " " << fixed << algo_name << policies_string[NO_POLICY] << " took " << time.count() << "ms"
+         << endl;
+  }
   {
     auto start = chrono::high_resolution_clock::now();
     sum = 0;
@@ -188,11 +281,10 @@ int main() {
              [&](int i) { sum += i; });
     auto end = chrono::high_resolution_clock::now();
     chrono::duration<double, milli> time = end - start;
-    cout << fixed << header << "(seq) took " << time.count() << "ms"
+    cout << "sum = " << sum << " " << fixed << algo_name << policies_string[SEQ] << " took " << time.count() << "ms"
          << endl;
-    cout << " sum = " << sum << endl;
   }
-  cout << "incorrect " << header << " result, data race:" << endl;
+  cout << "incorrect result, data race:" << endl;
   // below 2 are broken - data race
   {
     auto start = chrono::high_resolution_clock::now();
@@ -201,9 +293,8 @@ int main() {
              [&](int i) { sum += i; });
     auto end = chrono::high_resolution_clock::now();
     chrono::duration<double, milli> time = end - start;
-    cout << fixed << header << "(par) took " << time.count() << "ms"
+    cout << "sum = " << sum << " " << fixed << algo_name << policies_string[PAR] << " took " << time.count() << "ms"
          << endl;
-    cout << " sum = " << sum << endl;
   }
   {
     auto start = chrono::high_resolution_clock::now();
@@ -212,12 +303,11 @@ int main() {
              [&](int i) { sum += i; });
     auto end = chrono::high_resolution_clock::now();
     chrono::duration<double, milli> time = end - start;
-    cout << fixed << header << "(par) took " << time.count() << "ms"
+    cout << "sum = " << sum << " " << fixed << algo_name << policies_string[PAR] << " took " << time.count() << "ms"
          << endl;
-    cout << " sum = " << sum << endl;
   }
 
-  cout << "correct " << header << " result(mutex protected):" << endl;
+  cout << "correct result(mutex protected):" << endl;
   {
     auto start = chrono::high_resolution_clock::now();
     sum = 0;
@@ -228,12 +318,12 @@ int main() {
     });
     auto end = chrono::high_resolution_clock::now();
     chrono::duration<double, milli> time = end - start;
-    cout << fixed << header << "(par with mutex) took "
-         << time.count() << "ms" << endl;
-    cout << " sum = " << sum << endl;
+    cout << "sum = " << sum << " " << fixed << algo_name << policies_string[PAR] << "with mutex took " << time.count() << "ms"
+         << endl;
+
   }
 
-  cout << header << "  may deadlock due to vectorization of mutex:"
+  cout << "correct but may deadlock due to vectorization of mutex:"
        << endl;
   // this is actually supposed to deadlock if the compiler does the wrong thing
   // and does 2 locks and 2 unlocks in different orders
@@ -248,12 +338,11 @@ int main() {
     });
     auto end = chrono::high_resolution_clock::now();
     chrono::duration<double, milli> time = end - start;
-    cout << fixed << header << "(par_unseq with mutex) took "
-         << time.count() << "ms" << endl;
-    cout << " sum = " << sum << endl;
+    cout << "sum = " << sum << " " << fixed << algo_name << policies_string[PAR_UNSEQ] << "with mutex took " << time.count() << "ms"
+         << endl;
   }
 
-  cout << header <<" vectorization safe using atomic:" << endl;
+  cout << "correct vectorization safe using atomic:" << endl;
   {
     auto start = chrono::high_resolution_clock::now();
     atomic<int> sum = 0;
@@ -261,14 +350,15 @@ int main() {
              [&](int i) { sum.fetch_add(i, std::memory_order_relaxed); });
     auto end = chrono::high_resolution_clock::now();
     chrono::duration<double, milli> time = end - start;
-    cout << fixed << header << "(par_unseq with atomic sum) took "
-         << time.count() << "ms" << endl;
-    cout << " sum = " << sum << endl;
+    cout << "sum = " << sum << " " << fixed << algo_name << policies_string[PAR_UNSEQ] << "with atomic took " << time.count() << "ms"
+         << endl;
   }
   cout << endl
-       << "what we just learned is dont use the parallel version of for each "
-       << header << " algorithm! (on my hw)"
-       << endl;
+       << "what we just learned is the parallel version of " << endl
+       << algo_name << " can not be made better than seq on my hw" << endl
+       << "also strangely enough its more optimized than reduce even though reduce API is simpler" << endl
+       << "We also saw that (seq) can be slower than (no policy) by 2x for reduce" << endl
+       << "Don't assume anything! Measure!" << endl;
 
   return 0;
 }

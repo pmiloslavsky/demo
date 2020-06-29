@@ -27,14 +27,15 @@ using namespace std;
 
 const long unsigned int num_elements = 100'000'000;
 const long unsigned int min_num_elements = num_elements / pow(2, 12);
-double time_results[12][4];  // no policy, seq, par, par_unseq
+double time_results[12][5];  // no policy, seq, unseq, par, par_unseq
 const auto policies =
-    make_tuple(0, execution::seq, execution::par, execution::par_unseq);
+    make_tuple(0, execution::seq, execution::unseq, execution::par, execution::par_unseq);
 const vector<string> policies_string{(YEL_ESCAPE + "(no_policy)  " + RESET_ESCAPE),
                                      (YEL_ESCAPE + "(seq      )  " + RESET_ESCAPE),
+                                     (YEL_ESCAPE + "(unseq    )  " + RESET_ESCAPE),
                                      (YEL_ESCAPE + "(par      )  " + RESET_ESCAPE),
                                      (YEL_ESCAPE + "(par_unseq)  " + RESET_ESCAPE)};
-enum c_execution_policy { NO_POLICY = 0, SEQ, PAR, PAR_UNSEQ };
+enum c_execution_policy { NO_POLICY = 0, SEQ, UNSEQ, PAR, PAR_UNSEQ };
 const int num_iterations = 1;
 const bool debug = false;
 
@@ -51,17 +52,18 @@ string pr_policy_name(const string &policy_name) {
 
 //Analyze the results for each execution policy and for num of element in vector
 //raise alerts if the execution policies are not working
-void print_time_results(double (&time_results)[12][4], string algo_name) {
+void print_time_results(double (&time_results)[12][5], string algo_name) {
   cout << endl << algo_name << " times in ms:" << endl;
   cout << "execution policy:" << endl;
   //setw doesnt work on escape sequences
   cout << left << setw(13) << policies_string[NO_POLICY];
   cout << left << setw(13) << policies_string[SEQ];
+  cout << left << setw(13) << policies_string[UNSEQ];
   cout << left << setw(13) << policies_string[PAR];
   cout << left << setw(13) << policies_string[PAR_UNSEQ] << endl;
 
   for (int i = 0; i < 12; i++) {
-    for (int j = 0; j < 4; j++) {
+    for (int j = 0; j < 5; j++) {
       cout << fixed << left << setw(12) << time_results[i][j] << " ";
     }
 
@@ -124,11 +126,13 @@ int main() {
         case 0:
           result = reduce(v.begin(), v.end(), 0.0);
         case 1:
-          result = reduce(get<1>(policies), v.begin(), v.end(), 0.0);
+          result = reduce(get<SEQ>(policies), v.begin(), v.end(), 0.0);
         case 2:
-          result = reduce(get<2>(policies), v.begin(), v.end(), 0.0);
+          result = reduce(get<UNSEQ>(policies), v.begin(), v.end(), 0.0);
         case 3:
-          result = reduce(get<3>(policies), v.begin(), v.end(), 0.0);
+          result = reduce(get<PAR>(policies), v.begin(), v.end(), 0.0);
+        case 4:
+          result = reduce(get<PAR_UNSEQ>(policies), v.begin(), v.end(), 0.0);
       }
 
       auto end = chrono::high_resolution_clock::now();
@@ -182,11 +186,13 @@ int main() {
         case 0:
           sort(sorted.begin(), sorted.end());
         case 1:
-          sort(get<1>(policies), sorted.begin(), sorted.end());
+          sort(get<SEQ>(policies), sorted.begin(), sorted.end());
         case 2:
-          sort(get<2>(policies), sorted.begin(), sorted.end());
+          sort(get<UNSEQ>(policies), sorted.begin(), sorted.end());
         case 3:
-          sort(get<3>(policies), sorted.begin(), sorted.end());
+          sort(get<PAR>(policies), sorted.begin(), sorted.end());
+        case 4:
+          sort(get<PAR_UNSEQ>(policies), sorted.begin(), sorted.end());
       }
 
       auto end = chrono::high_resolution_clock::now();
@@ -243,17 +249,27 @@ int main() {
   {
     auto start = chrono::high_resolution_clock::now();
     sum = 0;
-    sum = reduce(get<1>(policies), v.begin(), v.end(), 0.0);
+    sum = reduce(get<SEQ>(policies), v.begin(), v.end(), 0.0);
     auto end = chrono::high_resolution_clock::now();
     chrono::duration<double, milli> time = end - start;
     cout << "sum = " << sum << " " << fixed << algo_name << policies_string[SEQ] << " took " << time.count() << "ms"
          << endl;
   }
-    cout << "correct " << policies_string[PAR_UNSEQ] << algo_name << " result:" << endl;
+  cout << "correct " << policies_string[UNSEQ] << algo_name << " result:" << endl;
   {
     auto start = chrono::high_resolution_clock::now();
     sum = 0;
-    sum = reduce(get<3>(policies), v.begin(), v.end(), 0.0);
+    sum = reduce(get<UNSEQ>(policies), v.begin(), v.end(), 0.0);
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double, milli> time = end - start;
+    cout << "sum = " << sum << " " << fixed << algo_name << policies_string[UNSEQ] << " took " << time.count() << "ms"
+         << endl;
+  }
+  cout << "correct " << policies_string[PAR_UNSEQ] << algo_name << " result:" << endl;
+  {
+    auto start = chrono::high_resolution_clock::now();
+    sum = 0;
+    sum = reduce(get<PAR_UNSEQ>(policies), v.begin(), v.end(), 0.0);
     auto end = chrono::high_resolution_clock::now();
     chrono::duration<double, milli> time = end - start;
     cout << "sum = " << sum << " " << fixed << algo_name << policies_string[PAR_UNSEQ] << " took " << time.count() << "ms"
@@ -282,6 +298,16 @@ int main() {
     auto end = chrono::high_resolution_clock::now();
     chrono::duration<double, milli> time = end - start;
     cout << "sum = " << sum << " " << fixed << algo_name << policies_string[SEQ] << " took " << time.count() << "ms"
+         << endl;
+  }
+  {
+    auto start = chrono::high_resolution_clock::now();
+    sum = 0;
+    for_each(execution::unseq, begin(v), end(v),
+             [&](int i) { sum += i; });
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double, milli> time = end - start;
+    cout << "sum = " << sum << " " << fixed << algo_name << policies_string[UNSEQ] << " took " << time.count() << "ms"
          << endl;
   }
   cout << "incorrect result, data race:" << endl;

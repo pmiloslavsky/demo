@@ -19,7 +19,7 @@ Concepts include:
 * testing for maximum sum invariance under left right symmetry and tree rotation
 
 ## parallel_algorithms directory
-Looks at C++17 STL sort and reduce using par,seq,par_unseq execution policies.
+Looks at C++17 STL sort and reduce and for_each using seq,unseq,par,par_unseq execution policies.
 Also looks at ways of writing code that make algorithms unparallelizable
 and unvectorizable.
 Conclusion:

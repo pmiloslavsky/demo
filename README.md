@@ -18,6 +18,9 @@ Concepts include:
 * pretty printing binary tree
 * testing for maximum sum invariance under left right symmetry and tree rotation
 
+## max_connected_color_count directory
+This is a harder variant of the flood fill algorithm. We have to find the biggest chunk of 4-way connected colors in the grid and return number of elements in the connected chunk. We dont use recursion. We end up using a tailored Union Find algorithm and memoizing the counts of joined sets in the set heads.
+
 ## parallel_algorithms directory
 Looks at C++17 STL sort and reduce and for_each using seq,unseq,par,par_unseq execution policies.
 Also looks at ways of writing code that make algorithms unparallelizable
@@ -26,3 +29,5 @@ Conclusion:
 * time your code any time you use an execution policy
 * vector size may affect whether or not there is an improvement
 ![Parallel Algorithms Screenshot](parallel_algorithms/parallel.png?raw=true "Hex")
+
+

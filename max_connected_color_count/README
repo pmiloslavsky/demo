@@ -1,0 +1,4 @@
+./max_connected_color_count 10
+
+This is a harder variant of the flood fill algorithm. We have to find the biggest chunk of 4-way connected colors in the grid and return number of elements in the connected chunk. We dont use recursion. We end up using a tailored Union Find algorithm and memoizing the counts of joined sets in the set heads.
+The passed 10 parameter is the size of the grid side.

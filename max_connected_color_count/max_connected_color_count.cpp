@@ -116,7 +116,7 @@ int max_connected_color_count(vector<vector<int>> &color_grid, int &largest_ix,
           if (cached_color_count[set_master_ix] > maximum) {
             maximum = cached_color_count[set_master_ix];
             largest_found_ix = set_master_ix;
-            if (verbose > 0) cout << our_ix << " m:" << maximum << endl;
+            //if (verbose > 0) cout << our_ix << " m:" << maximum << endl;
           }
         }  // color match
       }    // neighbors
@@ -127,7 +127,10 @@ int max_connected_color_count(vector<vector<int>> &color_grid, int &largest_ix,
     cout << "set masters:" << endl;
     for (int i = 0; i < grid_size; i++) {
       for (int j = 0; j < grid_size; j++) {
-        cout << setw(3) << set_master[i * grid_size + j] << ", ";
+        if (color_grid[i][j] == 0)
+          cout << setw(3) << set_master[i * grid_size + j] << ", ";
+        else
+          cout << setw(3) << "__" << ", ";
       }
       cout << endl;
     }
@@ -245,6 +248,46 @@ int main(int argc, char **argv) {
 
   largest_ix = 0;
   largest_count = max_connected_color_count(color_grid, largest_ix, 0);
+
+  cout << largest_count << " grouped "
+       << color_grid[largest_ix / grid_size][largest_ix % grid_size]
+       << "'s found at: " << largest_ix / grid_size << ","
+       << largest_ix % grid_size << endl;
+
+  // Now create another nasty example:
+  cout << endl << endl << "Test 4 (should be 23):" << endl;
+  grid_size = 10;
+  color_grid = {
+      {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+      {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+      {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+      {1, 1, 1, 1, 0, 0, 1, 1, 1, 1},
+      {1, 1, 1, 1, 1, 0, 1, 1, 1, 1},
+      {0, 1, 1, 0, 1, 0, 1, 1, 1, 1},
+      {0, 0, 0, 0, 0, 0, 1, 1, 1, 1},  // note this row
+      {1, 0, 1, 1, 1, 0, 0, 1, 1, 1},
+      {0, 0, 1, 0, 0, 1, 0, 1, 1, 1},
+      {1, 1, 1, 1, 0, 0, 0, 1, 1, 1},
+  };
+
+  for (auto &vec : color_grid) {
+    for (auto &x : vec) {
+      uniform_int_distribution<int> uniform_dist(1, 7);
+      if (x != 0) {
+        x = uniform_dist(el);
+      }
+    }
+  }
+
+  for (int i = 0; i < grid_size; i++) {
+    for (int j = 0; j < grid_size; j++) {
+      cout << color_grid[i][j] << ", ";
+    }
+    cout << endl;
+  }
+
+  largest_ix = 0;
+  largest_count = max_connected_color_count(color_grid, largest_ix, 1);
 
   cout << largest_count << " grouped "
        << color_grid[largest_ix / grid_size][largest_ix % grid_size]

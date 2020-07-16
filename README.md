@@ -11,6 +11,17 @@ Concepts include these graph algorithms:
 * Union Find
 ![Hex Screenshot](hex/hex.png?raw=true "Hex")
 
+## lorenz_3d_simulation directory
+Has a C++ 3D simulation of the lorenz system attractor. It was written using sfml and tgui libraries.
+Features include:
+* Loreniz PDE simulation and Frame of Reference display
+* Changeable particle and trail settings
+* Zoom via mouse and Rotation via Euler Angle sliders (Theta)
+* Skinned Modern GUI elements (Sliders, Button, Menus)
+* Escaped Particle Detection
+* On Screen Axes to indicate rotation
+![Lorenz Screenshot](lorenz_3d_simulation>/lorentz_widgets_save.png?raw=true "Lorenz")
+
 ## maximum_path_sum directory
 Has a solution to the maximum sum of a non forked path in a binary tree.
 I found it interesting because some of the solutions on the internet are deficient.

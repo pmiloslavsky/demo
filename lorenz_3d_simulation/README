@@ -1,0 +1,8 @@
+C++ 3D simulation of the lorenz system attractor. It was written using sfml and tgui libraries.
+Features include:
+* Loreniz PDE simulation and Frame of Reference display
+* Changeable particle and trail settings
+* Zoom via mouse and Rotation via Euler Angle sliders (Theta)
+* Skinned Modern GUI elements (Sliders, Button, Menus)
+* Escaped Particle Detection
+* On Screen Axes to indicate rotation

@@ -1,16 +1,6 @@
 # Demonstration code
 This contains several programs for demonstration purposes
 
-## hex directory
-Has a c++ implementation of the game hex
-using threaded Monte Carlo simulation.
-Concepts include these graph algorithms:
-* Kruskal Minimum Spanning Tree
-* Prim Minimum Spanning Tree
-* Dijkstra’s shortest path
-* Union Find
-![Hex Screenshot](hex/hex.png?raw=true "Hex")
-
 ## lorenz_3d_simulation directory
 Has a C++ 3D simulation of the lorenz system attractor. It was written using sfml and tgui libraries.
 Features include:
@@ -20,7 +10,17 @@ Features include:
 * Skinned Modern GUI elements (Sliders, Button, Menus)
 * Escaped Particle Detection
 * On Screen Axes to indicate rotation
-![Lorenz Screenshot](lorenz_3d_simulation>/lorentz_widgets_save.png?raw=true "Lorenz")
+![Lorenz Screenshot](lorenz_3d_simulation/lorentz_widgets_save.png?raw=true "Lorenz")
+
+## hex directory
+Has a c++ implementation of the game hex
+using threaded Monte Carlo simulation.
+Concepts include these graph algorithms:
+* Kruskal Minimum Spanning Tree
+* Prim Minimum Spanning Tree
+* Dijkstra’s shortest path
+* Union Find
+![Hex Screenshot](hex/hex.png?raw=true "Hex")
 
 ## maximum_path_sum directory
 Has a solution to the maximum sum of a non forked path in a binary tree.

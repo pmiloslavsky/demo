@@ -1,16 +1,30 @@
 # Demonstration code
 This contains several programs for demonstration purposes
 
-## lorenz_3d_simulation directory
-Has a C++ 3D simulation of the lorenz system attractor. It was written using SFML and TGUI libraries.
+
+## ode_simulation directory
+C++ 3D particle and trail simulation of many strange attractor ordinary
+differential equations. It was written using sfml and tgui libraries.
 Features include:
-* Lorenz PDE simulation and reference frame display
-* Changeable particle count and trail length settings
-* Zoom via mouse and Rotation via Euler Angle sliders (Theta)
-* Skinned modern GUI elements (Sliders, Button, Menus)
-* Escaped Particle Detection
+* Zoomable,rotatable (Euler Angle sliders (Theta)), trasnlatable Frame of Reference display
+* Various keyboard and mouse and gui controls for things like DE parameters
+* Changeable particle and trail settings
+* Skinned Modern GUI elements (Sliders, Button, Menus, etc)
+* Escaped particle detection
 * On Screen Axes to indicate rotation
-![Lorenz Screenshot](lorenz_3d_simulation/lorentz_widgets_save.png?raw=true "Lorenz")
+* Screenshots via hotkey
+* Hide all widgets hotkey
+* Color maps that color the trails and particles
+* Textures for moving circles
+<img src="ode/simulation/interface.png">
+<p align="center">
+<img src="ode/simulation/Thomas.png" width="300" height="300">
+<img src="ode/simulation/Aizawa.png" width="300" height="300">
+<img src="ode/simulation/Rossler.png" width="300" height="300">
+</p>
+
+## lorenz_3d_simulation directory
+An earlier version of the ode_simulation
 
 ## hex directory
 Has a c++ implementation of the game hex

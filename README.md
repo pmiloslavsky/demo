@@ -16,11 +16,11 @@ Features include:
 * Hide all widgets hotkey
 * Color maps that color the trails and particles
 * Textures for moving circles
-<img src="ode/simulation/interface.png">
+<img src="ode_simulation/interface.png">
 <p align="center">
-<img src="ode/simulation/Thomas.png" width="300" height="300">
-<img src="ode/simulation/Aizawa.png" width="300" height="300">
-<img src="ode/simulation/Rossler.png" width="300" height="300">
+<img src="ode_simulation/Thomas.png" width="300" height="300">
+<img src="ode_simulation/Aizawa.png" width="300" height="300">
+<img src="ode_simulation/Rossler.png" width="300" height="300">
 </p>
 
 ## lorenz_3d_simulation directory

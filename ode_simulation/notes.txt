@@ -1,0 +1,21 @@
+How to set up SFML graphics library on ubuntu:
+
+sudo apt-get install libsfml-dev
+// ? libportaudio2 libsfml-doc sndiod
+sudo apt-get install libsfml-doc
+apt list libsfml-doc
+dpkg --listfiles libsfml-doc
+
+To display fonts need:
+https://fonts2u.com/open-sans-bold.font
+or
+/usr/share/fonts on ubuntu
+
+To get buttons and sliders you need tgui library based on sfml
+Download TGUI-0.9-dev from
+https://github.com/texus/TGUI
+or 
+sudo add-apt-repository ppa:texus/tgui-0.8
+sudo apt-get update
+sudo apt-get install libtgui-dev
+

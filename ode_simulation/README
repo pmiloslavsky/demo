@@ -1,0 +1,15 @@
+C++ 3D particle and trail simulation of many strange attractor ordinary
+differential equations. It was written using sfml and tgui libraries.
+Features include:
+* Zoomable,rotatable (Euler Angle sliders (Theta)), trasnlatable Frame of Reference display
+* Various keyboard and mouse and gui controls for things like DE parameters
+* Changeable particle and trail settings
+* Skinned Modern GUI elements (Sliders, Button, Menus, etc)
+* Escaped particle detection
+* On Screen Axes to indicate rotation
+* Screenshots via hotkey
+* Hide all widgets hotkey
+* Color maps that color the trails and particles
+* Textures for moving circles
+
+

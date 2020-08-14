@@ -31,8 +31,8 @@ A C++ GUI framework to display fractals. Features:
 * Mandelbrot (zoom and pan via mouse)
 * Buddhabrot(Nebulabrot). Will run threads on all the cores to generate the image. To generate the image needs a lot of CPU. The threads have been optimized to generate the image very fast.
 <p align="center">
-<img src="fractals/nebulabrot.png" width="300" height="300">
-<img src="fractals/madelbrot.png" width="300" height="300">
+<img src="fractals/nebulabrot.png" width="400" height="266">
+<img src="fractals/madelbrot.png" width="400" height="266">
 </p>
 
 ## hex directory

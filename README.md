@@ -38,7 +38,7 @@ CUDA programming is very finicky and there is probably lots of room for improvem
 Nevertheless, its a massive improvement over one AMD thread doing the work.
 <p align="center">
 <img src="fractals/nebulabrot.png" width="400" height="266">
-<img src="fractals/madelbrot.png" width="400" height="266">
+<img src="fractals/mandelbrot.png" width="400" height="266">
 </p>
 
 ## hex directory

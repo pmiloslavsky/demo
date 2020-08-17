@@ -22,6 +22,7 @@
 //  Buddhabrot (one color)
 //  Nebulabrot (3 colors)
 // Mandelbrot coloring improvements
+// Dont redraw non buddha if there has been no change to fractal
 
 using namespace std;
 
@@ -54,11 +55,11 @@ void signal_callback_handler(int signum) {
 }
 
 // For really good pictures
-const int IMAGE_WIDTH = 2560;
-const int IMAGE_HEIGHT = 1600;
+// const int IMAGE_WIDTH = 2560;
+// const int IMAGE_HEIGHT = 1600;
 
-// const int IMAGE_WIDTH = 1600;
-// const int IMAGE_HEIGHT = 1200;
+const int IMAGE_WIDTH = 1600;
+const int IMAGE_HEIGHT = 1200;
 
 // The zoom and rotation and panning of the fractal (mandelbrot only so far)
 class ReferenceFrame {
@@ -68,20 +69,23 @@ class ReferenceFrame {
 
   // View
   //
-  double xstart;  // in pixels
-  double ystart;
-  double current_width;
-  double current_height;
+  double xstart; //in fractal coordinates
+  double ystart; //in fractal coordinates
+  double xdelta; //delta per pixel in fractal coordinates
+  double ydelta; //delta per pixel in fractal coordinates
+  double current_width; //in pixels
+  double current_height; //in pixels
 
   // Zoom Level
-  double zoom;
+  double displayed_zoom;
+  double requested_zoom;
 
   // Original total Pixels
   double original_width;
   double original_height;
 
   ReferenceFrame(float _thetaxy, double _zoom)
-      : theta{_thetaxy}, zoom{_zoom} {};
+      : theta{_thetaxy}, displayed_zoom{_zoom} {};
 
 };  // ReferenceFrame
 
@@ -126,33 +130,54 @@ void mandelbrot_iterations_to_escape(double x, double y, unsigned int iters_max,
   complex<double> point(x, y);
   complex<double> z(0, 0);
   unsigned int iter_ix = 0;
+
+
+  
   while (abs(z) < 2 && iter_ix <= iters_max) {
     z = z * z + point;
     iter_ix++;
   }
+  
   if (iter_ix < iters_max) {
     ++out;
     //    return (255 * iter_ix) / (iters_max - 1);
-
     //  smooth coloring ????    mu = N + 1 - log (log  |Z(N)|) / log 2
-    if (p_rcolor != 0) {
-      *p_rcolor = 55 + (128 * (iter_ix * 1)) / (iters_max);
-    }
 
-    if (p_gcolor != 0) {
-      *p_gcolor = 0 + (255 * (iter_ix * 1)) / (iters_max);
-    }
+    // *p_rcolor = (255*iter_ix) / (iters_max);
+    // *p_gcolor = 255 - (255*iter_ix) / (iters_max);
+    // *p_bcolor = clamp(128 + (255*iter_ix) / (iters_max),(unsigned int)0,(unsigned int)255);
 
-    if (p_bcolor != 0) {
-      *p_bcolor = 55 + (128 * iter_ix * 1) / (iters_max);
-    }
+    //Ultra Fractal Default
+    int i = iter_ix % 16;
+    vector<vector<int>> mapping(16, std::vector<int>(3));
+    mapping[0] = {66, 30, 15};
+    mapping[1] = {25, 7, 26};
+    mapping[2] = {9, 1, 47};
+    mapping[3] = {4, 4, 73};
+    mapping[4] = {0, 7, 100};
+    mapping[5] = {12, 44, 138};
+    mapping[6] = {24, 82, 177};
+    mapping[7] = {57, 125, 209};
+    mapping[8] = {134, 181, 229};
+    mapping[9] = {211, 236, 248};
+    mapping[10] = {241, 233, 191};
+    mapping[11] = {248, 201, 95};
+    mapping[12] = {255, 170, 0};
+    mapping[13] = {204, 128, 0};
+    mapping[14] = {153, 87, 0};
+    mapping[15] = {106, 52, 3};
 
-  } else  // set color
+    *p_rcolor = mapping[i][0];
+    *p_gcolor = mapping[i][1];
+    *p_bcolor = mapping[i][2];
+    
+  }
+  else  // set interior set color
   {
     ++in;
     if (p_rcolor != 0) *p_rcolor = 0;
     if (p_gcolor != 0) *p_gcolor = 0;
-    if (p_bcolor != 0) *p_bcolor = 64;
+    if (p_bcolor != 0) *p_bcolor = 0;
   }
 }
 
@@ -192,13 +217,20 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
  public:
   FractalModel(unsigned int _view_width, unsigned int _view_height)
       : view_width{_view_width}, view_height{_view_height} {
-    current_fractal = 1;
+    current_fractal = 0;
     hitsums = 0;
     maxred = 0;
     maxgreen = 0;
     maxblue = 0;
     cuda_detected = false;
     memset(&stats, 0, sizeof(stats));
+    R.displayed_zoom = 1.0;
+    R.requested_zoom = 1.0;
+    R.xstart = FRAC[current_fractal].xMinMax[0];
+    R.ystart = FRAC[current_fractal].yMinMax[0];
+    R.current_height = R.original_height;
+    R.current_width = R.original_width;
+    
     original_view_width = view_width;
     original_view_height = view_height;
     image.create(view_width, view_height, sf::Color(0, 0, 0));
@@ -208,31 +240,37 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
 
     createBuddhabrot();
 
+    color.resize(IMAGE_WIDTH);
+    for (auto &v : color) v.resize(IMAGE_HEIGHT);
+    
+
     stats[current_fractal].next_second_start = chrono::steady_clock::now();
   }
 
   ~FractalModel() {}
 
   void resetDefaults() {
-    R.zoom = 1.0;
-    R.xstart = 0.0;
-    R.ystart = 0.0;
+    R.displayed_zoom = 1.0;
+    R.requested_zoom = 1.0;
+    R.xstart = FRAC[current_fractal].xMinMax[0];
+    R.ystart = FRAC[current_fractal].yMinMax[0];
     R.current_height = R.original_height;
     R.current_width = R.original_width;
     hitsums = 0;
     maxred = 0;
     maxgreen = 0;
     maxblue = 0;
+    memset(&stats, 0, sizeof(stats));
     if (FRAC[current_fractal].name != string("Buddhabrot")) {
-      zoomFractal(1.0, 1.0);
+      zoomFractal(1.0);
     }
   }
 
   
 
   // thread pool is currently started outside the model
-  void buddhabrot_thread(int tix, std::future<void> terminate) {
-    cout << "buddhabrot thread running: " << tix << endl;
+  void fractal_thread(int tix, std::future<void> terminate) {
+    cout << "fractal thread running: " << tix << endl;
 
     vector<vector<unsigned long long>> redHits;
     vector<vector<unsigned long long>> greenHits;
@@ -257,8 +295,14 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
 
       // do work if we didnt terminate
 
-      // dont generate cpu load for non buddha fractals
-      if (FRAC[current_fractal].name != string("Buddhabrot")) continue;
+      //Non Probabalistic fractals
+      if (FRAC[current_fractal].name != string("Buddhabrot")) {
+        getImagePixels(R.xstart, R.ystart, R.xdelta, R.ydelta, tix);
+        continue;
+      }
+
+      
+      //Probabalistic fractals
 
       if ((FRAC[current_fractal].cuda_mode == true) &&
           (cuda_detected == true)) {
@@ -299,7 +343,7 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
       }
     }
 
-    cout << "buddhabrot thread exiting: " << tix << endl;
+    cout << "fractal thread exiting: " << tix << endl;
   };  // buddhabrot_thread
 
   // for each color
@@ -541,51 +585,49 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
     // sprite.rotate(90.f);
   }
 
-  void setImagePixels(double xstart, double ystart, double xdelta,
-                      double ydelta) {
-    // for every pixel
-    for (unsigned int i = 0; i < R.original_width; i++) {
+  void getImagePixels(double xstart, double ystart, double xdelta,
+                      double ydelta, unsigned int tix) {
+    //Subdivide x range by tix and num_threads
+    unsigned int xrange = R.original_width / num_threads;
+    unsigned int xs = tix*xrange;
+    unsigned int xe = (tix+1)*xrange;
+    if (tix == num_threads - 1)
+      xe = R.original_width;
+    
+    for (unsigned int i = xs; i < xe; i++) {
       for (unsigned int j = 0; j < R.original_height; j++) {
         double xi = xstart + i * xdelta;
         double yj = ystart + j * ydelta;
-
-        // pixel coordinates transformed to mandelbrot interval coordinates and
-        // calculate color
         stats[current_fractal].total++;
 
         int rcolor = 0;
         int gcolor = 0;
         int bcolor = 0;
-
-        // To do all 3 colors is more expensive
-        mandelbrot_iterations_to_escape(xi, yj, 128, &rcolor, &gcolor, &bcolor,
+        
+        mandelbrot_iterations_to_escape(xi, yj, 1000, &rcolor, &gcolor, &bcolor,
                                         stats[current_fractal].in_set,
                                         stats[current_fractal].escaped_set);
-        // int greenMap = mandelbrot_iterations_to_escape(xi, yj,
-        // 64,stats[current_fractal].in_set,
-        // stats[current_fractal].escaped_set); int blueMap =
-        // mandelbrot_iterations_to_escape(xi, yj,
-        // 32,stats[current_fractal].in_set,
-        // stats[current_fractal].escaped_set);
+    
+        color[i][j] = sf::Color(rcolor, gcolor, bcolor);
+      }
+    }
+    hitsums = R.original_width * R.original_height;
+  }
 
-        sf::Color pcolor{0, 0, 0};
-        pcolor = pcolor + sf::Color(rcolor, gcolor, bcolor);
-        // if (greenMap != 0)
-        //   pcolor = pcolor + sf::Color(0,greenMap,0);
-        // if (blueMap != 0)
-        //   pcolor = pcolor + sf::Color(0,0,blueMap);
-
-        image.setPixel(i, j, pcolor);
+  void setImagePixels(double xstart, double ystart, double xdelta,
+                      double ydelta) {
+    // for every pixel
+    for (unsigned int i = 0; i < R.original_width; i++) {
+      for (unsigned int j = 0; j < R.original_height; j++) {
+        image.setPixel(i, j, color[i][j]);
       }
     }
 
-    hitsums = R.original_width * R.original_height;
     texture.loadFromImage(image);
     sprite.setTexture(texture);
   }
 
-  void calculateZoomWindow(double currentzoom, double newzoom, double &xstart,
-                           double &ystart, double &xdelta, double &ydelta) {
+  void calculateZoomWindow(double newzoom) {
     double xratio = newzoom;
     double yratio = newzoom;
 
@@ -595,31 +637,32 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
     double maxy = FRAC[current_fractal].yMinMax[1];
 
     // mandelbrot_coordinates
-    xdelta = (maxx - minx) * xratio / R.original_width;
-    ydelta = (maxy - miny) * yratio / R.original_height;
+    double xdelta = (maxx - minx) * xratio / R.original_width;
+    double ydelta = (maxy - miny) * yratio / R.original_height;
+    R.xdelta = xdelta;
+    R.ydelta = ydelta;
 
     // after we zoom, we want to start here
     // mandelbrot coordinates
-    xstart =
-        R.xstart + R.original_width * (currentzoom - newzoom) / 2.0;  // pixels
+    double xstart =
+        R.xstart + (maxx - minx) * (R.displayed_zoom - newzoom) / 2.0;  // pixels
 
     R.xstart = xstart;
 
-    // map x pixels to -2 -> 1
-    xstart = xstart * (maxx - minx) / R.original_width + minx;
 
-    ystart =
-        R.ystart + R.original_height * (currentzoom - newzoom) / 2.0;  // pixels
+    double ystart =
+        R.ystart + (maxy - miny) * (R.displayed_zoom - newzoom) / 2.0;  // pixels
 
     R.ystart = ystart;
 
-    // map y pixels to -1 -> 1
-    ystart = ystart * (maxy - miny) / R.original_height + miny;
+
 
     R.current_width = newzoom * R.original_width;
     R.current_height = newzoom * R.original_height;
 
-    cout << "czoom: " << R.zoom;
+    R.displayed_zoom = newzoom;
+
+    cout << "zoom: " << R.displayed_zoom;
     cout << "  cdims: " << R.current_width << " " << R.current_height << endl;
     cout << "x range: " << xstart << " -> "
          << xstart + (R.original_width - 1) * xdelta;
@@ -628,10 +671,9 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
   }
 
   // Assumes the user doesnt resize the window to give it different pixels
-  void calculatePanWindow(double xcenter, double ycenter, double &xstart,
-                          double &ystart, double &xdelta, double &ydelta) {
-    double xratio = R.zoom;
-    double yratio = R.zoom;
+  void calculatePanWindow(double xcenter, double ycenter) {
+    double xratio = R.displayed_zoom;
+    double yratio = R.displayed_zoom;
 
     double minx = FRAC[current_fractal].xMinMax[0];
     double maxx = FRAC[current_fractal].xMinMax[1];
@@ -639,26 +681,24 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
     double maxy = FRAC[current_fractal].yMinMax[1];
 
     // mandelbrot_coordinates
-    xdelta = (maxx - minx) * xratio / R.original_width;
-    ydelta = (maxy - miny) * yratio / R.original_height;
+    double xdelta = (maxx - minx) * xratio / R.original_width;
+    double ydelta = (maxy - miny) * yratio / R.original_height;
+    R.xdelta = xdelta;
+    R.ydelta = ydelta;
 
     // after we pan we want to start here
     // mandelbrot coordinates
-    xstart = R.xstart - (R.original_width / 2.0 - xcenter) * R.zoom;  // pixels
+    double xstart = R.xstart - ((maxx - minx) / R.original_width)*(R.original_width / 2.0 - xcenter) * R.displayed_zoom;  // pixels
 
     R.xstart = xstart;
 
-    // map x pixels to -2 -> 1
-    xstart = xstart * (maxx - minx) / R.original_width + minx;
 
-    ystart = R.ystart - (R.original_height / 2.0 - ycenter) * R.zoom;  // pixels
+    double ystart = R.ystart - ((maxy - miny) / R.original_height)*(R.original_height / 2.0 - ycenter) * R.displayed_zoom;  // pixels
 
     R.ystart = ystart;
 
-    // map y pixels to -1 -> 1
-    ystart = ystart * (maxy - miny) / R.original_height + miny;
 
-    cout << "czoom: " << R.zoom;
+    cout << "pan: " << xcenter << " " << ycenter <<endl;
     cout << "  cdims: " << R.current_width << " " << R.current_height
          << " starts: " << R.xstart << " " << R.ystart << endl;
     cout << "x range: " << xstart << " -> "
@@ -667,28 +707,14 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
          << ystart + (R.original_height - 1) * ydelta << endl;
   }
 
-  void zoomFractal(double currentzoom, double newzoom) {
+  void zoomFractal(double newzoom) {
     if (FRAC[current_fractal].name == string("Buddhabrot")) return;
-
-    double xstart;
-    double ystart;
-    double xdelta;
-    double ydelta;
-    calculateZoomWindow(currentzoom, newzoom, xstart, ystart, xdelta, ydelta);
-
-    setImagePixels(xstart, ystart, xdelta, ydelta);
+    calculateZoomWindow(newzoom);
   }
 
   void panFractal(double xcenter, double ycenter) {
     if (FRAC[current_fractal].name == string("Buddhabrot")) return;
-
-    double xstart;
-    double ystart;
-    double xdelta;
-    double ydelta;
-    calculatePanWindow(xcenter, ycenter, xstart, ystart, xdelta, ydelta);
-
-    setImagePixels(xstart, ystart, xdelta, ydelta);
+    calculatePanWindow(xcenter, ycenter);
   }
 
   void update(sf::Time elapsed) {
@@ -711,6 +737,12 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
         rebuildImageFromHits();  // SetImagePixels
       }
     }
+    else
+    {
+      setImagePixels(R.xstart, R.ystart,
+                     R.xdelta, R.ydelta);
+    }
+    
 
     // Update stats in Model to track how effective buddhabrot threads are
     auto now = chrono::steady_clock::now();
@@ -769,6 +801,9 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
   vector<vector<unsigned long long>> redTrailHits;
   vector<vector<unsigned long long>> greenTrailHits;
   vector<vector<unsigned long long>> blueTrailHits;
+
+  //Non buddha fractals
+  vector<vector<sf::Color>> color;
 };
 
 // Now we try to do the control elements displayed inside the view GUI that
@@ -954,22 +989,22 @@ void display_all_widgets(shared_ptr<tgui::Gui> &pgui, bool maybe) {
 double get_new_zoom(sf::View &view, int delta) {
   if (delta < 0) {
     // zoom in
-    R.zoom = R.zoom * 0.90;
+    R.requested_zoom = R.requested_zoom * 0.90;
     // cout << "zoom: " << current_zoom << endl;
-    if (R.zoom < 0.0001) {
-      R.zoom = 1.0;
+    if (R.requested_zoom < 0.00001) {
+      R.requested_zoom = 1.0;
     }
   } else {
     // zoom out
-    R.zoom = R.zoom * 1.1;
+    R.requested_zoom = R.requested_zoom * 1.1;
     // cout << "zoom: " << current_zoom << endl;
 
-    if (R.zoom > 5.0) {
-      R.zoom = 1.0;
+    if (R.requested_zoom > 5.0) {
+      R.requested_zoom = 1.0;
     }
   }
 
-  return R.zoom;
+  return R.requested_zoom;
 }
 
 // save a screenshot
@@ -1018,7 +1053,8 @@ int main(int argc, char **argv) {
   sf::View modelview;
   sf::Vector2u viewD(screenDimensions.x, screenDimensions.y);
   modelview.setSize(viewD.x, viewD.y);
-  R.zoom = 1.0;
+  R.displayed_zoom = 1.0;
+  R.requested_zoom = 1.0;
   R.xstart = 0.0;
   R.ystart = 0.0;
   R.current_height = screenDimensions.y;
@@ -1053,7 +1089,7 @@ int main(int argc, char **argv) {
     num_threads = cmd_line_threads;
   p_model->num_threads = num_threads;
 
-  cout << "For Buddhabrot, using " << num_threads << " threads" << endl;
+  cout << "Using " << num_threads << " threads to speed up fractal rendering" << endl;
   thread threads[num_threads];
   std::promise<void> terminateThreadSignal[num_threads];
 
@@ -1064,7 +1100,7 @@ int main(int argc, char **argv) {
   for (unsigned int tix = 0; tix < num_threads; ++tix) {
     std::future<void> futureObj = terminateThreadSignal[tix].get_future();
 
-    threads[tix] = thread(&FractalModel::buddhabrot_thread, p_model, tix,
+    threads[tix] = thread(&FractalModel::fractal_thread, p_model, tix,
                           std::move(futureObj));
   }
 
@@ -1132,10 +1168,10 @@ int main(int argc, char **argv) {
       // Zoom the whole sim if mouse wheel moved
       if (event.type == sf::Event::MouseWheelScrolled) {
         if (event.mouseWheelScroll.wheel == sf::Mouse::VerticalWheel) {
-          double currentzoom = R.zoom;
           double newzoom =
               get_new_zoom(modelview, event.mouseWheelScroll.delta);
-          p_model->zoomFractal(currentzoom, newzoom);
+          cout << "New zoom: " << newzoom << endl;
+          p_model->zoomFractal(newzoom);
         }
       }
 

@@ -19,8 +19,11 @@
 // TODO
 // More fractals:
 //  Mandlebrot
-//  Buddhabrot (one color)
 //  Nebulabrot (3 colors)
+//  Mandelbrot with Power parameter
+//  Julia with power parameter and start parameter
+//  Buddhabrot (one color)
+//  Buddha with power
 // Mandelbrot coloring improvements
 // Dont redraw non buddha if there has been no change to fractal
 
@@ -55,11 +58,11 @@ void signal_callback_handler(int signum) {
 }
 
 // For really good pictures
-// const int IMAGE_WIDTH = 2560;
-// const int IMAGE_HEIGHT = 1600;
+const int IMAGE_WIDTH = 2560;
+const int IMAGE_HEIGHT = 1600;
 
-const int IMAGE_WIDTH = 1600;
-const int IMAGE_HEIGHT = 1200;
+// const int IMAGE_WIDTH = 1600;
+// const int IMAGE_HEIGHT = 1200;
 
 // The zoom and rotation and panning of the fractal (mandelbrot only so far)
 class ReferenceFrame {
@@ -103,13 +106,66 @@ ReferenceFrame R(0, 1.0);
 // };
 
 vector<SupportedFractal> FRAC = {
-    {string("Mandelbrot"), false, {-2.2, 1.0}, {-1.2, 1.2}, 0, {256, 128, 32}},
-    {string("Buddhabrot"),  // not going to be zoomable and pannable
-     true,
+    {string("Mandelbrot"),
+     false,
+     false,
+     false, //julia
+     {-2.2, 1.0},
+     {-1.2, 1.2},
+     0, //colormap
+     {256, 128, 32},
+     2,
+     complex<double>{0,0}
+    },
+    {string("Mandelbrot Pow"),
+     false,
+     false,
+     false,
      {-2.2, 1.0},
      {-1.2, 1.2},
      0,
-     {10000, 1000, 100}}};
+     {256, 128, 32},
+     3,
+     complex<double>{0,0}
+    },
+    {string("Julia Pow,Start"),
+     false,
+     false,
+     true, //julia
+     {-2.2, 2.2},
+     {-1.2, 1.2},
+     0,
+     {256, 128, 32},
+     2,
+     complex<double>{-0.79,0.15}
+    },
+    {string("Buddhabrot"),  // not going to be zoomable and pannable
+     true,
+     true,
+     false,
+     {-2.2, 1.0},
+     {-1.2, 1.2},
+     0,
+     {10000, 1000, 100},
+     2,
+     complex<double>{0,0}
+    },
+    {string("Buddhabrot BW"),  // not going to be zoomable and pannable
+     true,
+     true,
+     false,
+     {-2.2, 1.0},
+     {-1.2, 1.2},
+     0,
+     {10000, 10000, 10000},
+     2,
+     complex<double>{0,0}
+    }
+};
+
+
+
+
 
 //#include "fractals.h" SampleStats
 // struct SampleStats {
@@ -124,22 +180,32 @@ vector<SupportedFractal> FRAC = {
 // };
 
 void mandelbrot_iterations_to_escape(double x, double y, unsigned int iters_max,
-                                     int *p_rcolor, int *p_gcolor,
-                                     int *p_bcolor, unsigned long long &in,
+                                     int *p_rcolor, int *p_gcolor, int *p_bcolor,
+                                     double power, complex<double> zconst, bool julia,
+                                     unsigned long long &in,
                                      unsigned long long &out) {
   complex<double> point(x, y);
   complex<double> z(0, 0);
   unsigned int iter_ix = 0;
 
-
+  if (julia)
+    z = point;
   
   while (abs(z) < 2 && iter_ix <= iters_max) {
-    z = z * z + point;
+    if (julia)
+      z = pow(z,power) + zconst; //With Julia you dont add Point
+    else
+      z = pow(z,power) + point;
+    //z = z*z + point;
     iter_ix++;
   }
-  
-  if (iter_ix < iters_max) {
+
+  if (iter_ix < iters_max)
     ++out;
+  else
+    ++in;
+
+  if (iter_ix < iters_max){
     //    return (255 * iter_ix) / (iters_max - 1);
     //  smooth coloring ????    mu = N + 1 - log (log  |Z(N)|) / log 2
 
@@ -174,7 +240,6 @@ void mandelbrot_iterations_to_escape(double x, double y, unsigned int iters_max,
   }
   else  // set interior set color
   {
-    ++in;
     if (p_rcolor != 0) *p_rcolor = 0;
     if (p_gcolor != 0) *p_gcolor = 0;
     if (p_bcolor != 0) *p_bcolor = 0;
@@ -183,16 +248,24 @@ void mandelbrot_iterations_to_escape(double x, double y, unsigned int iters_max,
 
 void generate_buddhabrot_trail(const complex<double> &c, unsigned int iters_max,
                                vector<complex<double>> &trail,
+                               int power, complex<double> zconst, bool julia,
                                unsigned long long &in,
                                unsigned long long &out) {
   unsigned int iter_ix = 0;
   complex<double> z(0, 0);
 
+  if (julia)
+    z = c;
+
   trail.clear();
   trail.reserve(iters_max + 1);
 
   while (iter_ix < iters_max && abs(z) < 2.0) {
-    z = z * z + c;
+    if (julia)
+      z = pow(z,power) + zconst; //With Julia you dont add Point
+    else
+      z = pow(z,power) + c;
+    //z = z*z + c;
     ++iter_ix;
 
     trail.push_back(z);
@@ -235,7 +308,7 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
     original_view_height = view_height;
     image.create(view_width, view_height, sf::Color(0, 0, 0));
 
-    if (FRAC[current_fractal].name != string("Buddhabrot"))
+    if (FRAC[current_fractal].probabalistic != true)
       panFractal(view_width / 2.0, view_height / 2.0);
 
     createBuddhabrot();
@@ -261,8 +334,17 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
     maxgreen = 0;
     maxblue = 0;
     memset(&stats, 0, sizeof(stats));
-    if (FRAC[current_fractal].name != string("Buddhabrot")) {
+    if (FRAC[current_fractal].probabalistic != true) {
       zoomFractal(1.0);
+    }
+    
+    {
+      //TODO zero the per thread hits as well
+      std::lock_guard<std::mutex> guard(thread_result_report_mutex);  // keep out other threads
+      redTrailHits.resize(0);
+      greenTrailHits.resize(0);
+      blueTrailHits.resize(0);
+      createBuddhabrot();
     }
   }
 
@@ -296,7 +378,7 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
       // do work if we didnt terminate
 
       //Non Probabalistic fractals
-      if (FRAC[current_fractal].name != string("Buddhabrot")) {
+      if (FRAC[current_fractal].probabalistic != true) {
         getImagePixels(R.xstart, R.ystart, R.xdelta, R.ydelta, tix);
         continue;
       }
@@ -450,41 +532,62 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
 
       vector<complex<double>> trail;
 
-      unsigned int red_max_iters = 100000;
-      unsigned int green_max_iters = 10000;
-      unsigned int blue_max_iters = 1000;
+      // unsigned int red_max_iters = 100000;
+      // unsigned int green_max_iters = 10000;
+      // unsigned int blue_max_iters = 1000;
+      unsigned int red_max_iters = FRAC[current_fractal].max_iters[0];
+      unsigned int green_max_iters = FRAC[current_fractal].max_iters[1];
+      unsigned int blue_max_iters = FRAC[current_fractal].max_iters[2];
 
       generate_buddhabrot_trail(sample, red_max_iters, trail,
+                                FRAC[current_fractal].power,
+                                FRAC[current_fractal].zconst,
+                                FRAC[current_fractal].julia,
                                 stats[current_fractal].in_set,
                                 stats[current_fractal].escaped_set);
       saveBuddhabrotTrailToColor(trail, redHits);
       if (0 != trail.size()) {
         sample = complex<double>(sample.real(), -sample.imag());
         generate_buddhabrot_trail(sample, red_max_iters, trail,
+                                  FRAC[current_fractal].power,
+                                  FRAC[current_fractal].zconst,
+                                  FRAC[current_fractal].julia,
                                   stats[current_fractal].in_set,
                                   stats[current_fractal].escaped_set);
         saveBuddhabrotTrailToColor(trail, redHits);
       }
 
       generate_buddhabrot_trail(sample, green_max_iters, trail,
+                                FRAC[current_fractal].power,
+                                FRAC[current_fractal].zconst,
+                                FRAC[current_fractal].julia,
                                 stats[current_fractal].in_set,
                                 stats[current_fractal].escaped_set);
       saveBuddhabrotTrailToColor(trail, greenHits);
       if (0 != trail.size()) {
         sample = complex<double>(sample.real(), -sample.imag());
         generate_buddhabrot_trail(sample, green_max_iters, trail,
+                                  FRAC[current_fractal].power,
+                                  FRAC[current_fractal].zconst,
+                                  FRAC[current_fractal].julia,
                                   stats[current_fractal].in_set,
                                   stats[current_fractal].escaped_set);
         saveBuddhabrotTrailToColor(trail, greenHits);
       }
 
       generate_buddhabrot_trail(sample, blue_max_iters, trail,
+                                FRAC[current_fractal].power,
+                                FRAC[current_fractal].zconst,
+                                FRAC[current_fractal].julia,
                                 stats[current_fractal].in_set,
                                 stats[current_fractal].escaped_set);
       saveBuddhabrotTrailToColor(trail, blueHits);
       if (0 != trail.size()) {
         sample = complex<double>(sample.real(), -sample.imag());
         generate_buddhabrot_trail(sample, blue_max_iters, trail,
+                                  FRAC[current_fractal].power,
+                                  FRAC[current_fractal].zconst,
+                                  FRAC[current_fractal].julia,
                                   stats[current_fractal].in_set,
                                   stats[current_fractal].escaped_set);
         saveBuddhabrotTrailToColor(trail, blueHits);
@@ -604,7 +707,10 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
         int gcolor = 0;
         int bcolor = 0;
         
-        mandelbrot_iterations_to_escape(xi, yj, 1000, &rcolor, &gcolor, &bcolor,
+        mandelbrot_iterations_to_escape(xi, yj, 300, &rcolor, &gcolor, &bcolor,
+                                        FRAC[current_fractal].power,
+                                        FRAC[current_fractal].zconst,
+                                        FRAC[current_fractal].julia,
                                         stats[current_fractal].in_set,
                                         stats[current_fractal].escaped_set);
     
@@ -664,10 +770,12 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
 
     cout << "zoom: " << R.displayed_zoom;
     cout << "  cdims: " << R.current_width << " " << R.current_height << endl;
-    cout << "x range: " << xstart << " -> "
+    cout.precision(17);
+    cout << scientific << " starts: " << R.xstart << " " << R.ystart << endl;
+    cout << "x range: " << scientific << xstart << " -> "
          << xstart + (R.original_width - 1) * xdelta;
     cout << "  y range: " << ystart << " -> "
-         << ystart + (R.original_height - 1) * ydelta << endl;
+         << ystart + (R.original_height - 1) * ydelta << fixed << endl;
   }
 
   // Assumes the user doesnt resize the window to give it different pixels
@@ -699,21 +807,22 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
 
 
     cout << "pan: " << xcenter << " " << ycenter <<endl;
-    cout << "  cdims: " << R.current_width << " " << R.current_height
-         << " starts: " << R.xstart << " " << R.ystart << endl;
-    cout << "x range: " << xstart << " -> "
+    cout << "  cdims: " << R.current_width << " " << R.current_height;
+    cout.precision(17);
+    cout << scientific << " starts: " << R.xstart << " " << R.ystart << endl;
+    cout << "x range: " << scientific << xstart << " -> "
          << xstart + (R.original_width - 1) * xdelta;
     cout << "  y range: " << ystart << " -> "
-         << ystart + (R.original_height - 1) * ydelta << endl;
+         << ystart + (R.original_height - 1) * ydelta << fixed << endl;
   }
 
   void zoomFractal(double newzoom) {
-    if (FRAC[current_fractal].name == string("Buddhabrot")) return;
+    if (FRAC[current_fractal].probabalistic == true) return;
     calculateZoomWindow(newzoom);
   }
 
   void panFractal(double xcenter, double ycenter) {
-    if (FRAC[current_fractal].name == string("Buddhabrot")) return;
+    if (FRAC[current_fractal].probabalistic == true) return;
     calculatePanWindow(xcenter, ycenter);
   }
 
@@ -731,7 +840,7 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
     // counter 2D vector Wait for each thread to generate the trail hits
     // and tell each thread to upload its results into the master trail hits
     // Rebuild the image from the thread updated master trail hits
-    if (FRAC[current_fractal].name == string("Buddhabrot")) {
+    if (FRAC[current_fractal].probabalistic == true) {
       {
         std::lock_guard<std::mutex> guard(thread_result_report_mutex);
         rebuildImageFromHits();  // SetImagePixels
@@ -744,21 +853,22 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
     }
     
 
-    // Update stats in Model to track how effective buddhabrot threads are
+    // Update stats in Model to track how effective fractal threads,cuda are
     auto now = chrono::steady_clock::now();
     unsigned long long samples_now = stats[current_fractal].total;
-    if (now > stats[current_fractal].next_second_start) {
+    if ((now > stats[current_fractal].next_second_start) &&
+        (0 != (samples_now - stats[current_fractal].samples_last_second))) {
       stats[current_fractal].samples_per_second =
           (1000 * (samples_now - stats[current_fractal].samples_last_second)) /
           (1000 + chrono::duration_cast<chrono::milliseconds>(
-                      now - stats[current_fractal].next_second_start)
-                      .count());
+              now - stats[current_fractal].next_second_start)
+           .count());
       stats[current_fractal].next_second_start =
           chrono::steady_clock::now() + std::chrono::milliseconds(1000);
-
+      
       // cout << stats[current_fractal].samples_per_second << " " <<
       // (samples_now - stats[current_fractal].samples_last_second) << endl;
-
+      
       stats[current_fractal].samples_last_second = samples_now;
     }
   }
@@ -827,57 +937,108 @@ void signalFractalMenu(shared_ptr<FractalModel> p_model,
   setGuiElementsFromModel(pgui, p_model);
 }
 
+void signalPower(shared_ptr<FractalModel> p_model,
+                 shared_ptr<tgui::Gui> pgui, const sf::String &value) {
+  updateGuiElements(pgui, p_model);
+
+  double input = 2.0;
+  try {
+    input = std::stod(value.toAnsiString());
+  }
+  catch (const std::invalid_argument &ia) {
+    cout << "Invalid " << ia.what() <<endl;
+    input = 2.0;
+  }
+  FRAC[p_model->current_fractal].power = input;
+  p_model->resetDefaults();
+  setGuiElementsFromModel(pgui, p_model);
+}
+
+void signalZconstr(shared_ptr<FractalModel> p_model,
+                   shared_ptr<tgui::Gui> pgui, const sf::String &value) {
+  updateGuiElements(pgui, p_model);
+
+  double input = 0.0;
+  try {
+    input = std::stod(value.toAnsiString());
+  }
+  catch (const std::invalid_argument &ia) {
+    cout << "Invalid " << ia.what() <<endl;
+    input = 0.0;
+  }
+  FRAC[p_model->current_fractal].zconst = complex<double>(input, FRAC[p_model->current_fractal].zconst.imag());
+  p_model->resetDefaults();
+  setGuiElementsFromModel(pgui, p_model);
+}
+
+void signalZconsti(shared_ptr<FractalModel> p_model,
+                   shared_ptr<tgui::Gui> pgui, const sf::String &value) {
+  updateGuiElements(pgui, p_model);
+
+  double input = 0.0;
+  try {
+    input = std::stod(value.toAnsiString());
+  }
+  catch (const std::invalid_argument &ia) {
+    cout << "Invalid " << ia.what() <<endl;
+    input = 0.0;
+  }
+  FRAC[p_model->current_fractal].zconst = complex<double>(FRAC[p_model->current_fractal].zconst.real(), input);
+  p_model->resetDefaults();
+  setGuiElementsFromModel(pgui, p_model);
+}
+
 // The main GUI elements inside the view
 void createGuiElements(shared_ptr<tgui::Gui> pgui,
                        shared_ptr<FractalModel> &p_model) {
   // Current and Menu Column
   auto current = tgui::Label::create();
-  current->setPosition("parent.left", "parent.bottom - 200");
+  current->setPosition("parent.left", "parent.bottom - 300");
   current->setTextSize(14);
   pgui->add(current, "fractal_label");
 
   current = tgui::Label::create();
-  current->setPosition("parent.left + 150", "parent.bottom - 200");
+  current->setPosition("parent.left + 250", "parent.bottom - 300");
   current->setTextSize(14);
   pgui->add(current, "progress_label");
 
   current = tgui::Label::create();
-  current->setPosition("parent.left", "parent.bottom - 200 + 20");
+  current->setPosition("parent.left", "parent.bottom - 300 + 20");
   current->setTextSize(14);
   pgui->add(current, "secs_label");
 
   current = tgui::Label::create();
-  current->setPosition("parent.left + 150", "parent.bottom - 200 + 20");
+  current->setPosition("parent.left + 150", "parent.bottom - 300 + 20");
   current->setTextSize(14);
   pgui->add(current, "fps_label");
 
   current = tgui::Label::create();
-  current->setPosition("parent.left + 280", "parent.bottom - 200 + 20");
+  current->setPosition("parent.left + 280", "parent.bottom - 300 + 20");
   current->setTextSize(14);
   pgui->add(current, "sps_label");
 
   current = tgui::Label::create();
-  current->setPosition("parent.left + 400", "parent.bottom - 200 + 20");
+  current->setPosition("parent.left + 400", "parent.bottom - 300 + 20");
   current->setTextSize(14);
   pgui->add(current, "threads_label");
 
   current = tgui::Label::create();
-  current->setPosition("parent.left + 500", "parent.bottom - 200 + 20");
+  current->setPosition("parent.left + 500", "parent.bottom - 300 + 20");
   current->setTextSize(14);
   pgui->add(current, "cuda_label");
 
   current = tgui::Label::create();
-  current->setPosition("parent.left", "parent.bottom - 200 + 40");
+  current->setPosition("parent.left", "parent.bottom - 300 + 40");
   current->setTextSize(14);
   pgui->add(current, "boundary_label");
 
   current = tgui::Label::create();
-  current->setPosition("parent.left", "parent.bottom - 200 + 60");
+  current->setPosition("parent.left", "parent.bottom - 300 + 60");
   current->setTextSize(14);
   pgui->add(current, "stats_label");
 
   auto menu = tgui::MenuBar::create();
-  menu->setPosition("parent.left", "parent.bottom - 200 + 80");
+  menu->setPosition("parent.left", "parent.bottom - 300 + 80");
   menu->setSize(200.f, 22.f);
   menu->addMenu("Fractal");
   for (auto frac : FRAC) {
@@ -890,9 +1051,50 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   menu->addMenuItem("Type s to take a screenshot");
   menu->addMenuItem("Type c to turn cuda on and off");
   menu->addMenuItem("Type f for fullscreen toggle (buggy)");
+  menu->addMenuItem("Type e to exit");
 
   pgui->add(menu);
   menu->connect("MenuItemClicked", signalFractalMenu, p_model, pgui);
+
+  //Params column
+  current = tgui::Label::create();
+  current->setPosition("parent.left + 300", "parent.bottom - 150 - 20");
+  current->setTextSize(14);
+  pgui->add(current, "power_label");
+  
+  auto editBox = tgui::EditBox::create();
+  editBox->setSize(100, 20);
+  editBox->setTextSize(14);
+  editBox->setPosition("parent.left + 300", "parent.bottom - 150");
+  editBox->setDefaultText("2");
+  pgui->add(editBox, "power_box");
+  editBox->connect("TextChanged", signalPower, p_model, pgui);
+
+
+  current = tgui::Label::create();
+  current->setPosition("parent.left + 300", "parent.bottom - 100 - 20");
+  current->setTextSize(14);
+  pgui->add(current, "zconst_label");
+  
+  editBox = tgui::EditBox::create();
+  editBox->setSize(100, 20);
+  editBox->setTextSize(14);
+  editBox->setPosition("parent.left + 300", "parent.bottom - 100");
+  editBox->setDefaultText("0");
+  pgui->add(editBox, "zconst_real_box");
+  editBox->connect("TextChanged", signalZconstr, p_model, pgui);
+
+  editBox = tgui::EditBox::create();
+  editBox->setSize(100, 20);
+  editBox->setTextSize(14);
+  editBox->setPosition("parent.left + 300 + 120", "parent.bottom - 100");
+  editBox->setDefaultText("0");
+  pgui->add(editBox, "zconst_imag_box");
+  editBox->connect("TextChanged", signalZconsti, p_model, pgui);
+
+
+
+  
 }
 
 // When model changes resulting in gui changes
@@ -941,22 +1143,14 @@ void updateCurrentGuiElements(shared_ptr<tgui::Gui> &pgui,
   else
     current->setText("Cuda Off");
 
-  double minx = FRAC[p_model->current_fractal].xMinMax[0];
-  double maxx = FRAC[p_model->current_fractal].xMinMax[1];
-  double miny = FRAC[p_model->current_fractal].yMinMax[0];
-  double maxy = FRAC[p_model->current_fractal].yMinMax[1];
   current = pgui->get<tgui::Label>("boundary_label");
   current->setText(
       "Boundary: [" +
-      to_string(R.xstart * (maxx - minx) / R.original_width + minx) + "->" +
-      to_string((R.xstart + R.current_width) * (maxx - minx) /
-                    R.original_width +
-                minx) +
-      "]/[" + to_string(R.ystart * (maxy - miny) / R.original_height + miny) +
+      to_string(R.xstart) + "->" +
+      to_string(R.xstart + (R.original_width) * R.xdelta) +
+      "]/[" + to_string(R.ystart) +
       "->" +
-      to_string((R.ystart + R.current_height) * (maxy - miny) /
-                    R.original_height +
-                miny) +
+      to_string(R.ystart + (R.original_height) * R.ydelta) +
       "]");
 
   current = pgui->get<tgui::Label>("stats_label");
@@ -974,6 +1168,15 @@ void updateCurrentGuiElements(shared_ptr<tgui::Gui> &pgui,
                     p_model->stats[p_model->current_fractal].in_set +
                     p_model->stats[p_model->current_fractal].escaped_set))) +
       "\% total");
+
+  //Params column
+  current = pgui->get<tgui::Label>("power_label");
+  current->setText("Power: " + to_string(FRAC[p_model->current_fractal].power));
+
+  current = pgui->get<tgui::Label>("zconst_label");
+  current->setText("zconst: " + to_string(FRAC[p_model->current_fractal].zconst.real()) + " i*" +
+                   to_string(FRAC[p_model->current_fractal].zconst.imag()));
+  
 }
 
 void display_all_widgets(shared_ptr<tgui::Gui> &pgui, bool maybe) {
@@ -991,7 +1194,7 @@ double get_new_zoom(sf::View &view, int delta) {
     // zoom in
     R.requested_zoom = R.requested_zoom * 0.90;
     // cout << "zoom: " << current_zoom << endl;
-    if (R.requested_zoom < 0.00001) {
+    if (R.requested_zoom < 0.000000001) {
       R.requested_zoom = 1.0;
     }
   } else {
@@ -1032,7 +1235,7 @@ int main(int argc, char **argv) {
 
   sf::Vector2u screenDimensions(IMAGE_WIDTH, IMAGE_HEIGHT);
   sf::RenderWindow window(sf::VideoMode(screenDimensions.x, screenDimensions.y),
-                          "Fractals!", sf::Style::Default);
+                          "Fractals!", sf::Style::Fullscreen);
   window.setKeyRepeatEnabled(false);
 
   // // Display the list of all the video modes available for fullscreen
@@ -1141,6 +1344,13 @@ int main(int argc, char **argv) {
       if (event.type == sf::Event::KeyPressed) {
         if (event.key.code == sf::Keyboard::S) {
           save_screenshot(window, FRAC[p_model->current_fractal].name);
+        }
+      }
+
+      if (event.type == sf::Event::KeyPressed) {
+        if (event.key.code == sf::Keyboard::E) {
+          window.close();
+	  break;
         }
       }
 

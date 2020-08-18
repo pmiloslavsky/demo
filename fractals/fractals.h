@@ -2,13 +2,18 @@
 #include <chrono>
 #include <string>
 #include <vector>
+#include <complex>
 struct SupportedFractal {
   std::string name;
-  bool cuda_mode; 
+  bool cuda_mode;
+  bool probabalistic; //i.e. like buddha - affects thread model
+  bool julia;
   std::vector<double> xMinMax;  // x min max
   std::vector<double> yMinMax;  // y min max
   unsigned int color_scheme; //not yet used
-  std::vector<unsigned int> max_iters; //not yet used
+  std::vector<unsigned int> max_iters;
+  double power;
+  std::complex<double> zconst;
 };
 
 struct SampleStats {

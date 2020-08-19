@@ -16,6 +16,8 @@
 #include "buddha_cuda_kernel.h"
 #include "fractals.h"
 
+// #include "tinycolormap.hpp"
+
 // TODO
 // More fractals:
 //  Mandlebrot
@@ -23,9 +25,12 @@
 //  Mandelbrot with Power parameter
 //  Julia with power parameter and start parameter
 //  Buddhabrot (one color)
-//  Buddha with power
+//  Buddha with power (non cuda)
+//  Nebulabrot cuda
+//  Spiral Septagon
 // Mandelbrot coloring improvements
-// Dont redraw non buddha if there has been no change to fractal
+//  Work on smooth coloring and colormaps more
+// Select box with left mouse and display fractal inside box
 
 using namespace std;
 
@@ -139,6 +144,17 @@ vector<SupportedFractal> FRAC = {
      2,
      complex<double>{-0.79,0.15}
     },
+    {string("Spiral Septagon"),
+     false,
+     false,
+     false,
+     {-2.6, 2.6},
+     {-1.4, 1.4},
+     0, //colormap
+     {256, 128, 32},
+     7,
+     complex<double>{0,0}
+    },
     {string("Buddhabrot"),  // not going to be zoomable and pannable
      true,
      true,
@@ -197,6 +213,78 @@ void mandelbrot_iterations_to_escape(double x, double y, unsigned int iters_max,
     else
       z = pow(z,power) + point;
     //z = z*z + point;
+    iter_ix++;
+  }
+
+  if (iter_ix < iters_max)
+    ++out;
+  else
+    ++in;
+
+  if (iter_ix < iters_max){
+    //    return (255 * iter_ix) / (iters_max - 1);
+    //  smooth coloring ????    mu = N + 1 - log (log  |Z(N)|) / log 2
+    //double smooth = ((iter_ix + 1 - log(log2(abs(z))))/iters_max; //0 -> 1
+    
+    // *p_rcolor = (255*iter_ix) / (iters_max);
+    // *p_gcolor = 255 - (255*iter_ix) / (iters_max);
+    // *p_bcolor = clamp(128 + (255*iter_ix) / (iters_max),(unsigned int)0,(unsigned int)255);
+
+    //Ultra Fractal Default
+    int i = iter_ix % 16;
+    vector<vector<int>> mapping(16, std::vector<int>(3));
+    mapping[0] = {66, 30, 15};
+    mapping[1] = {25, 7, 26};
+    mapping[2] = {9, 1, 47};
+    mapping[3] = {4, 4, 73};
+    mapping[4] = {0, 7, 100};
+    mapping[5] = {12, 44, 138};
+    mapping[6] = {24, 82, 177};
+    mapping[7] = {57, 125, 209};
+    mapping[8] = {134, 181, 229};
+    mapping[9] = {211, 236, 248};
+    mapping[10] = {241, 233, 191};
+    mapping[11] = {248, 201, 95};
+    mapping[12] = {255, 170, 0};
+    mapping[13] = {204, 128, 0};
+    mapping[14] = {153, 87, 0};
+    mapping[15] = {106, 52, 3};
+
+    //non smooth
+    *p_rcolor = mapping[i][0];
+    *p_gcolor = mapping[i][1];
+    *p_bcolor = mapping[i][2];
+
+    //smooth
+    // double smooth = ((iter_ix + 1 - log(log2(abs(z))))); //0 -> im
+
+    // const tinycolormap::Color color = tinycolormap::GetColor(smooth/iters_max, tinycolormap::ColormapType::Viridis);
+
+    // *p_rcolor = 255*color.r();
+    // *p_gcolor = 255*color.g();
+    // *p_bcolor = 255*color.b();
+
+
+  }
+  else  // set interior set color
+  {
+    if (p_rcolor != 0) *p_rcolor = 0;
+    if (p_gcolor != 0) *p_gcolor = 0;
+    if (p_bcolor != 0) *p_bcolor = 0;
+  }
+}
+
+void spiral_septagon_iterations_to_escape(double x, double y, unsigned int iters_max,
+					  int *p_rcolor, int *p_gcolor, int *p_bcolor,
+					  double power, complex<double> zconst, bool julia,
+					  unsigned long long &in,
+					  unsigned long long &out) {
+  complex<double> point(x, y);
+  complex<double> z(x, y);
+  unsigned int iter_ix = 0;
+  
+  while (abs(z) < 40 && iter_ix <= iters_max) {
+    z = (pow(z,7) - (0.7/5))/z;
     iter_ix++;
   }
 
@@ -351,12 +439,14 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
   
 
   // thread pool is currently started outside the model
-  void fractal_thread(int tix, std::future<void> terminate) {
+  void fractal_thread(int tix, std::future<void> terminate, bool * p_reset) {
     cout << "fractal thread running: " << tix << endl;
 
     vector<vector<unsigned long long>> redHits;
     vector<vector<unsigned long long>> greenHits;
     vector<vector<unsigned long long>> blueHits;
+
+    bool reset_detected = false;
 
     redHits.resize(IMAGE_WIDTH);
     for (auto &v : redHits) v.resize(IMAGE_HEIGHT);
@@ -368,8 +458,9 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
     while (1) {
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-      // see if we should terminate
-      if (terminate.wait_for(std::chrono::nanoseconds(1)) !=
+      // see if we should terminate - since we're exiting anyway dont bother to pass
+      // it into the threads
+      if (terminate.wait_for(std::chrono::nanoseconds(0)) !=
           std::future_status::timeout) {
         std::cout << "Terminate thread requested: " << tix << std::endl;
         break;
@@ -379,7 +470,13 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
 
       //Non Probabalistic fractals
       if (FRAC[current_fractal].probabalistic != true) {
-        getImagePixels(R.xstart, R.ystart, R.xdelta, R.ydelta, tix);
+        reset_detected = getImagePixels(R.xstart, R.ystart, R.xdelta, R.ydelta, tix, p_reset);
+        if (reset_detected == true)
+        {
+          reset_detected = false;
+          //Clear any data generated so far
+          for (auto &v : color) v.clear();
+        }
         continue;
       }
 
@@ -410,7 +507,17 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
       } else {
         // threaded version of generate hits (we take advantage of being inside
         // model object)
-        generateMoreTrailHits(redHits, greenHits, blueHits);
+        reset_detected = generateMoreTrailHits(redHits, greenHits, blueHits, &p_reset[tix]);
+      }
+
+      if (reset_detected == true)
+      {
+        reset_detected = false;
+        //Clear any data generated so far
+        for (auto &v : redHits) v.clear();
+        for (auto &v : greenHits) v.clear();
+        for (auto &v : blueHits) v.clear();
+        continue; //dont merge fractal per thread trails
       }
 
       // auto end = chrono::high_resolution_clock::now();
@@ -498,9 +605,11 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
     return false;
   }
 
-  void generateMoreTrailHits(vector<vector<unsigned long long>> &redHits,
+  bool generateMoreTrailHits(vector<vector<unsigned long long>> &redHits,
                              vector<vector<unsigned long long>> &greenHits,
-                             vector<vector<unsigned long long>> &blueHits) {
+                             vector<vector<unsigned long long>> &blueHits,
+                             bool * p_reset) {
+    bool reset_detected = false;
     std::random_device rd;
     static std::mt19937_64 re(rd());
     uniform_real_distribution<double> xDistribution(
@@ -516,6 +625,14 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
       // Random pixels
       complex<double> sample(xDistribution(re), yDistribution(re));
       stats[current_fractal].total++;  // not atomic....
+
+      // see if we should reset
+      if (*p_reset == true) {
+        *p_reset = false;
+        //std::cout << "Reset hits thread requested: " << std::endl;
+        reset_detected = true;
+        break;
+      }
 
       if (true == skipInSet(sample)) {
         stats[current_fractal].rejected++;  // not atomic....
@@ -593,6 +710,7 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
         saveBuddhabrotTrailToColor(trail, blueHits);
       }
     }
+    return reset_detected;
   }
 
   // each thread does this under mutex
@@ -688,17 +806,28 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
     // sprite.rotate(90.f);
   }
 
-  void getImagePixels(double xstart, double ystart, double xdelta,
-                      double ydelta, unsigned int tix) {
+  bool getImagePixels(double xstart, double ystart, double xdelta,
+                      double ydelta, unsigned int tix, bool * p_reset) {
+    bool reset_detected = false;
+
     //Subdivide x range by tix and num_threads
     unsigned int xrange = R.original_width / num_threads;
     unsigned int xs = tix*xrange;
     unsigned int xe = (tix+1)*xrange;
     if (tix == num_threads - 1)
       xe = R.original_width;
+
     
     for (unsigned int i = xs; i < xe; i++) {
       for (unsigned int j = 0; j < R.original_height; j++) {
+        // see if we should reset
+        if (p_reset[tix] == true) {
+          p_reset[tix] = false;
+          //std::cout << "Reset thread requested: " << tix << std::endl;
+          reset_detected = true;
+          break;
+        }
+        
         double xi = xstart + i * xdelta;
         double yj = ystart + j * ydelta;
         stats[current_fractal].total++;
@@ -706,18 +835,31 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
         int rcolor = 0;
         int gcolor = 0;
         int bcolor = 0;
-        
-        mandelbrot_iterations_to_escape(xi, yj, 300, &rcolor, &gcolor, &bcolor,
-                                        FRAC[current_fractal].power,
-                                        FRAC[current_fractal].zconst,
-                                        FRAC[current_fractal].julia,
-                                        stats[current_fractal].in_set,
-                                        stats[current_fractal].escaped_set);
+
+	if (FRAC[current_fractal].name  == string("Spiral Septagon"))
+	  spiral_septagon_iterations_to_escape(xi, yj, 300, &rcolor, &gcolor, &bcolor,
+					       FRAC[current_fractal].power,
+					       FRAC[current_fractal].zconst,
+					       FRAC[current_fractal].julia,
+					       stats[current_fractal].in_set,
+					       stats[current_fractal].escaped_set);
+	else
+	  mandelbrot_iterations_to_escape(xi, yj, 300, &rcolor, &gcolor, &bcolor,
+					  FRAC[current_fractal].power,
+					  FRAC[current_fractal].zconst,
+					  FRAC[current_fractal].julia,
+					  stats[current_fractal].in_set,
+					  stats[current_fractal].escaped_set);
     
         color[i][j] = sf::Color(rcolor, gcolor, bcolor);
       }
+
+      if (reset_detected == true)
+        break;
     }
     hitsums = R.original_width * R.original_height;
+
+    return reset_detected;
   }
 
   void setImagePixels(double xstart, double ystart, double xdelta,
@@ -827,19 +969,7 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
   }
 
   void update(sf::Time elapsed) {
-    // Non Threaded Version
-    // if (FRAC[current_fractal].name == string("Buddhabrot")) {
-    //   generateMoreTrailHits(redTrailHits,
-    //                         greenTrailHits,
-    //                         blueTrailHits);
-    //   rebuildImageFromHits();  // SetImagePixels
-    // }
-
-    // Threaded Version:
-    // Tell each spawned thread to generate more trail hits in its own trail hit
-    // counter 2D vector Wait for each thread to generate the trail hits
-    // and tell each thread to upload its results into the master trail hits
-    // Rebuild the image from the thread updated master trail hits
+    //draw image from latest data
     if (FRAC[current_fractal].probabalistic == true) {
       {
         std::lock_guard<std::mutex> guard(thread_result_report_mutex);
@@ -1174,8 +1304,8 @@ void updateCurrentGuiElements(shared_ptr<tgui::Gui> &pgui,
   current->setText("Power: " + to_string(FRAC[p_model->current_fractal].power));
 
   current = pgui->get<tgui::Label>("zconst_label");
-  current->setText("zconst: " + to_string(FRAC[p_model->current_fractal].zconst.real()) + " i*" +
-                   to_string(FRAC[p_model->current_fractal].zconst.imag()));
+  current->setText("zconst: " + to_string(FRAC[p_model->current_fractal].zconst.real()) + " " +
+                   to_string(FRAC[p_model->current_fractal].zconst.imag()) + "*i");
   
 }
 
@@ -1296,6 +1426,11 @@ int main(int argc, char **argv) {
   thread threads[num_threads];
   std::promise<void> terminateThreadSignal[num_threads];
 
+  //funilly enough we dont need the complex C++ thread sync primitives
+  //this is to prevent unnecessary calculation when we request 2 zooms in a row quickly
+  bool thread_asked_to_reset[num_threads]; 
+  
+
   // start up thread pool
   // thread:
   // input: thread id, p_model, mutex to report results, future object for
@@ -1304,7 +1439,7 @@ int main(int argc, char **argv) {
     std::future<void> futureObj = terminateThreadSignal[tix].get_future();
 
     threads[tix] = thread(&FractalModel::fractal_thread, p_model, tix,
-                          std::move(futureObj));
+                          std::move(futureObj), &thread_asked_to_reset[0]);
   }
 
   // Create the gui and attach it to the window
@@ -1382,6 +1517,7 @@ int main(int argc, char **argv) {
               get_new_zoom(modelview, event.mouseWheelScroll.delta);
           cout << "New zoom: " << newzoom << endl;
           p_model->zoomFractal(newzoom);
+          for (unsigned int tix = 0; tix < num_threads; ++tix) {thread_asked_to_reset[tix] = true;}
         }
       }
 
@@ -1392,6 +1528,7 @@ int main(int argc, char **argv) {
           cout << "x: " << event.mouseButton.x;
           cout << " y: " << event.mouseButton.y << endl;
           p_model->panFractal(event.mouseButton.x, event.mouseButton.y);
+          for (unsigned int tix = 0; tix < num_threads; ++tix) {thread_asked_to_reset[tix] = true;}
         }
       }
 
@@ -1402,7 +1539,7 @@ int main(int argc, char **argv) {
 
     // Evolve the model independantly
     sf::Time elapsed = clock_e.restart();
-    p_model->update(elapsed);  // get more buddhabrot trails
+    p_model->update(elapsed);  // rebuild the pixels from what threads did in background
 
     // Draw the GUI and the MODEL both of which are controlled by
     // Keyboard, mouse, and gui elements
@@ -1422,6 +1559,8 @@ int main(int argc, char **argv) {
   // terminate threads in thread pool
   for (unsigned int tix = 0; tix < num_threads; ++tix) {
     terminateThreadSignal[tix].set_value();
+    //to make it check for terminate
+    for (unsigned int tix = 0; tix < num_threads; ++tix) {thread_asked_to_reset[tix] = true;} 
     threads[tix].join();
   }
 

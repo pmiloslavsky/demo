@@ -42,7 +42,7 @@ On my AMD 16 core machine, the full 16 threads on all cores version is about twi
 CUDA programming is very finicky and there is probably lots of room for improvement.
 Nevertheless, its a massive improvement over one AMD thread doing the work.
 <p align="center">
-<img src="fractals/interface_fractal.png" width="600" height="266">
+<img src="fractals/interface_fractal.png" width="800" height="266">
 <img src="fractals/nebulabrot.png" width="400" height="266">
 <img src="fractals/mandelbrot.png" width="400" height="266">
 <img src="fractals/julia.png" width="400" height="266">

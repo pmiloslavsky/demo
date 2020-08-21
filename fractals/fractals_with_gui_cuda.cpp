@@ -16,7 +16,7 @@
 #include "buddha_cuda_kernel.h"
 #include "fractals.h"
 
-// #include "tinycolormap.hpp"
+#include "tinycolormap.hpp"
 
 // TODO
 // More fractals:
@@ -30,7 +30,6 @@
 //  Spiral Septagon
 // Mandelbrot coloring improvements
 //  Work on smooth coloring and colormaps more
-// Select box with left mouse and display fractal inside box
 
 using namespace std;
 
@@ -69,7 +68,18 @@ const int IMAGE_HEIGHT = 1600;
 // const int IMAGE_WIDTH = 1600;
 // const int IMAGE_HEIGHT = 1200;
 
-// The zoom and rotation and panning of the fractal (mandelbrot only so far)
+// The zoom and rotation and panning and color of the fractal
+
+enum class ColoringAlgo
+{
+  MULTICYCLE, SMOOTH
+};
+
+enum class ColorCycle
+{
+  CC8, CC16, CC32, CC64, CC128, CC256
+};
+
 class ReferenceFrame {
  public:
   // x-y rotation angle
@@ -87,6 +97,17 @@ class ReferenceFrame {
   // Zoom Level
   double displayed_zoom;
   double requested_zoom;
+  
+  bool show_selection;
+
+  //Color
+  ColoringAlgo color_algo;
+  int color_cycle_size;
+  vector<string> color_cycle_size_names{string("8"), string("16"), string("32"), string("64"), string("128"), string("256")};
+
+  tinycolormap::ColormapType palette;
+  vector<string> color_names{string("Parula"), string("Heat"), string("Jet"), string("Hot"), string("Gray"), string("Magma"),
+  string("Inferno"), string("Plasma"), string("Viridis"), string("Cividis"), string("Github"), string("UF16")};
 
   // Original total Pixels
   double original_width;
@@ -111,26 +132,24 @@ ReferenceFrame R(0, 1.0);
 // };
 
 vector<SupportedFractal> FRAC = {
-    {string("Mandelbrot"),
+    {string("Mandelbrot 300"),
      false,
      false,
      false, //julia
-     {-2.2, 1.0},
-     {-1.2, 1.2},
-     0, //colormap
-     {256, 128, 32},
+     {-2.50, 1.5},
+     {-1.4, 1.4},
+     {300, 0, 0},
      2,
      complex<double>{0,0}
     },
-    {string("Mandelbrot Pow"),
+    {string("Mandelbrot 1000"),
      false,
      false,
      false,
-     {-2.2, 1.0},
-     {-1.2, 1.2},
-     0,
-     {256, 128, 32},
-     3,
+     {-2.5, 1.5},
+     {-1.4, 1.4},
+     {1000, 0, 0},
+     2,
      complex<double>{0,0}
     },
     {string("Julia Pow,Start"),
@@ -139,8 +158,7 @@ vector<SupportedFractal> FRAC = {
      true, //julia
      {-2.2, 2.2},
      {-1.2, 1.2},
-     0,
-     {256, 128, 32},
+     {300, 0, 0},
      2,
      complex<double>{-0.79,0.15}
     },
@@ -148,10 +166,9 @@ vector<SupportedFractal> FRAC = {
      false,
      false,
      false,
-     {-2.6, 2.6},
+     {-2.2, 2.2},
      {-1.4, 1.4},
-     0, //colormap
-     {256, 128, 32},
+     {300, 0, 0},
      7,
      complex<double>{0,0}
     },
@@ -161,7 +178,6 @@ vector<SupportedFractal> FRAC = {
      false,
      {-2.2, 1.0},
      {-1.2, 1.2},
-     0,
      {10000, 1000, 100},
      2,
      complex<double>{0,0}
@@ -172,7 +188,6 @@ vector<SupportedFractal> FRAC = {
      false,
      {-2.2, 1.0},
      {-1.2, 1.2},
-     0,
      {10000, 10000, 10000},
      2,
      complex<double>{0,0}
@@ -194,6 +209,90 @@ vector<SupportedFractal> FRAC = {
 //   std::chrono::time_point<chrono::steady_clock> next_second_start;
 //   unsigned long long samples_last_second;
 // };
+
+__inline__ void get_iteration_color(const int iter_ix, const int iters_max, const complex<double> & zfinal,
+                                    int *p_rcolor, int *p_gcolor, int *p_bcolor) {
+
+  //palette: UF16, Viridis, Plasma, Jet, Hot, Heat, Parula, Gray, Cividis, Github, UF16(added)
+  //cycle_size: 8,16,32,64,128,256
+  //color_algo: Smooth, MultiCycle
+
+  if (R.palette == tinycolormap::ColormapType::UF16)
+  {
+    //Ultra Fractal Default non smooth
+    int i = iter_ix % 16;
+    vector<vector<int>> mapping(16, std::vector<int>(3));
+    mapping[0] = {66, 30, 15};
+    mapping[1] = {25, 7, 26};
+    mapping[2] = {9, 1, 47};
+    mapping[3] = {4, 4, 73};
+    mapping[4] = {0, 7, 100};
+    mapping[5] = {12, 44, 138};
+    mapping[6] = {24, 82, 177};
+    mapping[7] = {57, 125, 209};
+    mapping[8] = {134, 181, 229};
+    mapping[9] = {211, 236, 248};
+    mapping[10] = {241, 233, 191};
+    mapping[11] = {248, 201, 95};
+    mapping[12] = {255, 170, 0};
+    mapping[13] = {204, 128, 0};
+    mapping[14] = {153, 87, 0};
+    mapping[15] = {106, 52, 3};
+
+    *p_rcolor = mapping[i][0];
+    *p_gcolor = mapping[i][1];
+    *p_bcolor = mapping[i][2];
+    return;
+  }
+
+  //Using tinycolormap
+  
+  if (R.color_algo == ColoringAlgo::MULTICYCLE)
+  {    
+    //colormap non smooth
+    int i = iter_ix % R.color_cycle_size;
+   
+    const tinycolormap::Color color = tinycolormap::GetColor(i/static_cast<double>(R.color_cycle_size), R.palette);
+
+    *p_rcolor = 255*color.r();
+    *p_gcolor = 255*color.g();
+    *p_bcolor = 255*color.b();
+  }
+  else if (R.color_algo == ColoringAlgo::SMOOTH)
+  {
+    double smooth = ((iter_ix + 1 - log(log2(abs(zfinal))))); //0 -> iters_max
+
+    const tinycolormap::Color color = tinycolormap::GetColor(smooth/iters_max, R.palette);
+
+    *p_rcolor = 255*color.r();
+    *p_gcolor = 255*color.g();
+    *p_bcolor = 255*color.b();
+  }
+  return;
+  
+  //smooth but use chunked colormap
+  // double smooth = ((iter_ix + 1 - log(log2(abs(z))))); //0 -> iters_max
+  
+  // //colormap portions - chunk colormap into 32
+  // double chunked_smooth = std::round(smooth * 8.0)/8.0;
+  
+  // const tinycolormap::Color color = tinycolormap::GetColor(chunked_smooth/static_cast<double>(iters_max), tinycolormap::ColormapType::Viridis);
+  
+  // *p_rcolor = 255*color.r();
+  // *p_gcolor = 255*color.g();
+  // *p_bcolor = 255*color.b();
+  
+  //Basic coloring:
+  //    return (255 * iter_ix) / (iters_max - 1);
+  //  smooth coloring ????    mu = N + 1 - log (log  |Z(N)|) / log 2
+  //double smooth = ((iter_ix + 1 - log(log2(abs(z))))/iters_max; //0 -> 1
+  
+  // *p_rcolor = (255*iter_ix) / (iters_max);
+  // *p_gcolor = 255 - (255*iter_ix) / (iters_max);
+  // *p_bcolor = clamp(128 + (255*iter_ix) / (iters_max),(unsigned int)0,(unsigned int)255);
+  
+}
+
 
 void mandelbrot_iterations_to_escape(double x, double y, unsigned int iters_max,
                                      int *p_rcolor, int *p_gcolor, int *p_bcolor,
@@ -222,49 +321,7 @@ void mandelbrot_iterations_to_escape(double x, double y, unsigned int iters_max,
     ++in;
 
   if (iter_ix < iters_max){
-    //    return (255 * iter_ix) / (iters_max - 1);
-    //  smooth coloring ????    mu = N + 1 - log (log  |Z(N)|) / log 2
-    //double smooth = ((iter_ix + 1 - log(log2(abs(z))))/iters_max; //0 -> 1
-    
-    // *p_rcolor = (255*iter_ix) / (iters_max);
-    // *p_gcolor = 255 - (255*iter_ix) / (iters_max);
-    // *p_bcolor = clamp(128 + (255*iter_ix) / (iters_max),(unsigned int)0,(unsigned int)255);
-
-    //Ultra Fractal Default
-    int i = iter_ix % 16;
-    vector<vector<int>> mapping(16, std::vector<int>(3));
-    mapping[0] = {66, 30, 15};
-    mapping[1] = {25, 7, 26};
-    mapping[2] = {9, 1, 47};
-    mapping[3] = {4, 4, 73};
-    mapping[4] = {0, 7, 100};
-    mapping[5] = {12, 44, 138};
-    mapping[6] = {24, 82, 177};
-    mapping[7] = {57, 125, 209};
-    mapping[8] = {134, 181, 229};
-    mapping[9] = {211, 236, 248};
-    mapping[10] = {241, 233, 191};
-    mapping[11] = {248, 201, 95};
-    mapping[12] = {255, 170, 0};
-    mapping[13] = {204, 128, 0};
-    mapping[14] = {153, 87, 0};
-    mapping[15] = {106, 52, 3};
-
-    //non smooth
-    *p_rcolor = mapping[i][0];
-    *p_gcolor = mapping[i][1];
-    *p_bcolor = mapping[i][2];
-
-    //smooth
-    // double smooth = ((iter_ix + 1 - log(log2(abs(z))))); //0 -> im
-
-    // const tinycolormap::Color color = tinycolormap::GetColor(smooth/iters_max, tinycolormap::ColormapType::Viridis);
-
-    // *p_rcolor = 255*color.r();
-    // *p_gcolor = 255*color.g();
-    // *p_bcolor = 255*color.b();
-
-
+    get_iteration_color(iter_ix, iters_max, z, p_rcolor, p_gcolor, p_bcolor);
   }
   else  // set interior set color
   {
@@ -284,7 +341,7 @@ void spiral_septagon_iterations_to_escape(double x, double y, unsigned int iters
   unsigned int iter_ix = 0;
   
   while (abs(z) < 40 && iter_ix <= iters_max) {
-    z = (pow(z,7) - (0.7/5))/z;
+    z = (pow(z,power) - (0.7/5))/z;
     iter_ix++;
   }
 
@@ -293,38 +350,8 @@ void spiral_septagon_iterations_to_escape(double x, double y, unsigned int iters
   else
     ++in;
 
-  if (iter_ix < iters_max){
-    //    return (255 * iter_ix) / (iters_max - 1);
-    //  smooth coloring ????    mu = N + 1 - log (log  |Z(N)|) / log 2
-
-    // *p_rcolor = (255*iter_ix) / (iters_max);
-    // *p_gcolor = 255 - (255*iter_ix) / (iters_max);
-    // *p_bcolor = clamp(128 + (255*iter_ix) / (iters_max),(unsigned int)0,(unsigned int)255);
-
-    //Ultra Fractal Default
-    int i = iter_ix % 16;
-    vector<vector<int>> mapping(16, std::vector<int>(3));
-    mapping[0] = {66, 30, 15};
-    mapping[1] = {25, 7, 26};
-    mapping[2] = {9, 1, 47};
-    mapping[3] = {4, 4, 73};
-    mapping[4] = {0, 7, 100};
-    mapping[5] = {12, 44, 138};
-    mapping[6] = {24, 82, 177};
-    mapping[7] = {57, 125, 209};
-    mapping[8] = {134, 181, 229};
-    mapping[9] = {211, 236, 248};
-    mapping[10] = {241, 233, 191};
-    mapping[11] = {248, 201, 95};
-    mapping[12] = {255, 170, 0};
-    mapping[13] = {204, 128, 0};
-    mapping[14] = {153, 87, 0};
-    mapping[15] = {106, 52, 3};
-
-    *p_rcolor = mapping[i][0];
-    *p_gcolor = mapping[i][1];
-    *p_bcolor = mapping[i][2];
-    
+  if (iter_ix < iters_max) {
+    get_iteration_color(iter_ix, iters_max, z, p_rcolor, p_gcolor, p_bcolor);
   }
   else  // set interior set color
   {
@@ -417,6 +444,7 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
     R.ystart = FRAC[current_fractal].yMinMax[0];
     R.current_height = R.original_height;
     R.current_width = R.original_width;
+    R.show_selection = false; //mouse click on menu is not a selection
     hitsums = 0;
     maxred = 0;
     maxgreen = 0;
@@ -837,14 +865,16 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
         int bcolor = 0;
 
 	if (FRAC[current_fractal].name  == string("Spiral Septagon"))
-	  spiral_septagon_iterations_to_escape(xi, yj, 300, &rcolor, &gcolor, &bcolor,
+	  spiral_septagon_iterations_to_escape(xi, yj, FRAC[current_fractal].max_iters[0],
+                                               &rcolor, &gcolor, &bcolor,
 					       FRAC[current_fractal].power,
 					       FRAC[current_fractal].zconst,
 					       FRAC[current_fractal].julia,
 					       stats[current_fractal].in_set,
 					       stats[current_fractal].escaped_set);
 	else
-	  mandelbrot_iterations_to_escape(xi, yj, 300, &rcolor, &gcolor, &bcolor,
+	  mandelbrot_iterations_to_escape(xi, yj, FRAC[current_fractal].max_iters[0],
+                                          &rcolor, &gcolor, &bcolor,
 					  FRAC[current_fractal].power,
 					  FRAC[current_fractal].zconst,
 					  FRAC[current_fractal].julia,
@@ -1118,6 +1148,14 @@ void signalZconsti(shared_ptr<FractalModel> p_model,
   setGuiElementsFromModel(pgui, p_model);
 }
 
+void signalColorBox(const int selected) {
+  R.palette = static_cast<tinycolormap::ColormapType>(selected);  
+}
+
+void signalColorCycleBox(const int selected) {
+  R.color_cycle_size = 8*pow(2,selected);  
+}
+
 // The main GUI elements inside the view
 void createGuiElements(shared_ptr<tgui::Gui> pgui,
                        shared_ptr<FractalModel> &p_model) {
@@ -1177,6 +1215,7 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   menu->addMenu("Help");
   menu->addMenuItem("Use mouse wheel to zoom (some fractals)");
   menu->addMenuItem("Use right mouse button to recenter (some fractals)");
+  menu->addMenuItem("Hold and drag left mouse button to zoom to cropped area (some fractals)");
   menu->addMenuItem("Type h to hide/show gui");
   menu->addMenuItem("Type s to take a screenshot");
   menu->addMenuItem("Type c to turn cuda on and off");
@@ -1222,7 +1261,26 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   pgui->add(editBox, "zconst_imag_box");
   editBox->connect("TextChanged", signalZconsti, p_model, pgui);
 
+  //Palette Column
+  auto lbox = tgui::ListBox::create();
+  lbox->setPosition("parent.left + 700", "parent.bottom - 300");
+  lbox->setSize(100.f, 250.f);
+  for (auto e : R.color_names) {
+    lbox->addItem(e);
+  }
 
+  pgui->add(lbox, "ColorBox");
+  lbox->connect("ItemSelected", signalColorBox);
+
+  lbox = tgui::ListBox::create();
+  lbox->setPosition("parent.left + 800", "parent.bottom - 300");
+  lbox->setSize(60.f, 130.f);
+  for (auto e : R.color_cycle_size_names) {
+    lbox->addItem(e);
+  }
+
+  pgui->add(lbox, "CycleBox");
+  lbox->connect("ItemSelected", signalColorCycleBox);
 
   
 }
@@ -1394,6 +1452,11 @@ int main(int argc, char **argv) {
   R.current_width = screenDimensions.x;
   R.original_height = screenDimensions.y;
   R.original_width = screenDimensions.x;
+
+  R.color_cycle_size = 32;
+  R.palette = tinycolormap::ColormapType::UF16;// tinycolormap::ColormapType::Viridis; tinycolormap::ColormapType::UF16
+  R.color_algo = ColoringAlgo::MULTICYCLE;
+  
   modelview.setCenter(screenDimensions.x / 2.0, screenDimensions.y / 2.0);
   window.setView(modelview);
 
@@ -1449,6 +1512,14 @@ int main(int argc, char **argv) {
   tgui::Theme::setDefault(&theme);
   createGuiElements(pgui, p_model);
   updateGuiElements(pgui, p_model);
+
+  //Track attempted crops with mouse
+  int crop_start_x=0;
+  int crop_start_y=0;
+  int crop_end_x=0;
+  int crop_end_y=0;
+  sf::RectangleShape selection(sf::Vector2f(0,0));
+  R.show_selection = false;
 
   // create a clock to track the elapsed time
   sf::Clock clock_s;  // start
@@ -1521,7 +1592,7 @@ int main(int argc, char **argv) {
         }
       }
 
-      // record center
+      // record center for right mouse button and crop for left
       if (event.type == sf::Event::MouseButtonPressed) {
         if (event.mouseButton.button == sf::Mouse::Right) {
           cout << "New center: ";
@@ -1529,6 +1600,53 @@ int main(int argc, char **argv) {
           cout << " y: " << event.mouseButton.y << endl;
           p_model->panFractal(event.mouseButton.x, event.mouseButton.y);
           for (unsigned int tix = 0; tix < num_threads; ++tix) {thread_asked_to_reset[tix] = true;}
+        }
+
+        if (event.mouseButton.button == sf::Mouse::Left) {
+          crop_start_x = event.mouseButton.x;
+          crop_start_y = event.mouseButton.y;
+        }
+        
+      }
+
+      //crop finish
+      if (event.type == sf::Event::MouseButtonReleased) {
+        if (event.mouseButton.button == sf::Mouse::Left) {
+          crop_end_x = event.mouseButton.x;
+          crop_end_y = event.mouseButton.y;
+
+          //Hopefully this filters out menu clicks
+          if (abs(crop_end_x - crop_start_x) > 10)
+          {
+            cout << "maintaining aspect ratio" << endl;
+            //We cant do this directly - we have to combine pan and zoom since they preserve aspect ratio
+            p_model->panFractal((crop_start_x + crop_end_x)/2,(crop_start_y + crop_end_y)/2);
+            //Now fake a new zoom -> update R.requested_zoom
+            R.requested_zoom = R.requested_zoom*(abs(crop_end_x - crop_start_x)/R.original_width);
+            p_model->zoomFractal(R.requested_zoom);
+            //tell threads to start drawing new stuff
+            for (unsigned int tix = 0; tix < num_threads; ++tix) {thread_asked_to_reset[tix] = true;}
+        
+          }
+          R.show_selection = false;
+        }
+      }
+
+      //Draw selection while button not released
+      if ((event.type == sf::Event::MouseMoved) &&
+         true == sf::Mouse::isButtonPressed(sf::Mouse::Left))
+      {
+        //Hopefully this filters out menu clicks
+        if  (abs(crop_end_x - crop_start_x) > 10)
+        {
+          selection.setSize(sf::Vector2f(abs(crop_start_x - event.mouseMove.x), abs(crop_start_y - event.mouseMove.y)));
+          selection.setFillColor(sf::Color::Transparent);
+          selection.setPosition(crop_start_x, crop_start_y);
+          
+          // set a 5-pixel wide orange outline
+          selection.setOutlineThickness(5);
+          selection.setOutlineColor(sf::Color(250, 150, 100));
+          R.show_selection = true;
         }
       }
 
@@ -1551,6 +1669,8 @@ int main(int argc, char **argv) {
     window.clear();
     window.setView(modelview);
     window.draw(*p_model);  // draw fractals
+    if (R.show_selection)
+      window.draw(selection);  //draw selection
     pgui->draw();           // Draw all GUI widgets
 
     window.display();

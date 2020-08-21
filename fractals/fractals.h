@@ -10,7 +10,6 @@ struct SupportedFractal {
   bool julia;
   std::vector<double> xMinMax;  // x min max
   std::vector<double> yMinMax;  // y min max
-  unsigned int color_scheme; //not yet used
   std::vector<unsigned int> max_iters;
   double power;
   std::complex<double> zconst;

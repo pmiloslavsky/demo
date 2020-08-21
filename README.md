@@ -43,9 +43,14 @@ CUDA programming is very finicky and there is probably lots of room for improvem
 Nevertheless, its a massive improvement over one AMD thread doing the work.
 <p align="center">
 <img src="fractals/interface_fractal.png" width="800" height="266">
-<img src="fractals/nebulabrot.png" width="400" height="266">
-<img src="fractals/mandelbrot.png" width="400" height="266">
-<img src="fractals/julia.png" width="400" height="266">
+<img src="fractals/fractal1.png" width="400" height="266">
+<img src="fractals/fractal2.png" width="400" height="266">
+<img src="fractals/fractal3.png" width="400" height="266">
+<img src="fractals/fractal4.png" width="400" height="266">
+<img src="fractals/fractal5.png" width="400" height="266">
+<img src="fractals/fractal6.png" width="400" height="266">
+<img src="fractals/fractal7.png" width="400" height="266">
+<img src="fractals/fractal8.png" width="400" height="266">
 </p>
 
 ## hex directory

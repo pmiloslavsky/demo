@@ -37,6 +37,8 @@ A C++/sfml/tgui/CUDA GUI framework to display/explore fractals. Features:
 * Mandelbrot (zoom and pan via mouse) Threaded.
 * Julia (zoom and pan via mouse) Threaded.
 * Spiral Septagon (zoom and pan via mouse) Threaded.
+* Nova method fractal (zoom and pan via mouse) Threaded.
+* Newton method fractal (zoom and pan via mouse) Threaded.
 * Buddhabrot(Nebulabrot). Threaded and CUDA optimized(no settable power support for cuda). Will run threads on all the cores to generate the image. To generate the image needs a lot of CPU. The threads have been optimized to generate the image very fast.
 On my AMD 16 core machine, the full 16 threads on all cores version is about twice as fast as CUDA and no threads.
 CUDA programming is very finicky and there is probably lots of room for improvement.

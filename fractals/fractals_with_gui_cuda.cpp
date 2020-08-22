@@ -18,8 +18,8 @@
 
 #include "tinycolormap.hpp"
 
-// TODO
-// More fractals:
+
+// Fractals:
 //  Mandlebrot
 //  Nebulabrot (3 colors)
 //  Mandelbrot with Power parameter
@@ -28,8 +28,12 @@
 //  Buddha with power (non cuda)
 //  Nebulabrot cuda
 //  Spiral Septagon
+// TODO
 // Mandelbrot coloring improvements
 //  Work on smooth coloring and colormaps more
+// Orbit Traps: Point, Lines, Shapes, pickover stalk
+// Color based on pixel in input image
+// Interior coloring
 
 using namespace std;
 
@@ -63,7 +67,7 @@ void signal_callback_handler(int signum) {
 
 // For really good pictures
 const int IMAGE_WIDTH = 2560;
-const int IMAGE_HEIGHT = 1600;
+const int IMAGE_HEIGHT = 1440;
 
 // const int IMAGE_WIDTH = 1600;
 // const int IMAGE_HEIGHT = 1200;
@@ -191,7 +195,27 @@ vector<SupportedFractal> FRAC = {
      {10000, 10000, 10000},
      2,
      complex<double>{0,0}
-    }
+    },
+    {string("Nova z6+z3-1"),
+     false,
+     false,
+     false,
+     {-2.5, 1.5},
+     {-1.4, 1.4},
+     {300, 0, 0},
+     6,
+     complex<double>{0,0}
+    },
+    {string("Newton z6+z3-1"),
+     false,
+     false,
+     false,
+     {-2.5, 1.5},
+     {-1.4, 1.4},
+     {300, 0, 0},
+     6,
+     complex<double>{0,0}
+    },
 };
 
 
@@ -352,6 +376,126 @@ void spiral_septagon_iterations_to_escape(double x, double y, unsigned int iters
 
   if (iter_ix < iters_max) {
     get_iteration_color(iter_ix, iters_max, z, p_rcolor, p_gcolor, p_bcolor);
+  }
+  else  // set interior set color
+  {
+    if (p_rcolor != 0) *p_rcolor = 0;
+    if (p_gcolor != 0) *p_gcolor = 0;
+    if (p_bcolor != 0) *p_bcolor = 0;
+  }
+}
+
+complex<double> Fz6(complex<double> z) {
+  return pow(z,6) + pow(z,3) - complex<double>(1,0);
+}
+
+complex<double> dFz6(complex<double> z) {
+  return complex<double>(6,0)*pow(z,5) + complex<double>(3,0)*pow(z,2);
+}
+
+vector<complex<double>> Fz6_roots{
+  complex<double>(0.586992498352664, 1.016700830808605),
+  complex<double>(-1.17398499670533,0),
+  complex<double>(0.586992498352664, -1.016700830808605),
+  complex<double>(-0.4258998211039621, -0.737680128975117),
+  complex<double>(0.851799642079243, 0),
+  complex<double>(-0.4258998211039621, 0.737680128975117)};
+
+void nova_z6_iterations_to_escape(double x, double y, unsigned int iters_max,
+                                  int *p_rcolor, int *p_gcolor, int *p_bcolor,
+                                  double power, complex<double> zconst, bool julia,
+                                  unsigned long long &in,
+                                  unsigned long long &out) {
+  complex<double> point(x, y);
+  complex<double> z(x, y);
+  complex<double> zprev(x, y);
+  unsigned int iter_ix = 0;
+  double tolerance = 0.000001;
+
+  //Mandelbrot nova
+  // zconst = z;
+  // z = Fz6_roots[0];
+  
+  while (iter_ix <= iters_max) {
+    zprev = z;
+    z = z - Fz6(z)/dFz6(z) + zconst;
+
+    complex<double> diff = z-zprev;
+    if ((abs(diff.real()) < tolerance) && (abs(diff.imag()) < tolerance))
+    {
+      break;
+    }
+    iter_ix++;
+  }
+
+  if (iter_ix < iters_max)
+    ++out;
+  else
+    ++in;
+
+  if (iter_ix < iters_max) {
+    get_iteration_color(iter_ix, iters_max, z, p_rcolor, p_gcolor, p_bcolor);
+  }
+  else  // set interior set color
+  {
+    if (p_rcolor != 0) *p_rcolor = 0;
+    if (p_gcolor != 0) *p_gcolor = 0;
+    if (p_bcolor != 0) *p_bcolor = 0;
+  }
+}
+
+void newton_z6_iterations_to_escape(double x, double y, unsigned int iters_max,
+                                  int *p_rcolor, int *p_gcolor, int *p_bcolor,
+                                  double power, complex<double> zconst, bool julia,
+                                  unsigned long long &in,
+                                  unsigned long long &out) {
+  complex<double> point(x, y);
+  complex<double> z(x, y);
+  unsigned int iter_ix = 0;
+  double tolerance = 0.000001;
+  unsigned int which_root = 0;
+  
+  while (iter_ix <= iters_max) {
+    z = z - Fz6(z)/dFz6(z);
+    bool root_found = false;
+    
+    for (unsigned int i=0; i < Fz6_roots.size(); ++i)
+    {
+      complex<double> diff = z-Fz6_roots[i];
+      
+      if ((abs(diff.real()) < tolerance) && (abs(diff.imag()) < tolerance))
+      {
+        root_found = true;
+        which_root = i;
+        break;
+      }
+    }
+    if (root_found == true) break;
+    iter_ix++;
+  }
+
+  if (iter_ix < iters_max)
+    ++out;
+  else
+    ++in;
+
+  if (iter_ix < iters_max) {
+    //found which_root
+    //color the root
+    // *p_rcolor = 64+32*which_root;
+    // *p_gcolor = 255 - 32*which_root;
+    // *p_bcolor = 128 + 16*which_root;
+    int color_ix = 0;
+    if (R.palette == tinycolormap::ColormapType::UF16)
+      color_ix = 2+2*which_root;
+    else
+      color_ix = 1 + (iters_max/7)*which_root;
+    
+    get_iteration_color(color_ix, iters_max, z, p_rcolor, p_gcolor, p_bcolor);
+
+    //color any root
+    //get_iteration_color(iter_ix, iters_max, z, p_rcolor, p_gcolor, p_bcolor);
+
   }
   else  // set interior set color
   {
@@ -591,12 +735,15 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
     cuda_detected = true;
 
     // test some cuda vector addition and return of sum vector to host
+    // just to see cuda is working
     cuda_vec_add(IMAGE_WIDTH, IMAGE_HEIGHT);
 
-    // test some cuda hit generation and return of hits to the host
-    cuda_generate_hits_no_fractal(IMAGE_WIDTH, IMAGE_HEIGHT);
+    // test a prototype API thats very much like the final one we have to write
+    // but doesnt have all the details
+    cuda_generate_hits_prototype(IMAGE_WIDTH, IMAGE_HEIGHT);
 
-    // test some cuda hit generation and return of hits to the host
+    // test some cuda hit generation and return of hits to the host - this is the real API
+    // used by threads
     SampleStats fakestat;
     cuda_generate_buddhabrot_hits(IMAGE_WIDTH, IMAGE_HEIGHT,
                                   FRAC[current_fractal], fakestat,
@@ -662,7 +809,7 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
         break;
       }
 
-      if (true == skipInSet(sample)) {
+      if ((FRAC[current_fractal].power == 2) && (true == skipInSet(sample))) {
         stats[current_fractal].rejected++;  // not atomic....
         continue;
       }
@@ -872,6 +1019,26 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
 					       FRAC[current_fractal].julia,
 					       stats[current_fractal].in_set,
 					       stats[current_fractal].escaped_set);
+        else if (FRAC[current_fractal].name  == string("Nova z6+z3-1"))
+        {
+          nova_z6_iterations_to_escape(xi, yj, FRAC[current_fractal].max_iters[0],
+                                       &rcolor, &gcolor, &bcolor,
+                                       FRAC[current_fractal].power,
+                                       FRAC[current_fractal].zconst,
+                                       FRAC[current_fractal].julia,
+                                       stats[current_fractal].in_set,
+                                       stats[current_fractal].escaped_set);
+        }
+        else if (FRAC[current_fractal].name  == string("Newton z6+z3-1"))
+        {
+          newton_z6_iterations_to_escape(xi, yj, FRAC[current_fractal].max_iters[0],
+                                       &rcolor, &gcolor, &bcolor,
+                                       FRAC[current_fractal].power,
+                                       FRAC[current_fractal].zconst,
+                                       FRAC[current_fractal].julia,
+                                       stats[current_fractal].in_set,
+                                       stats[current_fractal].escaped_set);
+        }
 	else
 	  mandelbrot_iterations_to_escape(xi, yj, FRAC[current_fractal].max_iters[0],
                                           &rcolor, &gcolor, &bcolor,
@@ -942,7 +1109,7 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
 
     cout << "zoom: " << R.displayed_zoom;
     cout << "  cdims: " << R.current_width << " " << R.current_height << endl;
-    cout.precision(17);
+    cout.precision(10);
     cout << scientific << " starts: " << R.xstart << " " << R.ystart << endl;
     cout << "x range: " << scientific << xstart << " -> "
          << xstart + (R.original_width - 1) * xdelta;
@@ -980,7 +1147,7 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
 
     cout << "pan: " << xcenter << " " << ycenter <<endl;
     cout << "  cdims: " << R.current_width << " " << R.current_height;
-    cout.precision(17);
+    cout.precision(10);
     cout << scientific << " starts: " << R.xstart << " " << R.ystart << endl;
     cout << "x range: " << scientific << xstart << " -> "
          << xstart + (R.original_width - 1) * xdelta;
@@ -1390,7 +1557,7 @@ double get_new_zoom(sf::View &view, int delta) {
     R.requested_zoom = R.requested_zoom * 1.1;
     // cout << "zoom: " << current_zoom << endl;
 
-    if (R.requested_zoom > 5.0) {
+    if (R.requested_zoom > 25.0) {
       R.requested_zoom = 1.0;
     }
   }
@@ -1423,7 +1590,7 @@ int main(int argc, char **argv) {
 
   sf::Vector2u screenDimensions(IMAGE_WIDTH, IMAGE_HEIGHT);
   sf::RenderWindow window(sf::VideoMode(screenDimensions.x, screenDimensions.y),
-                          "Fractals!", sf::Style::Fullscreen);
+                          "Fractals!", sf::Style::Fullscreen); //sf::Style::Fullscreen
   window.setKeyRepeatEnabled(false);
 
   // // Display the list of all the video modes available for fullscreen

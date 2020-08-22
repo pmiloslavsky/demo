@@ -155,7 +155,7 @@ __device__ bool skipInSettest(complex<double> sample) {
 
 //prototype of what I will actually need
 //2D array on device is one block of memory
-__global__ void generate_hits_no_fractal_kernel(unsigned long long *rH, int w, int h) {
+__global__ void generate_hits_prototype_kernel(unsigned long long *rH, int w, int h) {
   int i = threadIdx.x + blockDim.x * blockIdx.x; //dim is 1 and tix is 1
   
   if (i >= h*w)
@@ -213,7 +213,7 @@ __global__ void generate_hits_no_fractal_kernel(unsigned long long *rH, int w, i
   }
 }
 
-int cuda_generate_hits_no_fractal(unsigned int w, unsigned int h)
+int cuda_generate_hits_prototype(unsigned int w, unsigned int h)
 {
   cout << "CUDA Test: generate buddhabrot hits prototype" << endl;
   auto start = chrono::high_resolution_clock::now();
@@ -233,7 +233,7 @@ int cuda_generate_hits_no_fractal(unsigned int w, unsigned int h)
   
   checkCUDAError(cudaMemcpy(drH, &redHits[0], w*h*sizeof(redHits[0]), cudaMemcpyHostToDevice));
   
-  generate_hits_no_fractal_kernel<<<256,256>>>(drH, w, h);
+  generate_hits_prototype_kernel<<<256,256>>>(drH, w, h);
   
   checkLastCUDAError_noAbort("kernelA");		   
   
@@ -259,7 +259,7 @@ int cuda_generate_hits_no_fractal(unsigned int w, unsigned int h)
    
    checkCUDAError(cudaMemcpy(drH, &redHits[0], w*h*sizeof(redHits[0]), cudaMemcpyHostToDevice));
   
-   generate_hits_no_fractal_kernel<<<256*256,1>>>(drH, w, h);
+   generate_hits_prototype_kernel<<<256*256,1>>>(drH, w, h);
    
    checkLastCUDAError_noAbort("kernelA");		   
    
@@ -285,7 +285,7 @@ int cuda_generate_hits_no_fractal(unsigned int w, unsigned int h)
    
    // checkCUDAError(cudaMemcpy(drH, &redHits[0], w*h*sizeof(redHits[0]), cudaMemcpyHostToDevice));
   
-   // generate_hits_no_fractal_kernel<<<1,256*256>>>(drH, w, h);
+   // generate_hits_prototype_kernel<<<1,256*256>>>(drH, w, h);
    
    // checkLastCUDAError_noAbort("kernelA");		   
    

@@ -9,7 +9,7 @@ int cuda_info(void);
 int cuda_vec_add(unsigned int w, unsigned int h);
 
 //a prototype of stuff similar to what i need for buddhabrot
-int cuda_generate_hits_no_fractal(unsigned int w, unsigned int h);
+int cuda_generate_hits_prototype(unsigned int w, unsigned int h);
 
 //The actual nebulabrot implementation
 int cuda_generate_buddhabrot_hits(unsigned int w, unsigned int h,

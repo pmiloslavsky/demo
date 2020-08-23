@@ -112,6 +112,7 @@ class ReferenceFrame {
   tinycolormap::ColormapType palette;
   vector<string> color_names{string("Parula"), string("Heat"), string("Jet"), string("Hot"), string("Gray"), string("Magma"),
   string("Inferno"), string("Plasma"), string("Viridis"), string("Cividis"), string("Github"), string("UF16")};
+  bool reflect_palette;
 
   // Original total Pixels
   double original_width;
@@ -244,7 +245,6 @@ __inline__ void get_iteration_color(const int iter_ix, const int iters_max, cons
   if (R.palette == tinycolormap::ColormapType::UF16)
   {
     //Ultra Fractal Default non smooth
-    int i = iter_ix % 16;
     vector<vector<int>> mapping(16, std::vector<int>(3));
     mapping[0] = {66, 30, 15};
     mapping[1] = {25, 7, 26};
@@ -263,6 +263,14 @@ __inline__ void get_iteration_color(const int iter_ix, const int iters_max, cons
     mapping[14] = {153, 87, 0};
     mapping[15] = {106, 52, 3};
 
+    int i = iter_ix % 16;
+    if (R.reflect_palette)
+    {
+      i = iter_ix % 32;
+      if (i >= 16)
+        i = 31 - i;
+    } 
+
     *p_rcolor = mapping[i][0];
     *p_gcolor = mapping[i][1];
     *p_bcolor = mapping[i][2];
@@ -275,8 +283,11 @@ __inline__ void get_iteration_color(const int iter_ix, const int iters_max, cons
   {    
     //colormap non smooth
     int i = iter_ix % R.color_cycle_size;
-   
-    const tinycolormap::Color color = tinycolormap::GetColor(i/static_cast<double>(R.color_cycle_size), R.palette);
+    tinycolormap::Color color(0.0,0.0,0.0);
+    if (R.reflect_palette)
+      color = tinycolormap::GetColorR(i/static_cast<double>(R.color_cycle_size), R.palette);
+    else
+      color = tinycolormap::GetColor(i/static_cast<double>(R.color_cycle_size), R.palette);
 
     *p_rcolor = 255*color.r();
     *p_gcolor = 255*color.g();
@@ -285,8 +296,11 @@ __inline__ void get_iteration_color(const int iter_ix, const int iters_max, cons
   else if (R.color_algo == ColoringAlgo::SMOOTH)
   {
     double smooth = ((iter_ix + 1 - log(log2(abs(zfinal))))); //0 -> iters_max
-
-    const tinycolormap::Color color = tinycolormap::GetColor(smooth/iters_max, R.palette);
+    tinycolormap::Color color(0.0,0.0,0.0);
+    if (R.reflect_palette)
+      color = tinycolormap::GetColorR(smooth/iters_max, R.palette);
+    else
+      color = tinycolormap::GetColor(smooth/iters_max, R.palette);
 
     *p_rcolor = 255*color.r();
     *p_gcolor = 255*color.g();
@@ -562,6 +576,7 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
     R.ystart = FRAC[current_fractal].yMinMax[0];
     R.current_height = R.original_height;
     R.current_width = R.original_width;
+    R.reflect_palette = true;
     
     original_view_width = view_width;
     original_view_height = view_height;
@@ -1281,6 +1296,19 @@ void signalPower(shared_ptr<FractalModel> p_model,
   setGuiElementsFromModel(pgui, p_model);
 }
 
+void signalMIters(shared_ptr<FractalModel> p_model,
+                 shared_ptr<tgui::Gui> pgui, const sf::String &value) {
+  unsigned int input = 2.0;
+  try {
+    input = std::stoi(value.toAnsiString());
+  }
+  catch (const std::invalid_argument &ia) {
+    cout << "Invalid " << ia.what() <<endl;
+    input = 300;
+  }
+  FRAC[p_model->current_fractal].max_iters[0] = input;
+}
+
 void signalZconstr(shared_ptr<FractalModel> p_model,
                    shared_ptr<tgui::Gui> pgui, const sf::String &value) {
   updateGuiElements(pgui, p_model);
@@ -1322,6 +1350,14 @@ void signalColorBox(const int selected) {
 void signalColorCycleBox(const int selected) {
   R.color_cycle_size = 8*pow(2,selected);  
 }
+
+void signalButton() {
+  if (R.reflect_palette == true)
+    R.reflect_palette = false;
+  else
+    R.reflect_palette = true;
+}
+
 
 // The main GUI elements inside the view
 void createGuiElements(shared_ptr<tgui::Gui> pgui,
@@ -1406,6 +1442,19 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   pgui->add(editBox, "power_box");
   editBox->connect("TextChanged", signalPower, p_model, pgui);
 
+  current = tgui::Label::create();
+  current->setPosition("parent.left + 300 + 120", "parent.bottom - 150 - 20");
+  current->setTextSize(14);
+  pgui->add(current, "miters_label");
+
+  editBox = tgui::EditBox::create();
+  editBox->setSize(100, 20);
+  editBox->setTextSize(14);
+  editBox->setPosition("parent.left + 300 + 120", "parent.bottom - 150");
+  editBox->setDefaultText("300");
+  pgui->add(editBox, "max_iters_box");
+  editBox->connect("TextChanged", signalMIters, p_model, pgui);
+
 
   current = tgui::Label::create();
   current->setPosition("parent.left + 300", "parent.bottom - 100 - 20");
@@ -1449,7 +1498,12 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   pgui->add(lbox, "CycleBox");
   lbox->connect("ItemSelected", signalColorCycleBox);
 
-  
+  auto button = tgui::Button::create();
+  button->setPosition("parent.left + 800", "parent.bottom - 150");
+  button->setText("Reflect");
+  button->setSize(100, 30);
+  pgui->add(button, "Reflect");
+  button->connect("Pressed", signalButton);
 }
 
 // When model changes resulting in gui changes
@@ -1526,7 +1580,10 @@ void updateCurrentGuiElements(shared_ptr<tgui::Gui> &pgui,
 
   //Params column
   current = pgui->get<tgui::Label>("power_label");
-  current->setText("Power: " + to_string(FRAC[p_model->current_fractal].power));
+  current->setText("Power: " + to_string(FRAC[p_model->current_fractal].power).substr(0,4));
+
+  current = pgui->get<tgui::Label>("miters_label");
+  current->setText("Miters: " + to_string(FRAC[p_model->current_fractal].max_iters[0]));
 
   current = pgui->get<tgui::Label>("zconst_label");
   current->setText("zconst: " + to_string(FRAC[p_model->current_fractal].zconst.real()) + " " +

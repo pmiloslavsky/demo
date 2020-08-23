@@ -117,6 +117,15 @@ namespace tinycolormap
         return { s * c[0], s * c[1], s * c[2] };
     }
 
+    //reflected palette
+    inline Color GetColorR(double x, ColormapType type)
+    {
+      if (x < 0.5)
+        return GetColor(2.0*x, type);
+      else
+        return GetColor(1.0 - 2.0*(x - 0.5), type);
+    }
+
     inline Color GetColor(double x, ColormapType type)
     {
         switch (type)

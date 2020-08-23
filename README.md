@@ -24,14 +24,15 @@ Features include:
 </p>
 
 ## fractals directory
-A C++/sfml/tgui/CUDA GUI framework to display/explore fractals. Features:
+A C++/sfml/tgui/CUDA GUI framework to display/explore fractals. Threaded and CUDA optimized. Features:
 * Detects number of cores and uses all of them to speed rendering.
 * Detects CUDA device and uses it.  CUDA on/off toggle
 * Fractal status and selection GUI
 * Mouse and Keyboard and GUI Controls
 * Mouse: wheel to zoom, right click to recenter pan, left click/hold/drag to select a rectangle and zoom to it.
-* GUI settable fractal parameters: power and zconst(julia style)
+* GUI settable fractal parameters: power and zconst(julia style) and max iterations
 * GUI selectable color palettes and color cycle size options
+* GUI palette reflection button to prevent discontinuities
 * Screenshot hotkey and hide all widgets hotkey
 * Crop an area of the fractal (displays border) and it will zoom to crop.
 * Mandelbrot (zoom and pan via mouse) Threaded.
@@ -42,7 +43,7 @@ A C++/sfml/tgui/CUDA GUI framework to display/explore fractals. Features:
 * Buddhabrot(Nebulabrot). Threaded and CUDA optimized(no settable power support for cuda). Will run threads on all the cores to generate the image. To generate the image needs a lot of CPU. The threads have been optimized to generate the image very fast.
 On my AMD 16 core machine, the full 16 threads on all cores version is about twice as fast as CUDA and no threads.
 CUDA programming is very finicky and there is probably lots of room for improvement.
-Nevertheless, its a massive improvement over one AMD thread doing the work.
+Nevertheless, its a massive improvement over one hw thread doing the work.
 <p align="center">
 <img src="fractals/interface_fractal.png" width="800" height="266">
 <img src="fractals/fractal1.png" width="400" height="266">

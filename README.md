@@ -78,8 +78,8 @@ This is a harder variant of the flood fill algorithm. We have to find the bigges
 
 ## astar directory
 Astar,djikstra,double sided and directed search run on real US highway data (courtesy of MIT)
-(Produced kml files that are displayable in google maps)
-Several optimized solutionto PS6 of
+(can produce kml files that are displayable in google maps)
+Several optimized solutions to PS6 of
 <br>
 https://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-006-introduction-to-algorithms-fall-2011/assignments/
 <br>

@@ -1,7 +1,6 @@
 ## astar directory
 Astar,djikstra,double sided and directed search run on real US highway data (courtesy of MIT)
-(Produced kml files that are displayable in google maps)
-Several optimized solutionto PS6 of
+(can produce kml files that are displayable in google maps)
 <br>
 https://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-006-introduction-to-algorithms-fall-2011/assignments/
 <br>

@@ -80,7 +80,9 @@ This is a harder variant of the flood fill algorithm. We have to find the bigges
 Astar,djikstra,double sided and directed search run on real US highway data (courtesy of MIT)
 (Produced kml files that are displayable in google maps)
 Several optimized solutionto PS6 of
+<br>
 https://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-006-introduction-to-algorithms-fall-2011/assignments/
+<br>
 python dijkstra.py.single_sided < tests/0boston_berkeley.in
 Path: BOSTON EAST BOST, MA -> BERKELEY, CA
 Graph size: 90415 nodes, 250604 edges

@@ -77,7 +77,7 @@ Concepts include:
 This is a harder variant of the flood fill algorithm. We have to find the biggest chunk of 4-way connected colors in the grid and return number of elements in the connected chunk. We dont use recursion. We end up using a tailored Union Find algorithm and memoizing the counts of joined sets in the set heads.
 
 ## astar directory
-Astar,djikstra,double sided and directed search run on real US highway data (courtesy of MIT)
+Astar,dijkstra,double sided and directed search run on real US highway data (courtesy of MIT)
 (can produce kml files that are displayable in google maps)
 Several optimized solutions to PS6 of
 <br>

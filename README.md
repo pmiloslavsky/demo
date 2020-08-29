@@ -77,12 +77,12 @@ Concepts include:
 This is a harder variant of the flood fill algorithm. We have to find the biggest chunk of 4-way connected colors in the grid and return number of elements in the connected chunk. We dont use recursion. We end up using a tailored Union Find algorithm and memoizing the counts of joined sets in the set heads.
 
 ## astar directory
-Astar,dijkstra,double sided and directed search run on real US highway data (courtesy of MIT)
+Double sided and directed search (dijkstra and astar) run on real US highway data (courtesy of MIT)
 (can produce kml files that are displayable in google maps)
-Several optimized solutions to PS6 of
 <br>
 https://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-006-introduction-to-algorithms-fall-2011/assignments/
 <br>
+Below is a summary of how making the search double sided and directed improves the search:<br>
 python dijkstra.py.single_sided < tests/0boston_berkeley.in
 Path: BOSTON EAST BOST, MA -> BERKELEY, CA
 Graph size: 90415 nodes, 250604 edges

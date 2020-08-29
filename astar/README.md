@@ -1,9 +1,10 @@
 ## astar directory
-Astar,dijkstra,double sided and directed search run on real US highway data (courtesy of MIT)
+Double sided and directed search (dijkstra and astar) run on real US highway data (courtesy of MIT)
 (can produce kml files that are displayable in google maps)
 <br>
 https://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-006-introduction-to-algorithms-fall-2011/assignments/
 <br>
+Below is a summary of how making the search double sided and directed improves the search:<br>
 python dijkstra.py.single_sided < tests/0boston_berkeley.in
 Path: BOSTON EAST BOST, MA -> BERKELEY, CA
 Graph size: 90415 nodes, 250604 edges

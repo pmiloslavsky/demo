@@ -76,7 +76,7 @@ const int IMAGE_HEIGHT = 1440;
 
 enum class ColoringAlgo
 {
-  MULTICYCLE, SMOOTH
+  MULTICYCLE, SMOOTH, USE_IMAGE
 };
 
 enum class ColorCycle
@@ -113,6 +113,12 @@ class ReferenceFrame {
   vector<string> color_names{string("Parula"), string("Heat"), string("Jet"), string("Hot"), string("Gray"), string("Magma"),
   string("Inferno"), string("Plasma"), string("Viridis"), string("Cividis"), string("Github"), string("UF16")};
   bool reflect_palette;
+
+  sf::Texture escape_texture;
+  sf::Image escape_image;
+  unsigned int escape_image_w;
+  unsigned int escape_image_h;
+  bool image_loaded;
 
   // Original total Pixels
   double original_width;
@@ -242,6 +248,22 @@ __inline__ void get_iteration_color(const int iter_ix, const int iters_max, cons
   //cycle_size: 8,16,32,64,128,256
   //color_algo: Smooth, MultiCycle
 
+  if (R.color_algo == ColoringAlgo::USE_IMAGE)
+  {
+    double rd,ri;
+    double xi,yi;
+    xi = abs(modf(zfinal.real()*2,&rd));
+    yi = abs(modf(zfinal.imag()*2,&ri));
+    //xi = abs(zfinal.real() - (long long)zfinal.real());
+    //yi = abs(zfinal.imag() - (long long)zfinal.imag());   
+    sf::Color color = R.escape_image.getPixel(xi*(R.escape_image_w-1),
+                                              yi*(R.escape_image_h-1));
+    *p_rcolor = color.r;
+    *p_gcolor = color.g;
+    *p_bcolor = color.b;
+    return;
+  }
+  
   if (R.palette == tinycolormap::ColormapType::UF16)
   {
     //Ultra Fractal Default non smooth
@@ -1351,6 +1373,18 @@ void signalColorCycleBox(const int selected) {
   R.color_cycle_size = 8*pow(2,selected);  
 }
 
+void signalCAlgoBox(const int selected) {
+  if (selected == 0)
+    R.color_algo = ColoringAlgo::MULTICYCLE;
+  else if (selected == 1)
+    R.color_algo = ColoringAlgo::SMOOTH;
+  else if ((selected == 2) && (true == R.image_loaded))
+    R.color_algo = ColoringAlgo::USE_IMAGE;
+  else
+    R.color_algo = ColoringAlgo::MULTICYCLE;
+    
+}
+
 void signalButton() {
   if (R.reflect_palette == true)
     R.reflect_palette = false;
@@ -1504,6 +1538,16 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   button->setSize(100, 30);
   pgui->add(button, "Reflect");
   button->connect("Pressed", signalButton);
+
+  lbox = tgui::ListBox::create();
+  lbox->setPosition("parent.left + 800", "parent.bottom - 100");
+  lbox->setSize(100.f, 80.f);
+  lbox->addItem("MULTICYCLE");
+  lbox->addItem("SMOOTH");
+  lbox->addItem("USE_IMAGE");
+
+  pgui->add(lbox, "CAlgoBox");
+  lbox->connect("ItemSelected", signalCAlgoBox);
 }
 
 // When model changes resulting in gui changes
@@ -1680,6 +1724,25 @@ int main(int argc, char **argv) {
   R.color_cycle_size = 32;
   R.palette = tinycolormap::ColormapType::UF16;// tinycolormap::ColormapType::Viridis; tinycolormap::ColormapType::UF16
   R.color_algo = ColoringAlgo::MULTICYCLE;
+
+  //R.color_algo = ColoringAlgo::USE_IMAGE;
+  if ((R.escape_texture.loadFromFile("escape_image.jpg")) || (R.escape_texture.loadFromFile("escape_image.png")))
+  {
+    R.escape_image = R.escape_texture.copyToImage();
+    sf::Vector2u escape_image_dims = R.escape_image.getSize();
+    R.escape_image_w = escape_image_dims.x;
+    R.escape_image_h = escape_image_dims.y;
+    cout << "Loaded escape_image. Dims: " << R.escape_image_w << " " << R.escape_image_h << endl;
+    R.image_loaded = true;
+  }
+  else
+  {
+    cout << "missing escape_image.jpg[png] for fractal escape coloring" << endl;
+    R.color_algo = ColoringAlgo::MULTICYCLE;
+    R.image_loaded = false;
+  }
+
+  
   
   modelview.setCenter(screenDimensions.x / 2.0, screenDimensions.y / 2.0);
   window.setView(modelview);

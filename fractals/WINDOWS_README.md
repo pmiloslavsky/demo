@@ -8,12 +8,13 @@ To build for windows you will need to install:
 Set your include directories and library directories correctly.
 Define _WINDOWS in the preprocessor.
 <br>
-You will also need to copy the
+You will also need to copy the:
 * themes directory
 * SFML and TGUI dlls
 * escape_image.jpg
 into where the windows build is.
 <br>
+Sample commands on my computer:
 * mkdir x64
 * mkdir x64/Release/
 * cp -r themes x64/Release/

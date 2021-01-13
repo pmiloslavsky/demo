@@ -11,7 +11,6 @@
 #include <random>
 #include <string>
 #include <thread>
-#include <utility>
 
 #include "buddha_cuda_kernel.h"
 #include "fractals.h"
@@ -241,7 +240,7 @@ vector<SupportedFractal> FRAC = {
 //   unsigned long long samples_last_second;
 // };
 
-__inline__ void get_iteration_color(const int iter_ix, const int iters_max, const complex<double> & zfinal,
+inline void get_iteration_color(const int iter_ix, const int iters_max, const complex<double> & zfinal,
                                     int *p_rcolor, int *p_gcolor, int *p_bcolor) {
 
   //palette: UF16, Viridis, Plasma, Jet, Hot, Heat, Parula, Gray, Cividis, Github, UF16(added)
@@ -713,7 +712,9 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
         stats[current_fractal].in_set += cudastats.in_set;
         stats[current_fractal].escaped_set += cudastats.escaped_set;
 
-      } else {
+      } 
+      else 
+      {
         // threaded version of generate hits (we take advantage of being inside
         // model object)
         reset_detected = generateMoreTrailHits(redHits, greenHits, blueHits, &p_reset[tix]);
@@ -1668,13 +1669,21 @@ double get_new_zoom(sf::View &view, int delta) {
 
 // save a screenshot
 void save_screenshot(sf::RenderWindow &window, string name) {
+  char buffer[80] = "no date";
   time_t rawtime;
-  struct tm *timeinfo;
-  char buffer[80];
+  struct tm timeinfo;
+  struct tm* timeinfop = nullptr;
+
 
   time(&rawtime);
-  timeinfo = localtime(&rawtime);
-  strftime(buffer, sizeof(buffer), "%d-%m-%Y_%H_%M_%S", timeinfo);
+#ifdef _WINDOWS
+  localtime_s(&timeinfo, &rawtime);
+  timeinfop = &timeinfo;
+#else
+  timeinfop = localtime(&rawtime);
+#endif
+  
+  strftime(buffer, sizeof(buffer), "%d-%m-%Y_%H_%M_%S", timeinfop);
   std::string timestring(buffer);
 
   sf::Vector2u windowSize = window.getSize();
@@ -1765,20 +1774,21 @@ int main(int argc, char **argv) {
   else
     cmd_line_threads = thread::hardware_concurrency() - 1;
   unsigned int num_threads = 1;
-  if ((cmd_line_threads <= 0) or
+  if ((cmd_line_threads <= 0) ||
       (cmd_line_threads >= thread::hardware_concurrency() - 1))
     num_threads = thread::hardware_concurrency() - 1;
   else
     num_threads = cmd_line_threads;
   p_model->num_threads = num_threads;
+#define MAX_THREADS 32
 
   cout << "Using " << num_threads << " threads to speed up fractal rendering" << endl;
-  thread threads[num_threads];
-  std::promise<void> terminateThreadSignal[num_threads];
+  thread threads[MAX_THREADS];
+  std::promise<void> terminateThreadSignal[MAX_THREADS];
 
   //funilly enough we dont need the complex C++ thread sync primitives
   //this is to prevent unnecessary calculation when we request 2 zooms in a row quickly
-  bool thread_asked_to_reset[num_threads]; 
+  bool thread_asked_to_reset[MAX_THREADS];
   
 
   // start up thread pool

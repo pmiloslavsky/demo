@@ -44,6 +44,8 @@ A C++/sfml/tgui/CUDA GUI framework to display/explore fractals. Threaded and CUD
 On my AMD 16 core machine, the full 16 threads on all cores version is about twice as fast as CUDA and no threads.
 CUDA programming is very finicky and there is probably lots of room for improvement.
 Nevertheless, its a massive improvement over one hw thread doing the work.
+
+This has been ported to Windows and Ubuntu.
 <p align="center">
 <img src="fractals/interface_fractal.png" width="800" height="266">
 <img src="fractals/fractal1.png" width="400" height="266">

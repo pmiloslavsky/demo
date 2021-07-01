@@ -33,6 +33,17 @@
 // Orbit Traps: Point, Lines, Shapes, pickover stalk
 // Color based on pixel in input image
 // Interior coloring
+// reset all variables on fractal switch
+// "Reflect colormap toggle" - is it actually reflected on gui
+// save position in file name
+// make font bold black
+// memory:
+// save position and scale (just x?) and miters and zconst and power to db file
+// display saved position database
+// apply specified position from database
+// apply next position from database (button?)
+// display if position in database on gui
+
 
 using namespace std;
 

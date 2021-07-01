@@ -8,11 +8,14 @@ struct SupportedFractal {
   bool cuda_mode;
   bool probabalistic; //i.e. like buddha - affects thread model
   bool julia;
-  std::vector<double> xMinMax;  // x min max
-  std::vector<double> yMinMax;  // y min max
-  std::vector<unsigned int> max_iters;
-  double power;
-  std::complex<double> zconst;
+  std::vector<double> xMinMax;  // default x min max
+  std::vector<double> yMinMax;  // default min max
+  std::vector<unsigned int> current_max_iters;
+  std::vector<unsigned int> default_max_iters;
+  double current_power;
+  double default_power;
+  std::complex<double> current_zconst;
+  std::complex<double> default_zconst;
 };
 
 struct SampleStats {

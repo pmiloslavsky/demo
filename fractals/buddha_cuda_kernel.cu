@@ -529,7 +529,7 @@ int cuda_generate_buddhabrot_hits(unsigned int w, unsigned int h, SupportedFract
   generate_hits_kernel<<<32,256>>>(drH, dgH, dbH, dstats,
 				  w, h,
 				  frac.xMinMax[0], frac.xMinMax[1], frac.yMinMax[0], frac.yMinMax[1],
-				  frac.max_iters[0], frac.max_iters[1], frac.max_iters[2]);
+				  frac.current_max_iters[0], frac.current_max_iters[1], frac.current_max_iters[2]);
   
   checkLastCUDAError_noAbort("kernel for buddhabrot");		   
   

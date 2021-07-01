@@ -14,7 +14,8 @@ all: $(obj) #graph_class_pimpl
 $(obj): %: %.cpp
 	$(CC) -g -pthread -std=c++17 -fstack-protector -Wformat -Werror=format-security  -DNDEBUG -g -fwrapv -O3 -Wall -o $@ $< -ltgui -lsfml-graphics -lsfml-window -lsfml-system
 
-cudaversion=11.3
+cudaversion=11.1
+#set cudaversion=11.1
 #set path = (/usr/local/cuda-$(cudaversion)/bin $path)
 #set LD_LIBRARY_PATH = (/usr/local/cuda-$(cudaversion)/lib64)
 

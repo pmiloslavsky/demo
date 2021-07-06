@@ -96,7 +96,7 @@ enum class ColorCycle
 
 class ReferenceFrame {
  public:
-  // x-y rotation angle
+  // x-y rotation angle [future]
   float theta;
 
   // View
@@ -111,11 +111,6 @@ class ReferenceFrame {
   // Zoom Level
   double displayed_zoom;
   double requested_zoom;
-
-  //Repeatable view
-  double xcenter;
-  double ycenter;
-  double new_zoom;
 
   //zoom crop area
   bool show_selection;
@@ -248,7 +243,23 @@ vector<SupportedFractal> FRAC = {
     },
 };
 
+class SavedFractal {
+ public:
+  // p_model->current_fractal
+  // FRAC[p_model->current_fractal].current_power
+  // FRAC[p_model->current_fractal].current_max_iters[0]
+  // FRAC[p_model->current_fractal].current_zconst
+  int valid; 
+  unsigned int current_fractal;
+  std::vector<unsigned int> current_max_iters;
+  double current_power;
+  std::complex<double> current_zconst;
 
+  ReferenceFrame RF; //and the textures are in there - sigh
+
+  SavedFractal(float _thetaxy, double _zoom)
+      : valid{0},RF{_thetaxy,_zoom} {};
+};
 
 
 
@@ -617,7 +628,6 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
     memset(&stats, 0, sizeof(stats));
     R.displayed_zoom = 1.0;
     R.requested_zoom = 1.0;
-    R.new_zoom = 1.0;
     R.xstart = FRAC[current_fractal].xMinMax[0];
     R.ystart = FRAC[current_fractal].yMinMax[0];
     R.current_height = R.original_height;
@@ -1178,8 +1188,6 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
 
     R.displayed_zoom = newzoom;
 
-    R.new_zoom = newzoom;
-
     cout << "zoom: " << R.displayed_zoom;
     cout << "  cdims: " << R.current_width << " " << R.current_height << endl;
     cout.precision(10);
@@ -1216,10 +1224,6 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
     double ystart = R.ystart - ((maxy - miny) / R.original_height)*(R.original_height / 2.0 - ycenter) * R.displayed_zoom;  // pixels
 
     R.ystart = ystart;
-
-    R.xcenter = xcenter;
-    R.ycenter = ycenter;
-
 
     cout << "pan: " << xcenter << " " << ycenter <<endl;
     cout << "  cdims: " << R.current_width << " " << R.current_height;
@@ -1317,7 +1321,7 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
 
   //Non buddha fractals
   vector<vector<sf::Color>> color;
-};
+}; //FractalModel
 
 // Now we try to do the control elements displayed inside the view GUI that
 // control both the model and the view (not just the view)
@@ -1430,6 +1434,75 @@ void signalButton() {
     R.reflect_palette = false;
   else
     R.reflect_palette = true;
+}
+
+const int max_saved = 30;
+SavedFractal no_fractal{0,1.0};
+int frac_ix = 0;
+int displayed_frac_ix = -1;
+vector<SavedFractal> savf(max_saved,no_fractal);
+
+void signalSaveFractal(shared_ptr<FractalModel> p_model,
+                       shared_ptr<tgui::Gui> pgui) {
+
+  updateGuiElements(pgui, p_model);
+
+  // Mainly reference frame stuff 
+  // p_model->current_fractal
+  // FRAC[p_model->current_fractal].current_power
+  // FRAC[p_model->current_fractal].current_max_iters[0]
+  // FRAC[p_model->current_fractal].current_zconst
+  // TBD colors
+
+  savf[frac_ix] = no_fractal;
+  savf[frac_ix].valid = 1;
+  savf[frac_ix].current_fractal = p_model->current_fractal;
+  savf[frac_ix].current_power = FRAC[p_model->current_fractal].current_power;
+  savf[frac_ix].current_max_iters = FRAC[p_model->current_fractal].current_max_iters;
+  savf[frac_ix].current_zconst =   FRAC[p_model->current_fractal].current_zconst;
+  savf[frac_ix].RF = R;
+
+  frac_ix++;
+  if (frac_ix > max_saved) frac_ix = 0;
+  
+  setGuiElementsFromModel(pgui, p_model);
+}
+
+void signalLoadNextSaved(shared_ptr<FractalModel> p_model,
+                       shared_ptr<tgui::Gui> pgui) {
+  
+  updateGuiElements(pgui, p_model);
+
+  // Mainly reference frame stuff 
+  // p_model->current_fractal
+  // FRAC[p_model->current_fractal].current_power
+  // FRAC[p_model->current_fractal].current_max_iters[0]
+  // FRAC[p_model->current_fractal].current_zconst
+  // TBD colors
+  SavedFractal * p_savf;
+  int tried = 0;
+  int try_frac_ix = ++displayed_frac_ix;
+
+  while (1)
+  {
+    p_savf = &savf[try_frac_ix];
+    if (p_savf->valid != 0) break;
+    if (tried > max_saved) return;
+    try_frac_ix++;
+    if (try_frac_ix > max_saved) try_frac_ix = 0;
+    tried++;
+  }
+  displayed_frac_ix = try_frac_ix;
+
+  p_model->current_fractal = p_savf->current_fractal;
+  //p_model->reset_fractal_and_reference_frame();
+  //p_model->reset_fractal_params();
+  FRAC[p_model->current_fractal].current_power = p_savf->current_power;
+  FRAC[p_model->current_fractal].current_max_iters = p_savf->current_max_iters;
+  FRAC[p_model->current_fractal].current_zconst = p_savf->current_zconst;
+
+  R = p_savf->RF;
+  setGuiElementsFromModel(pgui, p_model);
 }
 
 
@@ -1551,6 +1624,27 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   pgui->add(editBox, "zconst_imag_box");
   editBox->connect("TextChanged", signalZconsti, p_model, pgui);
 
+  //Saved Fractal View Column
+
+  auto button = tgui::Button::create();
+  button->setPosition("parent.left + 600", "parent.bottom - 150");
+  button->setText("Save Fractal");
+  button->setSize(120, 30);
+  pgui->add(button, "SaveFractal");
+  button->connect("Pressed", signalSaveFractal, p_model, pgui);
+
+  button = tgui::Button::create();
+  button->setPosition("parent.left + 600", "parent.bottom - 100");
+  button->setText("Load Next Saved");
+  button->setSize(120, 30);
+  pgui->add(button, "LoadNextSaved");
+  button->connect("Pressed", signalLoadNextSaved, p_model, pgui);
+
+  current = tgui::Label::create();
+  current->setPosition("parent.left + 600", "parent.bottom - 50");
+  current->setTextSize(14);
+  pgui->add(current, "saved_fractal_label");
+
   //Palette Column
   auto lbox = tgui::ListBox::create();
   lbox->setPosition("parent.left + 800", "parent.bottom - 300");
@@ -1579,12 +1673,12 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   // pgui->add(button, "Reflect");
   // button->connect("Pressed", signalButton);
 
-  auto button = tgui::CheckBox::create();
-  button->setPosition("parent.left + 900", "parent.bottom - 150");
-  button->setText("Reflect");
-  button->setSize(30, 30);
-  pgui->add(button, "Reflect");
-  button->connect("Checked", signalButton);
+  auto cbox = tgui::CheckBox::create();
+  cbox->setPosition("parent.left + 900", "parent.bottom - 150");
+  cbox->setText("Reflect");
+  cbox->setSize(30, 30);
+  pgui->add(cbox, "Reflect");
+  cbox->connect("Checked", signalButton);
 
   lbox = tgui::ListBox::create();
   lbox->setPosition("parent.left + 900", "parent.bottom - 100");
@@ -1595,6 +1689,7 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
 
   pgui->add(lbox, "CAlgoBox");
   lbox->connect("ItemSelected", signalCAlgoBox);
+  
 }
 
 // When model changes resulting in gui changes
@@ -1608,7 +1703,12 @@ void updateGuiElements(shared_ptr<tgui::Gui> &pgui,
 
 // When some per model control changes: f.e. theta
 void setGuiElementsFromModel(shared_ptr<tgui::Gui> &pgui,
-                             shared_ptr<FractalModel> &p_model) {}
+                             shared_ptr<FractalModel> &p_model) {
+  //R.palette
+  auto current = pgui->get<tgui::ListBox>("ColorBox");
+  current->setSelectedItemByIndex(static_cast<int>(R.palette));
+
+}
 
 // update current things every draw even if no change
 void updateCurrentGuiElements(shared_ptr<tgui::Gui> &pgui,
@@ -1651,7 +1751,7 @@ void updateCurrentGuiElements(shared_ptr<tgui::Gui> &pgui,
       "]/[" + to_string(R.ystart) +
       "->" +
       to_string(R.ystart + (R.original_height) * R.ydelta) +
-      "]" + " Pos: " + to_string(R.xcenter) + "," + to_string(R.ycenter) + " Zoom: " + to_string(R.new_zoom));
+      "]" + " Pos: " + "," +" Zoom: " + to_string(R.displayed_zoom));
 
   current = pgui->get<tgui::Label>("stats_label");
   current->setText(
@@ -1679,6 +1779,9 @@ void updateCurrentGuiElements(shared_ptr<tgui::Gui> &pgui,
   current = pgui->get<tgui::Label>("zconst_label");
   current->setText("z_const: " + to_string(FRAC[p_model->current_fractal].current_zconst.real()) + " + " +
                    to_string(FRAC[p_model->current_fractal].current_zconst.imag()) + "*i");
+
+  current = pgui->get<tgui::Label>("saved_fractal_label");
+  current->setText("Fractal ix: " + to_string(displayed_frac_ix));
   
 }
 

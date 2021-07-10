@@ -1112,7 +1112,7 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
         int gcolor = 0;
         int bcolor = 0;
 
-	if (FRAC[current_fractal].name  == string("Spiral Septagon"))
+	if (FRAC[current_fractal].name  == string("Spiral_Septagon"))
 	  spiral_septagon_iterations_to_escape(xi, yj, FRAC[current_fractal].current_max_iters[0],
                                                &rcolor, &gcolor, &bcolor,
 					       FRAC[current_fractal].current_power,
@@ -1120,7 +1120,7 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
 					       FRAC[current_fractal].julia,
 					       stats[current_fractal].in_set,
 					       stats[current_fractal].escaped_set);
-        else if (FRAC[current_fractal].name  == string("Nova z6+z3-1"))
+        else if (FRAC[current_fractal].name  == string("Nova_z6+z3-1"))
         {
           nova_z6_iterations_to_escape(xi, yj, FRAC[current_fractal].current_max_iters[0],
                                        &rcolor, &gcolor, &bcolor,
@@ -1130,7 +1130,7 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
                                        stats[current_fractal].in_set,
                                        stats[current_fractal].escaped_set);
         }
-        else if (FRAC[current_fractal].name  == string("Newton z6+z3-1"))
+        else if (FRAC[current_fractal].name  == string("Newton_z6+z3-1"))
         {
           newton_z6_iterations_to_escape(xi, yj, FRAC[current_fractal].current_max_iters[0],
                                        &rcolor, &gcolor, &bcolor,

@@ -626,6 +626,11 @@ void generate_buddhabrot_trail(const complex<double> &c, unsigned int iters_max,
   // return trail
 }
 
+//fun-illy enough we dont need the complex C++ thread sync primitives
+//this is to prevent unnecessary calculation when we request 2 zooms in a row quickly
+#define MAX_THREADS 32
+bool thread_asked_to_reset[MAX_THREADS];
+
 // need buddhabrot threads not to mess up model
 std::mutex thread_result_report_mutex;
 
@@ -1506,11 +1511,8 @@ uint32_t crc32c(uint32_t crc, const unsigned char *buf, size_t len)
 }
 
 //std::filesystem::path::preferred_separator
-#ifdef _WINDOWS
-std::string separator{"\\"};
-#else
+// / works on windows also
 std::string separator{"/"};
-#endif
 
 
 void signalSaveKey(shared_ptr<FractalModel> p_model,
@@ -1581,8 +1583,7 @@ void signalLoadNextSaved(shared_ptr<FractalModel> p_model,
   displayed_frac_ix = try_frac_ix;
 
   p_model->current_fractal = p_savf->current_fractal;
-  //p_model->reset_fractal_and_reference_frame();
-  //p_model->reset_fractal_params();
+  
   FRAC[p_model->current_fractal].current_power = p_savf->current_power;
   FRAC[p_model->current_fractal].current_max_iters[0] = p_savf->current_max_iters[0];
   FRAC[p_model->current_fractal].current_max_iters[1] = p_savf->current_max_iters[1];
@@ -1590,6 +1591,8 @@ void signalLoadNextSaved(shared_ptr<FractalModel> p_model,
   FRAC[p_model->current_fractal].current_zconst = p_savf->current_zconst;
 
   R = p_savf->RF;
+
+  for (unsigned int tix = 0; tix < p_model->num_threads; ++tix) {thread_asked_to_reset[tix] = true;}
   setGuiElementsFromModel(pgui, p_model);
 }
 
@@ -1641,9 +1644,8 @@ void signalLoadNextKey(shared_ptr<FractalModel> p_model,
        << endl;
 
 
-  
   p_model->current_fractal = p_savf->current_fractal;
-
+  
   FRAC[p_model->current_fractal].current_power = p_savf->current_power;
   FRAC[p_model->current_fractal].current_max_iters[0] = p_savf->current_max_iters[0];
   FRAC[p_model->current_fractal].current_max_iters[1] = p_savf->current_max_iters[1];
@@ -1651,7 +1653,8 @@ void signalLoadNextKey(shared_ptr<FractalModel> p_model,
   FRAC[p_model->current_fractal].current_zconst = p_savf->current_zconst;
 
   R = p_savf->RF;
-  
+
+  for (unsigned int tix = 0; tix < p_model->num_threads; ++tix) {thread_asked_to_reset[tix] = true;}
   setGuiElementsFromModel(pgui, p_model);
 }
 
@@ -2113,16 +2116,10 @@ int main(int argc, char **argv) {
   else
     num_threads = cmd_line_threads;
   p_model->num_threads = num_threads;
-#define MAX_THREADS 32
 
   cout << "Using " << num_threads << " threads to speed up fractal rendering" << endl;
   thread threads[MAX_THREADS];
   std::promise<void> terminateThreadSignal[MAX_THREADS];
-
-  //funilly enough we dont need the complex C++ thread sync primitives
-  //this is to prevent unnecessary calculation when we request 2 zooms in a row quickly
-  bool thread_asked_to_reset[MAX_THREADS];
-  
 
   // start up thread pool
   // thread:

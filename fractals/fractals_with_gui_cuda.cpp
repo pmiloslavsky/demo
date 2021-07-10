@@ -1505,6 +1505,14 @@ uint32_t crc32c(uint32_t crc, const unsigned char *buf, size_t len)
     return ~crc;
 }
 
+//std::filesystem::path::preferred_separator
+#ifdef _WINDOWS
+std::string separator{"\\"};
+#else
+std::string separator{"/"};
+#endif
+
+
 void signalSaveKey(shared_ptr<FractalModel> p_model,
                    shared_ptr<tgui::Gui> pgui) {
 
@@ -1534,7 +1542,7 @@ void signalSaveKey(shared_ptr<FractalModel> p_model,
 
   uint32_t crc = crc32c(0,reinterpret_cast<unsigned char*>(p_savf), sizeof(*p_savf));
   
-  filename = key_version + std::filesystem::path::preferred_separator + FRAC[p_model->current_fractal].name +
+  filename = key_version + separator + FRAC[p_model->current_fractal].name +
       "_" + to_string(crc) + "." + key_version;
   key.open(filename.c_str(), ios::out | ios::binary);
   key.write(reinterpret_cast<char*>(p_savf), sizeof(*p_savf));
@@ -1617,7 +1625,7 @@ void signalLoadNextKey(shared_ptr<FractalModel> p_model,
   {
     if (ix == try_frac_ix)
     {
-      filename = p.path();
+      filename = p.path().string();
       break;
     }
     ix++;

@@ -705,6 +705,8 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
       blueTrailHits.resize(0);
       createBuddhabrot();
     }
+
+    for (unsigned int tix = 0; tix < this->num_threads; ++tix) {thread_asked_to_reset[tix] = true;}
   }
 
   
@@ -1560,13 +1562,8 @@ void signalLoadNextSaved(shared_ptr<FractalModel> p_model,
                          shared_ptr<tgui::Gui> pgui) {
   
   updateGuiElements(pgui, p_model);
+  p_model->reset_fractal_and_reference_frame();
 
-  // Mainly reference frame stuff 
-  // p_model->current_fractal
-  // FRAC[p_model->current_fractal].current_power
-  // FRAC[p_model->current_fractal].current_max_iters[0]
-  // FRAC[p_model->current_fractal].current_zconst
-  // TBD colors
   SavedFractal * p_savf;
   int tried = 0;
   int try_frac_ix = ++displayed_frac_ix;
@@ -1592,7 +1589,6 @@ void signalLoadNextSaved(shared_ptr<FractalModel> p_model,
 
   R = p_savf->RF;
 
-  for (unsigned int tix = 0; tix < p_model->num_threads; ++tix) {thread_asked_to_reset[tix] = true;}
   setGuiElementsFromModel(pgui, p_model);
 }
 
@@ -1602,6 +1598,8 @@ void signalLoadNextKey(shared_ptr<FractalModel> p_model,
                        shared_ptr<tgui::Gui> pgui) {
   
   updateGuiElements(pgui, p_model);
+  p_model->reset_fractal_and_reference_frame();
+  
   SavedFractal savef = no_fractal;;
   SavedFractal * p_savf = &savef;
   int ix=0;
@@ -1654,7 +1652,6 @@ void signalLoadNextKey(shared_ptr<FractalModel> p_model,
 
   R = p_savf->RF;
 
-  for (unsigned int tix = 0; tix < p_model->num_threads; ++tix) {thread_asked_to_reset[tix] = true;}
   setGuiElementsFromModel(pgui, p_model);
 }
 
@@ -1920,6 +1917,12 @@ void updateCurrentGuiElements(shared_ptr<tgui::Gui> &pgui,
   else
     current->setText("Cuda Off");
 
+  std::string zoom_string;
+  std::ostringstream out;
+  out.precision(16);
+  out << std::fixed << R.displayed_zoom;
+  zoom_string =  out.str();
+  
   current = pgui->get<tgui::Label>("boundary_label");
   current->setText(
       "Boundary: [" +
@@ -1928,7 +1931,7 @@ void updateCurrentGuiElements(shared_ptr<tgui::Gui> &pgui,
       "]/[" + to_string(R.ystart) +
       "->" +
       to_string(R.ystart + (R.original_height) * R.ydelta) +
-      "]" + " Pos: " + "," +" Zoom: " + to_string(R.displayed_zoom));
+      "]" + " Zoom: " + zoom_string);
 
   current = pgui->get<tgui::Label>("stats_label");
   current->setText(

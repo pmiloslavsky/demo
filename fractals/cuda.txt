@@ -7,4 +7,14 @@ $ sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cu
 $ sudo add-apt-repository "deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/ /"
 sudo apt install cuda
 echo 'export PATH=/usr/local/cuda/bin${PATH:+:${PATH}}'
+nvcc -o hello hello.cu
+
+https://linuxconfig.org/how-to-install-cuda-on-ubuntu-20-04-focal-fossa-linux
+
+wget -O /etc/apt/preferences.d/cuda-repository-pin-600 https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
+$ sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/7fa2af80.pub
+$ sudo add-apt-repository "deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/ /"
+sudo apt install cuda
+echo 'export PATH=/usr/local/cuda/bin${PATH:+:${PATH}}'
+echo 'export PATH=/usr/local/cuda/bin${PATH:+:${PATH}}' >> ~/.bashrc
 nvcc -o hello hello.cu 

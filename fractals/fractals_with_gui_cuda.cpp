@@ -1516,6 +1516,41 @@ uint32_t crc32c(uint32_t crc, const unsigned char *buf, size_t len)
 // / works on windows also
 std::string separator{"/"};
 
+void signalImportKeys(shared_ptr<FractalModel> p_model,
+		      shared_ptr<tgui::Gui> pgui) {
+  updateGuiElements(pgui, p_model);
+
+  std::string filename;
+
+  if (!fs::is_directory(key_version) || !fs::exists(key_version)) {
+    fs::create_directory(key_version);
+  }
+
+  //on windows, find linux
+  filename = std::string{".."} + separator + std::string{".."} + separator + std::string{".."} + separator + key_version;
+  if (fs::is_directory(filename)) {
+    for(auto& p: fs::directory_iterator(filename))
+      {
+	if (!fs::exists(key_version + separator + p.path().filename().string())) {
+	  fs::copy_file(p.path(), key_version + separator + p.path().filename().string());
+	}
+      }
+  }
+
+  //on linux, find windows
+  filename = std::string{"fractals_cuda"} + separator + std::string{"x64"} + separator + std::string{"Release"} + separator + key_version;
+  if (fs::is_directory(filename)) {
+    for(auto& p: fs::directory_iterator(filename))
+      {
+	filename = p.path().string();
+	if (!fs::exists(key_version + separator + p.path().filename().string())) {
+	  fs::copy_file(p.path(), key_version + separator + p.path().filename().string());
+	}
+      }
+  }
+  
+  setGuiElementsFromModel(pgui, p_model);
+}
 
 void signalSaveKey(shared_ptr<FractalModel> p_model,
                    shared_ptr<tgui::Gui> pgui) {
@@ -1795,6 +1830,13 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   current->setTextSize(14);
   pgui->add(current, "saved_fractal_label");
 
+  button = tgui::Button::create();
+  button->setPosition("parent.left + 600", "parent.bottom - 200");
+  button->setText("Import Keys");
+  button->setSize(120, 30);
+  pgui->add(button, "ImportKeys");
+  button->connect("Pressed", signalImportKeys, p_model, pgui);
+  
   button = tgui::Button::create();
   button->setPosition("parent.left + 600", "parent.bottom - 150");
   button->setText("Save Key");

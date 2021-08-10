@@ -7,7 +7,8 @@ struct SupportedFractal {
   std::string name;
   bool cuda_mode;
   bool probabalistic; //i.e. like buddha - affects thread model
-  bool julia;
+  bool julia; // affects formula
+  bool anti; //anti buddhabrot
   std::vector<double> xMinMax;  // default x min max
   std::vector<double> yMinMax;  // default min max
   std::vector<unsigned int> current_max_iters;

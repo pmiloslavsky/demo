@@ -6,7 +6,7 @@ CC=g++
 src = $(filter-out graph_class_implementation.cpp fractals_with_gui_cuda.cpp graph_class_pimpl.cpp, $(wildcard *.cpp))
 obj = $(patsubst %.cpp,%,$(src))
 
-all: $(obj) #graph_class_pimpl
+all: cuda_fractal
 
 
 .PHONY: all clean

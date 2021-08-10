@@ -120,16 +120,20 @@ class ReferenceFrame {
   //zoom crop area
   bool show_selection;
 
-  //Color
+  // Color Palletes
   ColoringAlgo color_algo;
   int color_cycle_size;
 
   tinycolormap::ColormapType palette;
   bool reflect_palette;
 
+  //Escape Image coloring
   unsigned int escape_image_w;
   unsigned int escape_image_h;
   bool image_loaded;
+
+  //Random Sample faster but less exact rendering
+  bool random_sample = false;
 
   // Original total Pixels
   double original_width;
@@ -807,7 +811,6 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
     R.current_height = R.original_height;
     R.current_width = R.original_width;
     R.show_selection = false; //mouse click on menu is not a selection
-    
     hitsums = 0;
     maxred = 0;
     maxgreen = 0;
@@ -1017,46 +1020,51 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
                              vector<vector<unsigned long long>> &blueHits,
                              bool * p_reset, int tix) {
     bool reset_detected = false;
-#if 0
-    // Randomly sampled pixels
-    std::random_device rd;
-    static std::mt19937_64 re(rd());
-    // uniform_real_distribution<double> xDistribution(
-    //     FRAC[current_fractal].xMinMax[0], FRAC[current_fractal].xMinMax[1]);
-    // uniform_real_distribution<double> yDistribution(
-    //     FRAC[current_fractal].yMinMax[0], FRAC[current_fractal].yMinMax[1]);
-    uniform_real_distribution<double> xDistribution(
-        -2, 2);
-    uniform_real_distribution<double> yDistribution(
-        -2, 2);
-    re.seed(chrono::high_resolution_clock::now().time_since_epoch().count());
-#endif
 
+    //looks like we need to do this even if not random
+    //if (R.random_sample) {
+      // Randomly sampled pixels
+      std::random_device rd;
+      static std::mt19937_64 re(rd());
+      // uniform_real_distribution<double> xDistribution(
+      //     FRAC[current_fractal].xMinMax[0], FRAC[current_fractal].xMinMax[1]);
+      // uniform_real_distribution<double> yDistribution(
+      //     FRAC[current_fractal].yMinMax[0], FRAC[current_fractal].yMinMax[1]);
+      uniform_real_distribution<double> xDistribution(
+						      -2, 2);
+      uniform_real_distribution<double> yDistribution(
+						      -2, 2);
+      re.seed(chrono::high_resolution_clock::now().time_since_epoch().count());
+      //}
+    
     unsigned long long max_samples =
         100000;  // large enought to overcome thread sleep time
 
     for (unsigned long long s_ix = 0; s_ix < max_samples; ++s_ix) {
-#if 0
-      // Randomly sampled pixels
-      complex<double> sample(xDistribution(re), yDistribution(re));
-#else
-      //Linearly sampled pixels
-      complex<double> sample(current_x[tix], current_y[tix]);
-      
-      double x = current_x[tix] + num_threads*deltax;
-      if (x > FRAC[current_fractal].xMinMax[1])
-      {
-	current_x[tix] = FRAC[current_fractal].xMinMax[0] + tix*deltax;
-	current_y[tix] = current_y[tix] + deltay;
-	if (current_y[tix] > FRAC[current_fractal].yMinMax[1]) {
-	  current_y[tix] = FRAC[current_fractal].yMinMax[0];
-	  image_wraps[tix]++;
-	  if (image_wraps[tix] > 16) return false;
-	}
+
+      complex<double> sample;
+      if (R.random_sample) {
+	// Randomly sampled pixels
+	sample = {xDistribution(re), yDistribution(re)};
+      } else {
+	//Linearly sampled pixels
+	sample = {current_x[tix], current_y[tix]};
+	
+	double x = current_x[tix] + num_threads*deltax;
+	if (x > FRAC[current_fractal].xMinMax[1])
+	  {
+	    current_x[tix] = FRAC[current_fractal].xMinMax[0] + tix*deltax;
+	    current_y[tix] = current_y[tix] + deltay;
+	    if (current_y[tix] > FRAC[current_fractal].yMinMax[1]) {
+	      current_y[tix] = FRAC[current_fractal].yMinMax[0];
+	      image_wraps[tix]++;
+	      if (image_wraps[tix] > 16) return false;
+	    }
+	  }
+	else
+	  current_x[tix] = x;
       }
-      else
-	current_x[tix] = x;
-#endif
+      
       stats[current_fractal].total++;  // not atomic....
 
       // see if we should reset
@@ -1623,6 +1631,13 @@ void signalButton() {
     R.reflect_palette = true;
 }
 
+void signalSamplingButton() {
+  if (R.random_sample == true)
+    R.random_sample = false;
+  else
+    R.random_sample = true;
+}
+
 const int max_saved = 30;
 SavedFractal no_fractal{0,1.0};
 int last_loaded_key_ix = -1;
@@ -1925,7 +1940,7 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   //pgui->add(menu); //added at end so its always on top
   menu->connect("MenuItemClicked", signalFractalMenu, p_model, pgui);
 
-  //Params Group
+  //Params Group  
   current = tgui::Label::create();
   current->setPosition("parent.left + 50", "parent.bottom - 150 - 20");
   current->setTextSize(14);
@@ -1967,6 +1982,15 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   editBox->setDefaultText("");
   pgui->add(editBox, "max_iters_box0");
   editBox->connect("TextChanged", signalMIters, p_model, pgui,0);
+
+  auto cbox = tgui::CheckBox::create();
+  cbox->setPosition("parent.left + 50 + 250", "parent.bottom - -210");
+  cbox->setText("Random\nSample");
+  cbox->setSize(30, 30);
+  pgui->add(cbox, "RandomSample");
+  cbox->connect("Checked", signalSamplingButton);
+  cbox->connect("Unchecked", signalSamplingButton);
+  cbox->setChecked(true);
 
 
   current = tgui::Label::create();
@@ -2066,7 +2090,7 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   // pgui->add(button, "Reflect");
   // button->connect("Pressed", signalButton);
 
-  auto cbox = tgui::CheckBox::create();
+  cbox = tgui::CheckBox::create();
   cbox->setPosition("parent.left + 900", "parent.bottom - 150");
   cbox->setText("Reflect");
   cbox->setSize(30, 30);

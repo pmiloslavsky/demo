@@ -824,6 +824,8 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
     for (unsigned int tix = 0; tix < this->num_threads; ++tix) {
       thread_asked_to_reset[tix] = true;
       image_wraps[tix] = 0;
+      current_x[tix] = FRAC[current_fractal].xMinMax[0] + deltax*tix;
+      current_y[tix] = FRAC[current_fractal].yMinMax[0] + deltay*tix;
     }
     
     
@@ -1640,11 +1642,18 @@ void signalButton() {
     R.reflect_palette = true;
 }
 
-void signalSamplingButton() {
+void signalSamplingButton(shared_ptr<FractalModel> p_model) {
   if (R.random_sample == true)
     R.random_sample = false;
   else
     R.random_sample = true;
+
+  for (unsigned int tix = 0; tix < p_model->num_threads; ++tix) {
+    thread_asked_to_reset[tix] = true;
+    p_model->image_wraps[tix] = 0;
+    p_model->current_x[tix] = FRAC[p_model->current_fractal].xMinMax[0] + p_model->deltax*tix;
+    p_model->current_y[tix] = FRAC[p_model->current_fractal].yMinMax[0] + p_model->deltay*tix;
+  }
 }
 
 const int max_saved = 30;
@@ -1997,8 +2006,8 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   cbox->setText("Random\nSample");
   cbox->setSize(30, 30);
   pgui->add(cbox, "RandomSample");
-  cbox->connect("Checked", signalSamplingButton);
-  cbox->connect("Unchecked", signalSamplingButton);
+  cbox->connect("Checked", signalSamplingButton, p_model);
+  cbox->connect("Unchecked", signalSamplingButton, p_model);
   cbox->setChecked(true);
 
 

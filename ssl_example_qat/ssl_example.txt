@@ -1,0 +1,34 @@
+https://aticleworld.com/ssl-server-client-using-openssl-in-c/
+[source code modified a little]
+
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout mycert.pem -out mycert.pem
+
+Example Client code for TLS communication
+
+Compile the Client : gcc -Wall -o client  Client.c -L/usr/lib -lssl -lcrypto
+Compile the Server : gcc -Wall -o server Server.c -L/usr/lib -lssl -lcrypto
+
+Compile qat:
+make qat
+
+Non QAT:
+Run : sudo ./server 8081
+Run :   ./client 127.0.0.1 8081
+
+
+QAT:
+watch cat /sys/kernel/debug/qat*/fw_counters
+
+sudo su
+export LD_LIBRARY_PATH=/usr/local/ssl/lib/
+./server 8081
+
+export LD_LIBRARY_PATH=/usr/local/ssl/lib/
+./clientqat 127.0.0.1 8081
+
+
+
+
+
+
+

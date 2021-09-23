@@ -120,16 +120,20 @@ class ReferenceFrame {
   //zoom crop area
   bool show_selection;
 
-  //Color
+  // Color Palletes
   ColoringAlgo color_algo;
   int color_cycle_size;
 
   tinycolormap::ColormapType palette;
   bool reflect_palette;
 
+  //Escape Image coloring
   unsigned int escape_image_w;
   unsigned int escape_image_h;
   bool image_loaded;
+
+  //Random Sample faster but less exact rendering
+  bool random_sample = false;
 
   // Original total Pixels
   double original_width;
@@ -651,7 +655,7 @@ void generate_buddhabrot_trail(const complex<double> &c, unsigned int iters_max,
                                unsigned long long &out) {
   unsigned int iter_ix = 0;
   complex<double> z(0, 0);
-  unsigned int max_iters_in_cycle = iters_max;
+  //unsigned int max_iters_in_cycle = iters_max; //for long_orbit
 
   //bool long_orbit = true;
 
@@ -688,7 +692,7 @@ void generate_buddhabrot_trail(const complex<double> &c, unsigned int iters_max,
 
       auto search = point_trail.find(z);
       if (search != point_trail.end()) {
-	max_iters_in_cycle = iter_ix;
+	//max_iters_in_cycle = iter_ix;
 	iter_ix = iters_max;
 	break;
       }
@@ -807,7 +811,6 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
     R.current_height = R.original_height;
     R.current_width = R.original_width;
     R.show_selection = false; //mouse click on menu is not a selection
-    
     hitsums = 0;
     maxred = 0;
     maxgreen = 0;
@@ -821,6 +824,8 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
     for (unsigned int tix = 0; tix < this->num_threads; ++tix) {
       thread_asked_to_reset[tix] = true;
       image_wraps[tix] = 0;
+      current_x[tix] = FRAC[current_fractal].xMinMax[0] + deltax*tix;
+      current_y[tix] = FRAC[current_fractal].yMinMax[0] + deltay*tix;
     }
     
     
@@ -837,10 +842,10 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
 
   // thread pool is currently started outside the model
   void fractal_thread(int tix, std::future<void> terminate, bool * p_reset) {
-    cout << "fractal thread running: " << tix << endl;
+    cout << "fractal thread " << tix << " running with oversampling: " << 4.0 << endl;
 
-    deltax = 4.5 / (16.0 * IMAGE_WIDTH);
-    deltay = 4.0 / (16.0 * IMAGE_HEIGHT);
+    deltax = 1.0 / (4.0 * IMAGE_WIDTH);
+    deltay = 1.0 / (4.0 * IMAGE_HEIGHT);
     current_x[tix] = FRAC[current_fractal].xMinMax[0] + deltax*tix;
     current_y[tix] = FRAC[current_fractal].yMinMax[0] + deltay*tix;
 
@@ -1017,47 +1022,32 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
                              vector<vector<unsigned long long>> &blueHits,
                              bool * p_reset, int tix) {
     bool reset_detected = false;
-#if 0
-    // Randomly sampled pixels
-    std::random_device rd;
-    static std::mt19937_64 re(rd());
-    // uniform_real_distribution<double> xDistribution(
-    //     FRAC[current_fractal].xMinMax[0], FRAC[current_fractal].xMinMax[1]);
-    // uniform_real_distribution<double> yDistribution(
-    //     FRAC[current_fractal].yMinMax[0], FRAC[current_fractal].yMinMax[1]);
-    uniform_real_distribution<double> xDistribution(
-        -2, 2);
-    uniform_real_distribution<double> yDistribution(
-        -2, 2);
-    re.seed(chrono::high_resolution_clock::now().time_since_epoch().count());
-#endif
 
+    if (image_wraps[tix] > 8) {
+      //cout << "thread " << tix << " paused" << endl;
+      return reset_detected;
+    }
+
+    //looks like we need to do this even if not random
+    //if (R.random_sample) {
+      // Randomly sampled pixels
+      std::random_device rd;
+      static std::mt19937_64 re(rd());
+      // uniform_real_distribution<double> xDistribution(
+      //     FRAC[current_fractal].xMinMax[0], FRAC[current_fractal].xMinMax[1]);
+      // uniform_real_distribution<double> yDistribution(
+      //     FRAC[current_fractal].yMinMax[0], FRAC[current_fractal].yMinMax[1]);
+      uniform_real_distribution<double> xDistribution(
+						      -2, 2);
+      uniform_real_distribution<double> yDistribution(
+						      -2, 2);
+      re.seed(chrono::high_resolution_clock::now().time_since_epoch().count());
+      //}
+    
     unsigned long long max_samples =
         100000;  // large enought to overcome thread sleep time
 
     for (unsigned long long s_ix = 0; s_ix < max_samples; ++s_ix) {
-#if 0
-      // Randomly sampled pixels
-      complex<double> sample(xDistribution(re), yDistribution(re));
-#else
-      //Linearly sampled pixels
-      complex<double> sample(current_x[tix], current_y[tix]);
-      
-      double x = current_x[tix] + num_threads*deltax;
-      if (x > FRAC[current_fractal].xMinMax[1])
-      {
-	current_x[tix] = FRAC[current_fractal].xMinMax[0] + tix*deltax;
-	current_y[tix] = current_y[tix] + deltay;
-	if (current_y[tix] > FRAC[current_fractal].yMinMax[1]) {
-	  current_y[tix] = FRAC[current_fractal].yMinMax[0];
-	  image_wraps[tix]++;
-	  if (image_wraps[tix] > 16) return false;
-	}
-      }
-      else
-	current_x[tix] = x;
-#endif
-      stats[current_fractal].total++;  // not atomic....
 
       // see if we should reset
       if (*p_reset == true) {
@@ -1067,18 +1057,47 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
         break;
       }
 
+      complex<double> sample;
+      if (R.random_sample) {
+	// Randomly sampled pixels
+	sample = {xDistribution(re), yDistribution(re)};
+      } else {
+	//Linearly sampled pixels
+	sample = {current_x[tix], current_y[tix]};
+	double xmin,xmax,ymin,ymax;
+
+	if (FRAC[current_fractal].name == string("Anti_Buddhabrot_Small")) {
+	  //to draw all orbits
+	  xmin = -2.2; xmax = 1.0;
+	  ymin = -1.2; ymax = 1.2;
+	} else {
+	  xmin = FRAC[current_fractal].xMinMax[0];
+	  xmax = FRAC[current_fractal].xMinMax[1];
+	  ymin = FRAC[current_fractal].yMinMax[0];
+	  ymax = FRAC[current_fractal].yMinMax[1];
+	}
+	
+	double x = current_x[tix] + num_threads*deltax;
+	if (x > xmax)
+	  {
+	    current_x[tix] = xmin + tix*deltax;
+	    current_y[tix] = current_y[tix] + deltay;
+	    if (current_y[tix] > ymax) {
+	      current_y[tix] = ymin;
+	      image_wraps[tix]++;
+	      if (image_wraps[tix] > 8) break;
+	    }
+	  }
+	else
+	  current_x[tix] = x;
+      }
+      
+      stats[current_fractal].total++;  // not atomic....
+
       if ((FRAC[current_fractal].current_power == 2) && (FRAC[current_fractal].anti == false) && (true == skipInSet(sample))) {
         stats[current_fractal].rejected++;  // not atomic....
         continue;
       }
-
-      // Alternative: Try to hit all the pixels
-      // double deltax = 4.0/R.original_width;
-      // double deltay = 4.0/R.original_height;
-      // complex<double> sample(FRAC[current_fractal].xMinMax[0] + deltax/2.0 +
-      // deltax*(s_ix%static_cast<int>(R.original_width)),
-      //                        FRAC[current_fractal].yMinMax[0] + deltay/2.0 +
-      //                        deltay*((s_ix/static_cast<int>(R.original_width))%(static_cast<int>(R.original_height))));
 
       vector<complex<double>> trail;
 
@@ -1623,6 +1642,20 @@ void signalButton() {
     R.reflect_palette = true;
 }
 
+void signalSamplingButton(shared_ptr<FractalModel> p_model) {
+  if (R.random_sample == true)
+    R.random_sample = false;
+  else
+    R.random_sample = true;
+
+  for (unsigned int tix = 0; tix < p_model->num_threads; ++tix) {
+    thread_asked_to_reset[tix] = true;
+    p_model->image_wraps[tix] = 0;
+    p_model->current_x[tix] = FRAC[p_model->current_fractal].xMinMax[0] + p_model->deltax*tix;
+    p_model->current_y[tix] = FRAC[p_model->current_fractal].yMinMax[0] + p_model->deltay*tix;
+  }
+}
+
 const int max_saved = 30;
 SavedFractal no_fractal{0,1.0};
 int last_loaded_key_ix = -1;
@@ -1925,7 +1958,7 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   //pgui->add(menu); //added at end so its always on top
   menu->connect("MenuItemClicked", signalFractalMenu, p_model, pgui);
 
-  //Params Group
+  //Params Group  
   current = tgui::Label::create();
   current->setPosition("parent.left + 50", "parent.bottom - 150 - 20");
   current->setTextSize(14);
@@ -1967,6 +2000,15 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   editBox->setDefaultText("");
   pgui->add(editBox, "max_iters_box0");
   editBox->connect("TextChanged", signalMIters, p_model, pgui,0);
+
+  auto cbox = tgui::CheckBox::create();
+  cbox->setPosition("parent.left + 50 + 250", "parent.bottom - -210");
+  cbox->setText("Random\nSample");
+  cbox->setSize(30, 30);
+  pgui->add(cbox, "RandomSample");
+  cbox->connect("Checked", signalSamplingButton, p_model);
+  cbox->connect("Unchecked", signalSamplingButton, p_model);
+  cbox->setChecked(true);
 
 
   current = tgui::Label::create();
@@ -2066,7 +2108,7 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   // pgui->add(button, "Reflect");
   // button->connect("Pressed", signalButton);
 
-  auto cbox = tgui::CheckBox::create();
+  cbox = tgui::CheckBox::create();
   cbox->setPosition("parent.left + 900", "parent.bottom - 150");
   cbox->setText("Reflect");
   cbox->setSize(30, 30);

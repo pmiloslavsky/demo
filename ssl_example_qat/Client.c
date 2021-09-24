@@ -29,17 +29,27 @@ SSL_CTX* InitCTX(void)
     SSL_CTX *ctx;
     OpenSSL_add_all_algorithms();  /* Load cryptos, et.al. */
     SSL_load_error_strings();   /* Bring in and register error messages */
+    // TLS_client_method() TLSv1_2_client_method()
+#if defined(QAT_INTEGRATION)
+    method = TLSv1_2_client_method();  /* Create new client-method instance */
+#else
     method = TLS_client_method();  /* Create new client-method instance */
+#endif
     ctx = SSL_CTX_new(method);   /* Create new context */
     if ( ctx == NULL )
     {
         ERR_print_errors_fp(stderr);
         abort();
     }
-    // Test option for QAT and SSL 1.1.1
+#if defined(QAT_INTEGRATION)
+    // QAT can only use TLS 1.2 for symmetric encryption (SSL_write)
+    // This cipher suite is usable by QAT
+    SSL_CTX_set_cipher_list(ctx, "AES256-SHA256");
+    // Also needed for QAT and SSL 1.1.1
     printf("Disabling ENCRYPT_THEN_MAC for QAT\n");
     SSL_CTX_set_options(ctx,
                         SSL_OP_NO_ENCRYPT_THEN_MAC);
+#endif
     return ctx;
 }
 void ShowCerts(SSL* ssl)
@@ -103,11 +113,34 @@ int main(int count, char *strings[])
     server = OpenConnection(hostname, atoi(portnum));
     ssl = SSL_new(ctx);      /* create new SSL connection state */
     SSL_set_fd(ssl, server);    /* attach the socket descriptor */
+    //SSL_set_cipher_list(ssl, "ECDHE_RSA_AES_256_CBC_SHA256");
     if ( SSL_connect(ssl) == FAIL )   /* perform the connection */
         ERR_print_errors_fp(stderr);
     else
     {
-        printf("Connected with %s encryption\n", SSL_get_cipher(ssl));
+        //To deal with >16b packets easier
+        SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY);
+      
+        printf("Default:\n %s", SSL_get_cipher_list(ssl,0));
+#if defined(PRINT_AVAILABLE_CIPHER_SUITES)
+	STACK_OF(SSL_CIPHER) *stack;
+	stack = SSL_get_ciphers(ssl);
+	SSL_CIPHER *cipher; int bits;
+	printf("Available:\n");
+	while((cipher = (SSL_CIPHER*)sk_pop(stack)) != NULL)
+	  {
+	    printf("* Cipher: %s\n", SSL_CIPHER_get_name(cipher));
+	    printf("  Bits: %i\n", SSL_CIPHER_get_bits(cipher, &bits));
+	    printf("  Used bits: %i\n", bits);
+	    printf("  Version: %s\n", SSL_CIPHER_get_version(cipher));
+	    printf("  Description: %s\n", SSL_CIPHER_description(cipher, NULL, 0));
+	  }
+#endif
+
+	
+        printf("\nConnected with %s encryption %s\n", SSL_get_cipher(ssl), SSL_get_version(ssl));
+	char buf[128]; SSL_CIPHER_description(SSL_get_current_cipher(ssl), buf, sizeof(buf));
+	printf("%s\n",buf);
 	ShowCerts(ssl);        /* get any certs */
 	
 	printf("Starting send/receive cycles of %d messages\n",cycles);
@@ -119,7 +152,12 @@ int main(int count, char *strings[])
 	 for (int ix=0; ix < cycles; ix++)
          {
 	   bytes = SSL_write(ssl,wbuf,length);
-	   if (bytes != length) {printf("Write failed: 0x%x\n",bytes); ERR_print_errors_fp(stderr); goto exitloop;}
+	   if (bytes != length) {
+	     int rc;
+	     rc = SSL_get_error(ssl, bytes);
+	     printf("Write failed: 0x%x  rc: 0x%x\n",bytes,rc);
+	     ERR_print_errors_fp(stderr);
+	     goto exitloop;}
 	 }
 	 clock_gettime(CLOCK_REALTIME, &stop);
 

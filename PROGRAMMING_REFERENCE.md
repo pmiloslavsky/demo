@@ -92,7 +92,8 @@ Composition: black diamond
 
 # 4. Python
 ## 4.1. Tutorials
-* https://realpython.com/
+* :boom: Misc: https://realpython.com/
+* python source: https://realpython.com/cpython-source-code-guide/
 ## 4.2. Cheat Sheets
 * https://gto76.github.io/python-cheatsheet/ 
 ## 4.3. profiling

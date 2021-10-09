@@ -1,83 +1,87 @@
 Table of Contents:
-- [C/C++](#cc)
-  - [API Reference](#api-reference)
-  - [Supported Features by Compiler Version](#supported-features-by-compiler-version)
-  - [C++ Libraries](#c-libraries)
-    - [GNU libstdc++](#gnu-libstdc)
-    - [List of Libraries](#list-of-libraries)
-    - [GUI](#gui)
-    - [Intel TBB](#intel-tbb)
-  - [Replacing STL allocators:](#replacing-stl-allocators)
-  - [Cheat sheets](#cheat-sheets)
-- [Python](#python)
-- [Algorithms](#algorithms)
-  - [Reference](#reference)
-  - [Interviewing and Competitive Programming](#interviewing-and-competitive-programming)
-- [Design Patterns and OO](#design-patterns-and-oo)
-  - [UML syntax](#uml-syntax)
-- [Python](#python-1)
-  - [Tutorials](#tutorials)
-  - [Cheat Sheets](#cheat-sheets-1)
-  - [profiling](#profiling)
-  - [Source Code:](#source-code)
-- [Debugging,Analysis and Performance Tuning](#debugginganalysis-and-performance-tuning)
-  - [GDB](#gdb)
-  - [Profiling](#profiling-1)
-- [Unix tips](#unix-tips)
-- [Books](#books)
-- [Statistical Analysis and Machine Learning](#statistical-analysis-and-machine-learning)
-  - [Fundamentals of ML](#fundamentals-of-ml)
-  - [Statistical measures in python:](#statistical-measures-in-python)
-    - [Plotting:](#plotting)
-    - [Fitting:](#fitting)
-    - [Sampling:](#sampling)
-    - [Learning](#learning)
+- [1. C/C++](#1-cc)
+  - [1.1. API Reference](#11-api-reference)
+  - [1.2. Supported Features by Compiler Version](#12-supported-features-by-compiler-version)
+  - [1.3. C++ Libraries](#13-c-libraries)
+    - [1.3.1. GNU libstdc++](#131-gnu-libstdc)
+    - [1.3.2. List of Libraries](#132-list-of-libraries)
+    - [1.3.3. GUI](#133-gui)
+    - [1.3.4. Intel TBB](#134-intel-tbb)
+  - [1.4. Replacing STL allocators:](#14-replacing-stl-allocators)
+  - [1.5. Cheat sheets](#15-cheat-sheets)
+- [2. Algorithms](#2-algorithms)
+  - [2.1. Reference](#21-reference)
+  - [2.2. Interviewing and Competitive Programming](#22-interviewing-and-competitive-programming)
+- [3. Design Patterns and OO](#3-design-patterns-and-oo)
+  - [3.1. UML syntax](#31-uml-syntax)
+- [4. Python](#4-python)
+  - [4.1. Tutorials](#41-tutorials)
+  - [4.2. Cheat Sheets](#42-cheat-sheets)
+  - [4.3. profiling](#43-profiling)
+  - [4.4. Source Code:](#44-source-code)
+- [5. Debugging,Analysis and Performance Tuning](#5-debugginganalysis-and-performance-tuning)
+  - [5.1. Automated](#51-automated)
+  - [5.2. GDB](#52-gdb)
+  - [5.3. Profiling](#53-profiling)
+- [6. OS specific](#6-os-specific)
+  - [6.1. Linux](#61-linux)
+  - [6.2. AIX](#62-aix)
+- [7. Unix tips](#7-unix-tips)
+- [8. Books](#8-books)
+- [9. Statistical Analysis and Machine Learning](#9-statistical-analysis-and-machine-learning)
+  - [9.1. Fundamentals of ML](#91-fundamentals-of-ml)
+  - [9.2. Statistical measures in python:](#92-statistical-measures-in-python)
+    - [9.2.1. Plotting:](#921-plotting)
+    - [9.2.2. Fitting:](#922-fitting)
+    - [9.2.3. Sampling:](#923-sampling)
+    - [9.2.4. Learning](#924-learning)
 
-# C/C++
-## API Reference
+
+# 1. C/C++
+## 1.1. API Reference
  * CPP: :boom: https://en.cppreference.com/w/cpp
  * CPP: https://www.cplusplus.com/reference/unordered_map/unordered_map/
  * CPP How to Program: https://cs.fit.edu/~mmahoney/cse2050/how2cpp.html
  * C standard library: https://www.cplusplus.com/reference/clibrary/
-## Supported Features by Compiler Version
+## 1.2. Supported Features by Compiler Version
  * https://en.cppreference.com/w/cpp/compiler_support
-## C++ Libraries
-### GNU libstdc++
+## 1.3. C++ Libraries
+### 1.3.1. GNU libstdc++
 * Docs: https://gcc.gnu.org/onlinedocs/libstdc++/manual/index.html
 * Library test suite for parallel sort: https://gcc.gnu.org/git/?p=gcc.git;a=blob;f=libstdc%2B%2B-v3/testsuite/25_algorithms/pstl/alg_sorting/sort.cc;h=e0c55df404f82dc360cea77ce411511bc2b4e619;hb=HEAD
-### List of Libraries
+### 1.3.2. List of Libraries
 https://en.cppreference.com/w/cpp/links/libs
-### GUI
+### 1.3.3. GUI
 * SFML https://www.sfml-dev.org/index.php
 * TGUI https://tgui.eu/
-### Intel TBB
+### 1.3.4. Intel TBB
 Forms the basis of parallel algorithms in latest C++ versions
 
 https://software.intel.com/content/www/us/en/develop/documentation/tbb-documentation/top.html
 
 Introduction: https://www.youtube.com/watch?v=9Otq_fcUnPE
 
-## Replacing STL allocators:
+## 1.4. Replacing STL allocators:
 * https://gcc.gnu.org/onlinedocs/libstdc++/manual/memory.html
 * https://johnysswlab.com/the-price-of-dynamic-memory-allocation/
 * 
-## Cheat sheets
+## 1.5. Cheat sheets
  * Syntax cheat sheet: https://github.com/gibsjose/cpp-cheat-sheet/blob/master/C%2B%2B%20Syntax.md
  * Data Structures and Algorithms cheat sheet: https://github.com/gibsjose/cpp-cheat-sheet/blob/master/Data%20Structures%20and%20Algorithms.md
  * C++ STL quick reference: https://overapi.com/static/cs/STL%20Quick%20Reference%201.29.pdf
-# Python
-# Algorithms
-## Reference
+
+# 2. Algorithms
+## 2.1. Reference
 https://www.geeksforgeeks.org/
-## Interviewing and Competitive Programming
+## 2.2. Interviewing and Competitive Programming
 * :boom: https://www.hackerrank.com/
 * https://www.hackerrank.com/philip_miloslav1
-# Design Patterns and OO
+# 3. Design Patterns and OO
 * SOLID:  https://scotch.io/bar-talk/s-o-l-i-d-the-first-five-principles-of-object-oriented-design
 * Catalog: https://en.wikipedia.org/wiki/Software_design_pattern
 * Cloud Patterns: https://docs.microsoft.com/en-us/azure/architecture/patterns/
 * UML: https://www.guru99.com/uml-cheatsheet-reference-guide.html
-## UML syntax
+## 3.1. UML syntax
 <<interface>>  +public  -private    variable: type
 
 Inheritance: from class: solid line black arrow, from abstract class: solid line white arrow, from interface: dashed line white arrow
@@ -85,27 +89,39 @@ Inheritance: from class: solid line black arrow, from abstract class: solid line
 Aggregation: white diamond
 
 Composition: black diamond
-# Python
-## Tutorials
+
+# 4. Python
+## 4.1. Tutorials
 * https://realpython.com/
-## Cheat Sheets
+## 4.2. Cheat Sheets
 * https://gto76.github.io/python-cheatsheet/ 
-## profiling
+## 4.3. profiling
 python -m cProfile -s time circuit.py
-## Source Code:
-# Debugging,Analysis and Performance Tuning
-## GDB
+## 4.4. Source Code:
+# 5. Debugging,Analysis and Performance Tuning
+## 5.1. Automated
+* valgrind
+* cachegrind (find cache thrashing)
+## 5.2. GDB
 * SIGSEGV: http://unknownroad.com/rtfm/gdbtut/gdbsegfault.html
-## Profiling
-# Unix tips
-# Books
+## 5.3. Profiling
+
+# 6. OS specific
+## 6.1. Linux
+* Search kernel source: https://elixir.bootlin.com/linux/v5.14.10/source
+* Search kernel Docs: https://www.kernel.org/doc/html/latest/search.html
+## 6.2. AIX
+
+
+# 7. Unix tips
+# 8. Books
 * (Stroustrop’s paper about C++ evolution) https://dl.acm.org/doi/abs/10.1145/3386320
 * Fedor G Pikus Hands on Design Patterns with C++
 
-# Statistical Analysis and Machine Learning
-## Fundamentals of ML
+# 9. Statistical Analysis and Machine Learning
+## 9.1. Fundamentals of ML
 * https://github.com/ageron/handson-ml2
-## Statistical measures in python:
+## 9.2. Statistical measures in python:
 ```
 popSD = numpy.std(population)
 
@@ -151,7 +167,7 @@ Area in standard deviation:
 
               'std =', round(area, 4))
 ```
-### Plotting:
+### 9.2.1. Plotting:
 pylab.plot   pylab.hist   pylab.table
 ```
     pylab.errorbar(xVals, sizeMeans,
@@ -160,7 +176,7 @@ pylab.plot   pylab.hist   pylab.table
 
                    label = '95% Confidence Interval')
 ```
-### Fitting:
+### 9.2.2. Fitting:
 ```
 def genFits(xVals, yVals, degrees):
 
@@ -174,7 +190,7 @@ def genFits(xVals, yVals, degrees):
 
 estYVals = pylab.polyval(model, xVals)
 ```
-### Sampling:
+### 9.2.3. Sampling:
 ```
 random.sample(population, sampleSize)
 
@@ -186,7 +202,7 @@ If the samples are not random and independent don’t make conclusions……
 
 Survivor bias, non response bias, cherry picking
 ```
-### Learning
+### 9.2.4. Learning
 Clustering (kNearestNeighbor) is Unsupervised Learning
 Classification (Logistic Regresion and k-means(greedy)) is Supervised Learning:
 Logistic Regression comes in 2 kinds:

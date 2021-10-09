@@ -1,7 +1,7 @@
 Table of Contents:
 - [C/C++](#cc)
   - [API Reference](#api-reference)
-  - [Compiler Version Supported Features](#compiler-version-supported-features)
+  - [Supported Features by Compiler Version](#supported-features-by-compiler-version)
   - [C++ Libraries](#c-libraries)
     - [GNU libstdc++](#gnu-libstdc)
     - [List of Libraries](#list-of-libraries)
@@ -34,11 +34,11 @@ Table of Contents:
 
 # C/C++
 ## API Reference
- * CPP: https://en.cppreference.com/w/cpp
+ * CPP: :boom: https://en.cppreference.com/w/cpp
  * CPP: https://www.cplusplus.com/reference/unordered_map/unordered_map/
  * CPP How to Program: https://cs.fit.edu/~mmahoney/cse2050/how2cpp.html
  * C standard library: https://www.cplusplus.com/reference/clibrary/
-## Compiler Version Supported Features
+## Supported Features by Compiler Version
  * https://en.cppreference.com/w/cpp/compiler_support
 ## C++ Libraries
 ### GNU libstdc++
@@ -64,19 +64,18 @@ Introduction: https://www.youtube.com/watch?v=9Otq_fcUnPE
  * Syntax cheat sheet: https://github.com/gibsjose/cpp-cheat-sheet/blob/master/C%2B%2B%20Syntax.md
  * Data Structures and Algorithms cheat sheet: https://github.com/gibsjose/cpp-cheat-sheet/blob/master/Data%20Structures%20and%20Algorithms.md
  * C++ STL quick reference: https://overapi.com/static/cs/STL%20Quick%20Reference%201.29.pdf
- * 
 # Python
 # Algorithms
 ## Reference
 https://www.geeksforgeeks.org/
 ## Interviewing and Competitive Programming
-* https://www.hackerrank.com/
+* :boom: https://www.hackerrank.com/
 * https://www.hackerrank.com/philip_miloslav1
 # Design Patterns and OO
 * SOLID:  https://scotch.io/bar-talk/s-o-l-i-d-the-first-five-principles-of-object-oriented-design
 * Catalog: https://en.wikipedia.org/wiki/Software_design_pattern
 * Cloud Patterns: https://docs.microsoft.com/en-us/azure/architecture/patterns/
-* UML: 
+* UML: https://www.guru99.com/uml-cheatsheet-reference-guide.html
 ## UML syntax
 <<interface>>  +public  -private    variable: type
 

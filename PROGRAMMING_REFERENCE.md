@@ -25,8 +25,9 @@ Table of Contents:
   - [Profiling](#profiling-1)
 - [Unix tips](#unix-tips)
 - [Books](#books)
-- [Statistical Analysis and Learning](#statistical-analysis-and-learning)
-    - [Statistical measures:](#statistical-measures)
+- [Statistical Analysis and Machine Learning](#statistical-analysis-and-machine-learning)
+  - [Fundamentals of ML](#fundamentals-of-ml)
+  - [Statistical measures in python:](#statistical-measures-in-python)
     - [Plotting:](#plotting)
     - [Fitting:](#fitting)
     - [Sampling:](#sampling)
@@ -101,8 +102,10 @@ python -m cProfile -s time circuit.py
 * (Stroustrop’s paper about C++ evolution) https://dl.acm.org/doi/abs/10.1145/3386320
 * Fedor G Pikus Hands on Design Patterns with C++
 
-# Statistical Analysis and Learning
-### Statistical measures:
+# Statistical Analysis and Machine Learning
+## Fundamentals of ML
+* https://github.com/ageron/handson-ml2
+## Statistical measures in python:
 ```
 popSD = numpy.std(population)
 

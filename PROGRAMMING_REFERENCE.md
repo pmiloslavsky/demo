@@ -26,7 +26,13 @@ Table of Contents:
 - [6. OS specific](#6-os-specific)
   - [6.1. Linux](#61-linux)
   - [6.2. AIX](#62-aix)
+    - [6.2.1. system administration](#621-system-administration)
+      - [6.2.1.1. processors and configuration](#6211-processors-and-configuration)
+  - [6.3. Docker](#63-docker)
+    - [6.3.1. Basic Commands](#631-basic-commands)
 - [7. Unix tips](#7-unix-tips)
+  - [7.1. Why is computer slow?](#71-why-is-computer-slow)
+  - [7.2. Save terminal session with tmux](#72-save-terminal-session-with-tmux)
 - [8. Books](#8-books)
 - [9. Statistical Analysis and Machine Learning](#9-statistical-analysis-and-machine-learning)
   - [9.1. Fundamentals of ML](#91-fundamentals-of-ml)
@@ -112,9 +118,51 @@ python -m cProfile -s time circuit.py
 * Search kernel source: https://elixir.bootlin.com/linux/v5.14.10/source
 * Search kernel Docs: https://www.kernel.org/doc/html/latest/search.html
 ## 6.2. AIX
+### 6.2.1. system administration
+#### 6.2.1.1. processors and configuration
+* lscfg -lproc\*
+* lparstat -i | grep CPU
+* also lparstat without args (shows smt4 sometimes)
+* bindprocessor -q
+* lsattr -El proc0
+## 6.3. Docker
+### 6.3.1. Basic Commands
+Install docker:
+https://docs.docker.com/engine/install/ubuntu/#installation-methods
+Hello world doesn’t work at first – eventually it started working for me
+```
+sudo docker run -it docker/surprise
+sudo docker ps -a
+sudo docker ls
+```
 
+
+Networking:
+https://docs.docker.com/network/network-tutorial-standalone/
+```
+sudo ip link set dev docker0 up/down
+sudo docker exec -it iris ping -c 2 google.com
+Sudo docker exec -it iris ip addr show
+sudo docker network ls
+sudo docker network inspect bridge
+sudo docker network inspect host
+sudo docker exec -it iris ls -la /usr/irissys/bin/libirisHLL.so
+```
 
 # 7. Unix tips
+## 7.1. Why is computer slow?
+* top
+* free
+* dstat
+* iostat
+## 7.2. Save terminal session with tmux
+* sudo apt install tmux
+* tmux
+* export TERM=xterm-256color
+* setenv TERM xterm-256color
+* tmux ls
+* tmux attach-session -t 0
+* CTRL-B D  (detach)
 # 8. Books
 * (Stroustrop’s paper about C++ evolution) https://dl.acm.org/doi/abs/10.1145/3386320
 * Fedor G Pikus Hands on Design Patterns with C++

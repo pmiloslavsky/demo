@@ -117,8 +117,19 @@ python -m cProfile -s time circuit.py
 ## 6.1. Linux
 * Search kernel source: https://elixir.bootlin.com/linux/v5.14.10/source
 * Search kernel Docs: https://www.kernel.org/doc/html/latest/search.html
+### perf
+* sudo apt-get update
+* sudo apt-get dist-upgrade
+* sudo apt-get install --reinstall linux-tools-common linux-tools-generic linux-tools-`uname -r`
+* sudo perf top
 ## 6.2. AIX
 ### 6.2.1. system administration
+```sudo lssecattr -c /usr/sbin/lsattr
+1420-012 "/usr/sbin/lsattr" does not exist in the privileged command database.
+sudo lssecattr -c /usr/pmapi/tools/pmcycles
+/usr/pmapi/tools/pmcycles accessauths=aix.system.pmustat.global innateprivs=PV_PMU_CONFIG,PV_PMU_SYSTEM secflags=FSF_EPS
+```
+
 #### 6.2.1.1. processors and configuration
 * lscfg -lproc\*
 * lparstat -i | grep CPU

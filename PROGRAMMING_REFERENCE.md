@@ -25,6 +25,7 @@ Table of Contents:
   - [5.3. Profiling](#53-profiling)
 - [6. OS specific](#6-os-specific)
   - [6.1. Linux](#61-linux)
+    - [6.1.1. perf](#611-perf)
   - [6.2. AIX](#62-aix)
     - [6.2.1. system administration](#621-system-administration)
       - [6.2.1.1. processors and configuration](#6211-processors-and-configuration)
@@ -111,13 +112,16 @@ python -m cProfile -s time circuit.py
 * cachegrind (find cache thrashing)
 ## 5.2. GDB
 * SIGSEGV: http://unknownroad.com/rtfm/gdbtut/gdbsegfault.html
+* Cheat sheet https://darkdust.net/files/GDB%20Cheat%20Sheet.pdf
 ## 5.3. Profiling
+* with perf: https://www.brendangregg.com/FlameGraphs/cpuflamegraphs.html
+* with valgrind: https://developer.mantidproject.org/ProfilingWithValgrind.html
 
 # 6. OS specific
 ## 6.1. Linux
 * Search kernel source: https://elixir.bootlin.com/linux/v5.14.10/source
 * Search kernel Docs: https://www.kernel.org/doc/html/latest/search.html
-### perf
+### 6.1.1. perf
 * sudo apt-get update
 * sudo apt-get dist-upgrade
 * sudo apt-get install --reinstall linux-tools-common linux-tools-generic linux-tools-`uname -r`

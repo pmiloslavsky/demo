@@ -1724,26 +1724,29 @@ void signalImportKeys(shared_ptr<FractalModel> p_model,
     fs::create_directory(key_version);
   }
 
-  //on windows, find linux
+  //The keys are saved either in the linux or the windows place
+  //but they are imported from both places when you push import
+
+  //copy the keys from the linux location if it exists ../../../fractal_key_version_1
   filename = std::string{".."} + separator + std::string{".."} + separator + std::string{".."} + separator + key_version;
   if (fs::is_directory(filename)) {
     for(auto& p: fs::directory_iterator(filename))
       {
-	if (!fs::exists(key_version + separator + p.path().filename().string())) {
-	  fs::copy_file(p.path(), key_version + separator + p.path().filename().string());
-	}
+	    if (!fs::exists(key_version + separator + p.path().filename().string())) {
+	        fs::copy_file(p.path(), key_version + separator + p.path().filename().string());
+	    }
       }
   }
 
-  //on linux, find windows
+  //copy the keys for the windows location if it exists  fractals_cuda/x64/Release/fractal_key_version_1
   filename = std::string{"fractals_cuda"} + separator + std::string{"x64"} + separator + std::string{"Release"} + separator + key_version;
   if (fs::is_directory(filename)) {
     for(auto& p: fs::directory_iterator(filename))
       {
-	filename = p.path().string();
-	if (!fs::exists(key_version + separator + p.path().filename().string())) {
-	  fs::copy_file(p.path(), key_version + separator + p.path().filename().string());
-	}
+	    filename = p.path().string();
+	    if (!fs::exists(key_version + separator + p.path().filename().string())) {
+	        fs::copy_file(p.path(), key_version + separator + p.path().filename().string());
+	    }
       }
   }
   
@@ -1773,6 +1776,8 @@ void signalSaveKey(shared_ptr<FractalModel> p_model,
   std::string filename;
   std::ofstream key;
 
+  // save the keys into either the windows location or the linux location
+  // import will pick it up from both
   if (!fs::is_directory(key_version) || !fs::exists(key_version)) {
     fs::create_directory(key_version);
   }
@@ -2407,9 +2412,8 @@ int main(int argc, char **argv) {
     threads[tix] = thread(&FractalModel::fractal_thread, p_model, tix,
                           std::move(futureObj), &thread_asked_to_reset[0]);
   }
-
-  // Create the gui and attach it to the window
   bool display_gui = true;
+  // Create the gui and attach it to the window
   auto pgui = make_shared<tgui::Gui>(window);
   tgui::Theme theme{"themes/BabyBlue.txt"};
   tgui::Theme::setDefault(&theme);
@@ -2571,7 +2575,7 @@ int main(int argc, char **argv) {
 
     window.clear();
     window.setView(modelview);
-    if (display_gui == false) window.draw(*p_model);  // draw fractals in gui off mode to save cpu
+    window.draw(*p_model);  // draw fractals in gui off mode to save cpu
     if (R.show_selection)
       window.draw(selection);  //draw selection
     pgui->draw();           // Draw all GUI widgets

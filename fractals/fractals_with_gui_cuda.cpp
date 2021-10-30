@@ -311,6 +311,8 @@ vector<SupportedFractal> FRAC = {
     },
 };
 
+bool update_and_draw = true; //stop using cpu for a bit
+
 const int FRACTAL_VERSION{1};
 
 std::string key_version = std::string{"fractal_key_version_"} + to_string(FRACTAL_VERSION);
@@ -863,6 +865,12 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
     for (auto &v : blueHits) v.resize(IMAGE_HEIGHT);
 
     while (1) {
+        // Don't update if we want to pause cpu usage
+        if (update_and_draw == false) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            continue;
+        }
+
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
       // see if we should terminate - since we're exiting anyway dont bother to pass
@@ -1955,10 +1963,12 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   menu->addMenuItem("Use right mouse button to recenter (some fractals)");
   menu->addMenuItem("Hold and drag left mouse button to zoom to cropped area (some fractals)");
   menu->addMenuItem("Type h to hide/show gui");
+  menu->addMenuItem("Type p to pause/resume fractal generation");
+  menu->addMenuItem("Type c to turn cuda on/off");
+  menu->addMenuItem("Type f for fullscreen on/off (buggy)");
   menu->addMenuItem("Type s to take a screenshot");
-  menu->addMenuItem("Type c to turn cuda on and off");
-  menu->addMenuItem("Type f for fullscreen toggle (buggy)");
   menu->addMenuItem("Type e to exit");
+
 
   //pgui->add(menu); //added at end so its always on top
   menu->connect("MenuItemClicked", signalFractalMenu, p_model, pgui);
@@ -2336,7 +2346,6 @@ int main(int argc, char **argv) {
   // window.create(sf::VideoMode(1024, 768, desktop.bitsPerPixel), "SFML
   // window");
 
-  // Main window
   sf::View modelview;
   sf::Vector2u viewD(screenDimensions.x, screenDimensions.y);
   modelview.setSize(viewD.x, viewD.y);
@@ -2452,38 +2461,34 @@ int main(int argc, char **argv) {
             display_all_widgets(pgui, false);
           }
         }
-      }
-
-      if (event.type == sf::Event::KeyPressed) {
-        if (event.key.code == sf::Keyboard::S) {
-          save_screenshot(window, FRAC[p_model->current_fractal].name, modelview, p_model, pgui, display_gui);
+        else if (event.key.code == sf::Keyboard::P) {
+            if (update_and_draw == false) {
+                update_and_draw = true;
+            }
+            else {
+                update_and_draw = false;
+            }
         }
-      }
-
-      if (event.type == sf::Event::KeyPressed) {
-        if (event.key.code == sf::Keyboard::E) {
-          window.close();
-	  break;
+        else if (event.key.code == sf::Keyboard::S) {
+            save_screenshot(window, FRAC[p_model->current_fractal].name, modelview, p_model, pgui, display_gui);
         }
-      }
-
-      if (event.type == sf::Event::KeyPressed) {
-        if (event.key.code == sf::Keyboard::C) {
-          if (FRAC[p_model->current_fractal].cuda_mode == true)
-            FRAC[p_model->current_fractal].cuda_mode = false;
-          else
-            FRAC[p_model->current_fractal].cuda_mode = true;
+        else if (event.key.code == sf::Keyboard::E) {
+            window.close();
+            break;
         }
-      }
-
-      if (event.type == sf::Event::KeyPressed) {
-        if (event.key.code == sf::Keyboard::F) {
-          // sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
-          // window.setSize(sf::Vector2u{screenDimensions.x,
-          // screenDimensions.y});
-          window.create(sf::VideoMode(screenDimensions.x, screenDimensions.y),
-                        "Fractals!", sf::Style::Fullscreen);
-          window.setSize(sf::Vector2u{screenDimensions.x, screenDimensions.y});
+        else if (event.key.code == sf::Keyboard::C) {
+            if (FRAC[p_model->current_fractal].cuda_mode == true)
+                FRAC[p_model->current_fractal].cuda_mode = false;
+            else
+                FRAC[p_model->current_fractal].cuda_mode = true;
+        }
+        else if (event.key.code == sf::Keyboard::F) {
+            // sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
+            // window.setSize(sf::Vector2u{screenDimensions.x,
+            // screenDimensions.y});
+            window.create(sf::VideoMode(screenDimensions.x, screenDimensions.y),
+                "Fractals!", sf::Style::Fullscreen);
+            window.setSize(sf::Vector2u{ screenDimensions.x, screenDimensions.y });
         }
       }
 
@@ -2562,25 +2567,26 @@ int main(int argc, char **argv) {
     }
     ++frames;
 
-    // Evolve the model independantly
-    sf::Time elapsed = clock_e.restart();
-    p_model->update(elapsed);  // rebuild the pixels from what threads did in background
+    if (update_and_draw) {
+        // Evolve the model independantly
+        sf::Time elapsed = clock_e.restart();
+        p_model->update(elapsed);  // rebuild the pixels from what threads did in background
 
-    // Draw the GUI and the MODEL both of which are controlled by
-    // Keyboard, mouse, and gui elements
-    updateCurrentGuiElements(pgui, p_model, start.asSeconds(),
-                             frames / start.asSeconds());
+        // Draw the GUI and the MODEL both of which are controlled by
+        // Keyboard, mouse, and gui elements
+        updateCurrentGuiElements(pgui, p_model, start.asSeconds(),
+            frames / start.asSeconds());
 
-    start = clock_s.getElapsedTime();
+        start = clock_s.getElapsedTime();
 
-    window.clear();
-    window.setView(modelview);
-    window.draw(*p_model);  // draw fractals in gui off mode to save cpu
-    if (R.show_selection)
-      window.draw(selection);  //draw selection
-    pgui->draw();           // Draw all GUI widgets
-
-    window.display();
+        window.clear();
+        window.setView(modelview);
+        window.draw(*p_model);      // draw fractals in gui off mode to save cpu
+        if (R.show_selection)
+            window.draw(selection); // draw mouse selection
+        pgui->draw();               // Draw all GUI widgets
+        window.display();           // if you always do this it will cause screen jitter, but if you alt-tabe you will get white screen
+    }
   }
 
   // terminate threads in thread pool

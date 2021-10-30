@@ -11,7 +11,7 @@ A C++/sfml/tgui/CUDA GUI framework to display/explore fractals. Threaded and CUD
 * GUI settable fractal parameters: power and zconst(julia style) and max iterations
 * GUI selectable color palettes and color cycle size options
 * GUI palette reflection button to prevent discontinuities
-* Screenshot hotkey and hide all widgets hotkey
+* Screenshot hotkey and hide all widgets hotkey and pause cpu usage hotkey
 * Crop an area of the fractal (displays border) and it will zoom to crop.
 * Save and Load fractal key support from file and from memory
 * Mandelbrot (zoom and pan via mouse) Threaded.
@@ -19,14 +19,16 @@ A C++/sfml/tgui/CUDA GUI framework to display/explore fractals. Threaded and CUD
 * Spiral Septagon (zoom and pan via mouse) Threaded.
 * Nova method fractal (zoom and pan via mouse) Threaded.
 * Newton method fractal (zoom and pan via mouse) Threaded.
+* Anti-buddhabrot with oversampling
 * Buddhabrot(Nebulabrot). Threaded and CUDA optimized(no settable power support for cuda). Will run threads on all the cores to generate the image. To generate the image needs a lot of CPU. The threads have been optimized to generate the image very fast.
 On my AMD 16 core machine, the full 16 threads on all cores version is about twice as fast as CUDA and no threads.
 CUDA programming is very finicky and there is probably lots of room for improvement.
 Nevertheless, its a massive improvement over one hw thread doing the work.
-* Anti-buddhabrot with oversampling
+
 
 This has been ported to Windows and Ubuntu.
 <p align="center">
+<img src="fractals/interface_fractal.png" width="800" height="266">
 <img src="fractals/interface_fractal1.png" width="800" height="266">
 <img src="fractals/interface_fractal2.png" width="800" height="266">
 <img src="fractals/interface_fractal3.png" width="800" height="266">

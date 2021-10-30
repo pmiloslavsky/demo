@@ -28,7 +28,6 @@ Nevertheless, its a massive improvement over one hw thread doing the work.
 
 This has been ported to Windows and Ubuntu.
 <p align="center">
-<img src="fractals/interface_fractal.png" width="800" height="266">
 <img src="fractals/interface_fractal1.png" width="800" height="266">
 <img src="fractals/interface_fractal2.png" width="800" height="266">
 <img src="fractals/interface_fractal3.png" width="800" height="266">

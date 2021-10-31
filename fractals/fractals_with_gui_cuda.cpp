@@ -90,7 +90,7 @@ const int IMAGE_HEIGHT = 1440;
 
 enum class ColoringAlgo
 {
-  MULTICYCLE, SMOOTH, USE_IMAGE
+  MULTICYCLE, SMOOTH, USE_IMAGE, SHADOW_MAP
 };
 
 enum class ColorCycle
@@ -186,7 +186,8 @@ vector<SupportedFractal> FRAC = {
      {-1.4, 1.4},
      {300, 0, 0},{300, 0, 0},
      2,2,
-     complex<double>{0,0},complex<double>{0,0}
+     complex<double>{0,0},complex<double>{0,0},
+     2,2
     },
     {string("Mandelbrot_1000"),
      false,
@@ -197,7 +198,8 @@ vector<SupportedFractal> FRAC = {
      {-1.4, 1.4},
      {1000, 0, 0},{1000, 0, 0},
      2,2,
-     complex<double>{0,0},complex<double>{0,0}
+     complex<double>{0,0},complex<double>{0,0},
+     2,2
     },
     {string("Julia"),
      false,
@@ -208,7 +210,8 @@ vector<SupportedFractal> FRAC = {
      {-1.2, 1.2},
      {300, 0, 0},{300, 0, 0},
      2,2,
-     complex<double>{-0.79,0.15},complex<double>{-0.79,0.15}
+     complex<double>{-0.79,0.15},complex<double>{-0.79,0.15},
+     2,2
     },
     {string("Spiral_Septagon"),
      false,
@@ -219,7 +222,8 @@ vector<SupportedFractal> FRAC = {
      {-1.4, 1.4},
      {300, 0, 0},{300, 0, 0},
      7,7,
-     complex<double>{0,0},complex<double>{0,0}
+     complex<double>{0,0},complex<double>{0,0},
+     2,2
     },
     {string("Buddhabrot"),  // not going to be zoomable and pannable
      true,
@@ -230,7 +234,8 @@ vector<SupportedFractal> FRAC = {
      {-1.2, 1.2},
      {10000, 1000, 100},{10000, 1000, 100},
      2,2,
-     complex<double>{0,0},complex<double>{0,0}
+     complex<double>{0,0},complex<double>{0,0},
+     2,2
     },
     {string("Buddhabrot_BW"),  // not going to be zoomable and pannable
      true,
@@ -241,7 +246,8 @@ vector<SupportedFractal> FRAC = {
      {-1.2, 1.2},
      {10000, 10000, 10000},{10000, 10000, 10000},
      2,2,
-     complex<double>{0,0},complex<double>{0,0}
+     complex<double>{0,0},complex<double>{0,0},
+     2,2
     },
     {string("Buddhabrot_General"),  // not going to be zoomable and pannable
      false,
@@ -252,7 +258,8 @@ vector<SupportedFractal> FRAC = {
      {-1.2, 1.2},
      {10000, 1000, 100},{10000, 1000, 100},
      2,2,
-     complex<double>{0,0},complex<double>{0,0}
+     complex<double>{0,0},complex<double>{0,0},
+     2,2
     },
     {string("Buddhabrot_General_Julia"),  // not going to be zoomable and pannable
      false,
@@ -263,7 +270,8 @@ vector<SupportedFractal> FRAC = {
      {-1.2, 1.2},
      {10000, 1000, 100},{10000, 1000, 100},
      2,2,
-     complex<double>{0,0},complex<double>{0,0}
+     complex<double>{0,0},complex<double>{0,0},
+     2,2
     },
     {string("Anti_Buddhabrot_General"),  // not going to be zoomable and pannable
      false,
@@ -274,7 +282,8 @@ vector<SupportedFractal> FRAC = {
      {-1.2, 1.2},
      {10000, 10000, 10000},{10000, 10000, 10000},
      2,2,
-     complex<double>{0,0},complex<double>{0,0}
+     complex<double>{0,0},complex<double>{0,0},
+     2,2
     },
     {string("Anti_Buddhabrot_Small"),  // not going to be zoomable and pannable
      false,
@@ -285,7 +294,8 @@ vector<SupportedFractal> FRAC = {
      {-1.0, .25},
      {10000, 10000, 10000},{10000, 10000, 10000},
      2,2,
-     complex<double>{0,0},complex<double>{0,0}
+     complex<double>{0,0},complex<double>{0,0},
+     2,2
     },
     {string("Nova_z6+z3-1"),
      false,
@@ -296,7 +306,8 @@ vector<SupportedFractal> FRAC = {
      {-1.4, 1.4},
      {300, 0, 0},{300, 0, 0},
      6,6,
-     complex<double>{0,0},complex<double>{0,0}
+     complex<double>{0,0},complex<double>{0,0},
+     2,2
     },
     {string("Newton_z6+z3-1"),
      false,
@@ -307,7 +318,8 @@ vector<SupportedFractal> FRAC = {
      {-1.4, 1.4},
      {300, 0, 0},{300, 0, 0},
      6,6,
-     complex<double>{0,0},complex<double>{0,0}
+     complex<double>{0,0},complex<double>{0,0},
+     2,2
     },
 };
 
@@ -329,6 +341,7 @@ class SavedFractal {
   unsigned int current_max_iters[3];
   double current_power;
   std::complex<double> current_zconst;
+  double current_escape_r;
 
   ReferenceFrame RF;
   //but not NSR
@@ -350,8 +363,8 @@ class SavedFractal {
 //   unsigned long long samples_last_second;
 // };
 
-inline void get_iteration_color(const int iter_ix, const int iters_max, const complex<double> & zfinal,
-                                    int *p_rcolor, int *p_gcolor, int *p_bcolor) {
+inline void get_iteration_color(const int iter_ix, const int iters_max, const complex<double> & zfinal, complex<double>& derivative,
+                                int *p_rcolor, int *p_gcolor, int *p_bcolor) {
 
   //palette: UF16, Viridis, Plasma, Jet, Hot, Heat, Parula, Gray, Cividis, Github, UF16(added)
   //cycle_size: 8,16,32,64,128,256
@@ -371,7 +384,40 @@ inline void get_iteration_color(const int iter_ix, const int iters_max, const co
     *p_gcolor = color.g;
     *p_bcolor = color.b;
     return;
+  } 
+  else if (R.color_algo == ColoringAlgo::SHADOW_MAP)
+  {
+      const double h2 = 1.5;  // height factor of the incoming light
+      const double angle = 45 / 360; // incoming direction of light
+      const complex<double> I(0.0, 1.0);
+      complex<double> u;
+      double t;
+      const double pi = 3.14159265358979323846;
+      complex<double> v = std::exp(I * complex<double>((angle * 2 * pi), 0));  // unit 2D vector in this direction
+       // incoming light 3D vector = (v.re, v.im, h2)
+
+      u = zfinal / derivative;
+      u = u / abs(u);  // normal vector : (u.re, u.im, 1)
+      t = u.real() * v.real() + u.imag() * v.imag() + h2;  // dot product with the incoming light
+      t = t / (1 + h2);  // rescale so that t does not get bigger than 1
+      if (t < 0) t = 0;
+      //a+t(b-a) black -> white
+#if 0
+      double smooth = ((iter_ix + 1 - log(log2(abs(zfinal))))); //0 -> iters_max
+      tinycolormap::Color color(0.0, 0.0, 0.0);
+      color = tinycolormap::GetColor(smooth / iters_max, tinycolormap::ColormapType::Gray);
+
+      *p_rcolor = t*255 * color.r();
+      *p_gcolor = t*255 * color.g();
+      *p_bcolor = t*255 * color.b();
+#else
+      if (p_rcolor != 0) *p_rcolor = t * 255;
+      if (p_gcolor != 0) *p_gcolor = t * 255;
+      if (p_bcolor != 0) *p_bcolor = t * 255;
+#endif
+      return;
   }
+  
   
   if (R.palette == tinycolormap::ColormapType::UF16)
   {
@@ -465,21 +511,27 @@ inline void get_iteration_color(const int iter_ix, const int iters_max, const co
 
 void mandelbrot_iterations_to_escape(double x, double y, unsigned int iters_max,
                                      int *p_rcolor, int *p_gcolor, int *p_bcolor,
-                                     double power, complex<double> zconst, bool julia,
+                                     double power, complex<double> zconst, double escape_r, bool julia,
                                      unsigned long long &in,
                                      unsigned long long &out) {
   complex<double> point(x, y);
   complex<double> z(0, 0);
+  complex<double> dc(1, 0);
+  complex<double> derivative(1, 0);
   unsigned int iter_ix = 0;
 
   if (julia)
     z = point;
   
-  while (abs(z) < 2 && iter_ix <= iters_max) {
+  while (abs(z) < (escape_r*escape_r) && iter_ix <= iters_max) {
     if (julia)
       z = pow(z,power) + zconst; //With Julia you dont add Point
     else
-      z = pow(z,power) + point;
+    {
+        derivative = derivative * complex<double>(2,0) * z + dc;
+        z = pow(z, power) + point;
+
+    }
     //z = z*z + point;
     iter_ix++;
   }
@@ -489,8 +541,9 @@ void mandelbrot_iterations_to_escape(double x, double y, unsigned int iters_max,
   else
     ++in;
 
-  if (iter_ix < iters_max){
-    get_iteration_color(iter_ix, iters_max, z, p_rcolor, p_gcolor, p_bcolor);
+  if (iter_ix < iters_max)
+  {
+    get_iteration_color(iter_ix, iters_max, z, derivative, p_rcolor, p_gcolor, p_bcolor);
   }
   else  // set interior set color
   {
@@ -502,14 +555,15 @@ void mandelbrot_iterations_to_escape(double x, double y, unsigned int iters_max,
 
 void spiral_septagon_iterations_to_escape(double x, double y, unsigned int iters_max,
 					  int *p_rcolor, int *p_gcolor, int *p_bcolor,
-					  double power, complex<double> zconst, bool julia,
+					  double power, complex<double> zconst, double escape_r, bool julia,
 					  unsigned long long &in,
 					  unsigned long long &out) {
   complex<double> point(x, y);
   complex<double> z(x, y);
+  complex<double> derivative(1, 0);
   unsigned int iter_ix = 0;
   
-  while (abs(z) < 40 && iter_ix <= iters_max) {
+  while (abs(z) < (escape_r*escape_r) && iter_ix <= iters_max) {
     z = (pow(z,power) - (0.7/5))/z;
     iter_ix++;
   }
@@ -520,7 +574,7 @@ void spiral_septagon_iterations_to_escape(double x, double y, unsigned int iters
     ++in;
 
   if (iter_ix < iters_max) {
-    get_iteration_color(iter_ix, iters_max, z, p_rcolor, p_gcolor, p_bcolor);
+    get_iteration_color(iter_ix, iters_max, z, derivative, p_rcolor, p_gcolor, p_bcolor);
   }
   else  // set interior set color
   {
@@ -548,12 +602,13 @@ vector<complex<double>> Fz6_roots{
 
 void nova_z6_iterations_to_escape(double x, double y, unsigned int iters_max,
                                   int *p_rcolor, int *p_gcolor, int *p_bcolor,
-                                  double power, complex<double> zconst, bool julia,
+                                  double power, complex<double> zconst, double escape_r, bool julia,
                                   unsigned long long &in,
                                   unsigned long long &out) {
   complex<double> point(x, y);
   complex<double> z(x, y);
   complex<double> zprev(x, y);
+  complex<double> derivative(1, 0);
   unsigned int iter_ix = 0;
   double tolerance = 0.000001;
 
@@ -579,7 +634,7 @@ void nova_z6_iterations_to_escape(double x, double y, unsigned int iters_max,
     ++in;
 
   if (iter_ix < iters_max) {
-    get_iteration_color(iter_ix, iters_max, z, p_rcolor, p_gcolor, p_bcolor);
+    get_iteration_color(iter_ix, iters_max, z, derivative, p_rcolor, p_gcolor, p_bcolor);
   }
   else  // set interior set color
   {
@@ -591,11 +646,12 @@ void nova_z6_iterations_to_escape(double x, double y, unsigned int iters_max,
 
 void newton_z6_iterations_to_escape(double x, double y, unsigned int iters_max,
                                   int *p_rcolor, int *p_gcolor, int *p_bcolor,
-                                  double power, complex<double> zconst, bool julia,
+                                  double power, complex<double> zconst, double escape_r, bool julia,
                                   unsigned long long &in,
                                   unsigned long long &out) {
   complex<double> point(x, y);
   complex<double> z(x, y);
+  complex<double> derivative(1, 0);
   unsigned int iter_ix = 0;
   double tolerance = 0.000001;
   unsigned int which_root = 0;
@@ -636,7 +692,7 @@ void newton_z6_iterations_to_escape(double x, double y, unsigned int iters_max,
     else
       color_ix = 1 + (iters_max/7)*which_root;
     
-    get_iteration_color(color_ix, iters_max, z, p_rcolor, p_gcolor, p_bcolor);
+    get_iteration_color(color_ix, iters_max, z, derivative, p_rcolor, p_gcolor, p_bcolor);
 
     //color any root
     //get_iteration_color(iter_ix, iters_max, z, p_rcolor, p_gcolor, p_bcolor);
@@ -652,7 +708,7 @@ void newton_z6_iterations_to_escape(double x, double y, unsigned int iters_max,
 
 void generate_buddhabrot_trail(const complex<double> &c, unsigned int iters_max,
                                vector<complex<double>> &trail,
-                               int power, complex<double> zconst, bool julia, bool anti,
+                               int power, complex<double> zconst, double escape_r, bool julia, bool anti,
                                unsigned long long &in,
                                unsigned long long &out) {
   unsigned int iter_ix = 0;
@@ -685,7 +741,7 @@ void generate_buddhabrot_trail(const complex<double> &c, unsigned int iters_max,
     trail.reserve(iters_max + 1);
 
 
-    while (iter_ix < iters_max && abs(z) < 2.0) {
+    while (iter_ix < iters_max && abs(z) < (escape_r*escape_r)) {
       if (julia)
 	z = pow(z,power) + zconst; //With Julia you dont add Point usually
       else
@@ -800,6 +856,7 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
     FRAC[current_fractal].current_max_iters = FRAC[current_fractal].default_max_iters;
     FRAC[current_fractal].current_power =  FRAC[current_fractal].default_power;
     FRAC[current_fractal].current_zconst = FRAC[current_fractal].default_zconst;
+    FRAC[current_fractal].current_escape_r = FRAC[current_fractal].default_escape_r;
   }
 
   //could just be tuning fractal
@@ -1116,8 +1173,9 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
       generate_buddhabrot_trail(sample, red_max_iters, trail,
                                 FRAC[current_fractal].current_power,
                                 FRAC[current_fractal].current_zconst,
+                                FRAC[current_fractal].current_escape_r,
                                 FRAC[current_fractal].julia,
-				FRAC[current_fractal].anti,
+				                FRAC[current_fractal].anti,
                                 stats[current_fractal].in_set,
                                 stats[current_fractal].escaped_set);
       saveBuddhabrotTrailToColor(trail, redHits);
@@ -1126,8 +1184,9 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
         generate_buddhabrot_trail(sample, red_max_iters, trail,
                                   FRAC[current_fractal].current_power,
                                   FRAC[current_fractal].current_zconst,
+                                  FRAC[current_fractal].current_escape_r,
                                   FRAC[current_fractal].julia,
-				  FRAC[current_fractal].anti,
+				                  FRAC[current_fractal].anti,
                                   stats[current_fractal].in_set,
                                   stats[current_fractal].escaped_set);
         saveBuddhabrotTrailToColor(trail, redHits);
@@ -1136,8 +1195,9 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
       generate_buddhabrot_trail(sample, green_max_iters, trail,
                                 FRAC[current_fractal].current_power,
                                 FRAC[current_fractal].current_zconst,
+                                FRAC[current_fractal].current_escape_r,
                                 FRAC[current_fractal].julia,
-				FRAC[current_fractal].anti,
+				                FRAC[current_fractal].anti,
                                 stats[current_fractal].in_set,
                                 stats[current_fractal].escaped_set);
       saveBuddhabrotTrailToColor(trail, greenHits);
@@ -1146,8 +1206,9 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
         generate_buddhabrot_trail(sample, green_max_iters, trail,
                                   FRAC[current_fractal].current_power,
                                   FRAC[current_fractal].current_zconst,
+                                  FRAC[current_fractal].current_escape_r,
                                   FRAC[current_fractal].julia,
-				  FRAC[current_fractal].anti,
+				                  FRAC[current_fractal].anti,
                                   stats[current_fractal].in_set,
                                   stats[current_fractal].escaped_set);
         saveBuddhabrotTrailToColor(trail, greenHits);
@@ -1156,8 +1217,9 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
       generate_buddhabrot_trail(sample, blue_max_iters, trail,
                                 FRAC[current_fractal].current_power,
                                 FRAC[current_fractal].current_zconst,
+                                FRAC[current_fractal].current_escape_r,
                                 FRAC[current_fractal].julia,
-				FRAC[current_fractal].anti,
+				                FRAC[current_fractal].anti,
                                 stats[current_fractal].in_set,
                                 stats[current_fractal].escaped_set);
       saveBuddhabrotTrailToColor(trail, blueHits);
@@ -1166,8 +1228,9 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
         generate_buddhabrot_trail(sample, blue_max_iters, trail,
                                   FRAC[current_fractal].current_power,
                                   FRAC[current_fractal].current_zconst,
+                                  FRAC[current_fractal].current_escape_r,
                                   FRAC[current_fractal].julia,
-				  FRAC[current_fractal].anti,
+				                  FRAC[current_fractal].anti,
                                   stats[current_fractal].in_set,
                                   stats[current_fractal].escaped_set);
         saveBuddhabrotTrailToColor(trail, blueHits);
@@ -1304,6 +1367,7 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
                                                &rcolor, &gcolor, &bcolor,
 					       FRAC[current_fractal].current_power,
 					       FRAC[current_fractal].current_zconst,
+                           FRAC[current_fractal].current_escape_r,
 					       FRAC[current_fractal].julia,
 					       stats[current_fractal].in_set,
 					       stats[current_fractal].escaped_set);
@@ -1313,6 +1377,7 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
                                        &rcolor, &gcolor, &bcolor,
                                        FRAC[current_fractal].current_power,
                                        FRAC[current_fractal].current_zconst,
+                                       FRAC[current_fractal].current_escape_r,
                                        FRAC[current_fractal].julia,
                                        stats[current_fractal].in_set,
                                        stats[current_fractal].escaped_set);
@@ -1323,6 +1388,7 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
                                        &rcolor, &gcolor, &bcolor,
                                        FRAC[current_fractal].current_power,
                                        FRAC[current_fractal].current_zconst,
+                                       FRAC[current_fractal].current_escape_r,
                                        FRAC[current_fractal].julia,
                                        stats[current_fractal].in_set,
                                        stats[current_fractal].escaped_set);
@@ -1332,6 +1398,7 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
                                           &rcolor, &gcolor, &bcolor,
 					  FRAC[current_fractal].current_power,
 					  FRAC[current_fractal].current_zconst,
+                      FRAC[current_fractal].current_escape_r,
 					  FRAC[current_fractal].julia,
 					  stats[current_fractal].in_set,
 					  stats[current_fractal].escaped_set);
@@ -1623,6 +1690,23 @@ void signalZconsti(shared_ptr<FractalModel> p_model,
   setGuiElementsFromModel(pgui, p_model);
 }
 
+void signal_escape_r(shared_ptr<FractalModel> p_model,
+    shared_ptr<tgui::Gui> pgui, const sf::String& value) {
+    updateGuiElements(pgui, p_model);
+
+    double input = 0.0;
+    try {
+        input = std::stod(value.toAnsiString());
+    }
+    catch (const std::invalid_argument& ia) {
+        cout << "Invalid " << ia.what() << endl;
+        input = 0.0;
+    }
+    FRAC[p_model->current_fractal].current_escape_r = input;
+    p_model->reset_fractal_and_reference_frame();
+    setGuiElementsFromModel(pgui, p_model);
+}
+
 void signalColorBox(const int selected) {
   R.palette = static_cast<tinycolormap::ColormapType>(selected);  
 }
@@ -1638,8 +1722,8 @@ void signalCAlgoBox(const int selected) {
     R.color_algo = ColoringAlgo::SMOOTH;
   else if ((selected == 2) && (true == R.image_loaded))
     R.color_algo = ColoringAlgo::USE_IMAGE;
-  else
-    R.color_algo = ColoringAlgo::MULTICYCLE;
+  else if (selected == 3)
+    R.color_algo = ColoringAlgo::SHADOW_MAP;
     
 }
 
@@ -1691,6 +1775,7 @@ void signalSaveFractal(shared_ptr<FractalModel> p_model,
   savf[frac_ix].current_max_iters[1] = FRAC[p_model->current_fractal].current_max_iters[1];
   savf[frac_ix].current_max_iters[2] = FRAC[p_model->current_fractal].current_max_iters[2];
   savf[frac_ix].current_zconst =   FRAC[p_model->current_fractal].current_zconst;
+  savf[frac_ix].current_escape_r = FRAC[p_model->current_fractal].current_escape_r;
   savf[frac_ix].RF = R;
 
   frac_ix++;
@@ -1774,6 +1859,7 @@ void signalSaveKey(shared_ptr<FractalModel> p_model,
   savf[frac_ix].current_max_iters[1] = FRAC[p_model->current_fractal].current_max_iters[1];
   savf[frac_ix].current_max_iters[2] = FRAC[p_model->current_fractal].current_max_iters[2];
   savf[frac_ix].current_zconst =   FRAC[p_model->current_fractal].current_zconst;
+  savf[frac_ix].current_escape_r = FRAC[p_model->current_fractal].current_escape_r;
   savf[frac_ix].RF = R;
 
   SavedFractal * p_savf = &savf[frac_ix];
@@ -1832,7 +1918,7 @@ void signalLoadNextSaved(shared_ptr<FractalModel> p_model,
   FRAC[p_model->current_fractal].current_max_iters[1] = p_savf->current_max_iters[1];
   FRAC[p_model->current_fractal].current_max_iters[2] = p_savf->current_max_iters[2];
   FRAC[p_model->current_fractal].current_zconst = p_savf->current_zconst;
-
+  FRAC[p_model->current_fractal].current_escape_r = p_savf->current_escape_r;
   R = p_savf->RF;
 
   setGuiElementsFromModel(pgui, p_model);
@@ -1895,7 +1981,7 @@ void signalLoadNextKey(shared_ptr<FractalModel> p_model,
   FRAC[p_model->current_fractal].current_max_iters[1] = p_savf->current_max_iters[1];
   FRAC[p_model->current_fractal].current_max_iters[2] = p_savf->current_max_iters[2];
   FRAC[p_model->current_fractal].current_zconst = p_savf->current_zconst;
-
+  FRAC[p_model->current_fractal].current_escape_r = p_savf->current_escape_r;
   R = p_savf->RF;
 
   setGuiElementsFromModel(pgui, p_model);
@@ -2047,6 +2133,19 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   pgui->add(editBox, "zconst_imag_box");
   editBox->connect("TextChanged", signalZconsti, p_model, pgui);
 
+  current = tgui::Label::create();
+  current->setPosition("parent.left + 50", "parent.bottom - 80");
+  current->setTextSize(14);
+  pgui->add(current, "escape_r_label");
+
+  editBox = tgui::EditBox::create();
+  editBox->setSize(100, 20);
+  editBox->setTextSize(14);
+  editBox->setPosition("parent.left + 50 + 120", "parent.bottom - 60");
+  editBox->setDefaultText("0");
+  pgui->add(editBox, "escape_r_box");
+  editBox->connect("TextChanged", signal_escape_r, p_model, pgui);
+
   //Save Fractal Group
 
   auto button = tgui::Button::create();
@@ -2133,10 +2232,11 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
 
   lbox = tgui::ListBox::create();
   lbox->setPosition("parent.left + 900", "parent.bottom - 100");
-  lbox->setSize(100.f, 80.f);
+  lbox->setSize(100.f, 100.f);
   lbox->addItem("MULTICYCLE");
   lbox->addItem("SMOOTH");
   lbox->addItem("USE_IMAGE");
+  lbox->addItem("SHADOW_MAP");
 
   pgui->add(lbox, "CAlgoBox");
   lbox->connect("ItemSelected", signalCAlgoBox);
@@ -2242,6 +2342,9 @@ void updateCurrentGuiElements(shared_ptr<tgui::Gui> &pgui,
   current = pgui->get<tgui::Label>("zconst_label");
   current->setText("z_const: " + to_string(FRAC[p_model->current_fractal].current_zconst.real()) + " + " +
                    to_string(FRAC[p_model->current_fractal].current_zconst.imag()) + "*i");
+
+  current = pgui->get<tgui::Label>("escape_r_label");
+  current->setText("Escape R: " + to_string(FRAC[p_model->current_fractal].current_escape_r));
 
   current = pgui->get<tgui::Label>("saved_fractal_label");
   current->setText("Fractal ix: " + to_string(displayed_frac_ix));

@@ -516,8 +516,8 @@ void mandelbrot_iterations_to_escape(double x, double y, unsigned int iters_max,
                                      unsigned long long &out) {
   complex<double> point(x, y);
   complex<double> z(0, 0);
-  complex<double> dc(1, 0);
-  complex<double> derivative(1, 0);
+  complex<double> dc(0, 1);
+  complex<double> derivative = dc;
   unsigned int iter_ix = 0;
 
   if (julia)
@@ -807,6 +807,7 @@ void generate_buddhabrot_trail(const complex<double> &c, unsigned int iters_max,
 //this is to prevent unnecessary calculation when we request 2 zooms in a row quickly
 #define MAX_THREADS 32
 bool thread_asked_to_reset[MAX_THREADS];
+unsigned int thread_iteration[MAX_THREADS];
 
 // need buddhabrot threads not to mess up model
 std::mutex thread_result_report_mutex;
@@ -882,6 +883,7 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
 
     for (unsigned int tix = 0; tix < this->num_threads; ++tix) {
       thread_asked_to_reset[tix] = true;
+      thread_iteration[tix] = 0;
       image_wraps[tix] = 0;
       current_x[tix] = FRAC[current_fractal].xMinMax[0] + deltax*tix;
       current_y[tix] = FRAC[current_fractal].yMinMax[0] + deltay*tix;
@@ -900,8 +902,8 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
   
 
   // thread pool is currently started outside the model
-  void fractal_thread(int tix, std::future<void> terminate, bool * p_reset) {
-    cout << "fractal thread " << tix << " running with oversampling: " << 4.0 << endl;
+  void fractal_thread(int tix, std::future<void> terminate, bool * p_reset, unsigned int * p_iteration) {
+    //cout << "fractal thread " << tix << " running with oversampling: " << 4.0 << endl;
 
     deltax = 1.0 / (4.0 * IMAGE_WIDTH);
     deltay = 1.0 / (4.0 * IMAGE_HEIGHT);
@@ -949,6 +951,10 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
           //Clear any data generated so far
           for (auto &v : color) v.clear();
         }
+
+        p_iteration[tix]++;
+        //cout << "tix iteration: " << p_iteration[tix] << endl;
+
         continue;
       }
 
@@ -1000,13 +1006,10 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
       // ms" << endl;
 
       // merge trail hits into the instance of the class (but dont make image)
-      {
-        mergeHits(redHits, greenHits,
-                  blueHits);  // mutex inside
-      }
+      mergeHits(redHits, greenHits, blueHits);  // mutex inside
     }
 
-    cout << "fractal thread exiting: " << tix << endl;
+    //cout << "fractal thread exiting: " << tix << endl;
   };  // buddhabrot_thread
 
   // for each color
@@ -1026,6 +1029,16 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
     for (auto &v : blueTrailHits) v.resize(IMAGE_HEIGHT);
 
   }  // createBuddhabrot
+
+  void cudaPresent() {
+      int count = cuda_info();
+
+      if (count == 0) {
+          cuda_detected = false;
+          return;
+      }
+      cuda_detected = true;
+  }
 
   void cudaTest() {
     int count = cuda_info();
@@ -1742,6 +1755,7 @@ void signalSamplingButton(shared_ptr<FractalModel> p_model) {
 
   for (unsigned int tix = 0; tix < p_model->num_threads; ++tix) {
     thread_asked_to_reset[tix] = true;
+    thread_iteration[tix] = 0;
     p_model->image_wraps[tix] = 0;
     p_model->current_x[tix] = FRAC[p_model->current_fractal].xMinMax[0] + p_model->deltax*tix;
     p_model->current_y[tix] = FRAC[p_model->current_fractal].yMinMax[0] + p_model->deltay*tix;
@@ -1924,6 +1938,47 @@ void signalLoadNextSaved(shared_ptr<FractalModel> p_model,
   setGuiElementsFromModel(pgui, p_model);
 }
 
+int LoadProvidedKey(shared_ptr<FractalModel> p_model,
+                    shared_ptr<tgui::Gui> pgui,
+                    std::string keyname)
+{
+    updateGuiElements(pgui, p_model);
+    p_model->reset_fractal_and_reference_frame();
+    SavedFractal savef = no_fractal;
+    SavedFractal* p_savf = &savef;
+    std::string filename;
+
+    // Check if key contains key_version
+    std::size_t found = keyname.find(key_version);
+    if ((keyname == "no key") || (found == std::string::npos))
+    {
+        cout << "wrong fractal version: " << keyname << std::flush << endl;
+        return 1;
+    }
+
+    filename = keyname;
+
+    std::ifstream key;
+    key.open(filename.c_str(), ios::in | ios::binary);
+    key.read(reinterpret_cast<char*>(p_savf), sizeof(*p_savf));
+    key.close();
+
+    cout << "loaded provided key: " << keyname << " " << p_savf->current_fractal << endl;
+
+
+    p_model->current_fractal = p_savf->current_fractal;
+
+    FRAC[p_model->current_fractal].current_power = p_savf->current_power;
+    FRAC[p_model->current_fractal].current_max_iters[0] = p_savf->current_max_iters[0];
+    FRAC[p_model->current_fractal].current_max_iters[1] = p_savf->current_max_iters[1];
+    FRAC[p_model->current_fractal].current_max_iters[2] = p_savf->current_max_iters[2];
+    FRAC[p_model->current_fractal].current_zconst = p_savf->current_zconst;
+    FRAC[p_model->current_fractal].current_escape_r = p_savf->current_escape_r;
+    R = p_savf->RF;
+
+    setGuiElementsFromModel(pgui, p_model);
+    return 0;
+}
 
 int key_count = 0;
 void signalLoadNextKey(shared_ptr<FractalModel> p_model,
@@ -1932,7 +1987,7 @@ void signalLoadNextKey(shared_ptr<FractalModel> p_model,
   updateGuiElements(pgui, p_model);
   p_model->reset_fractal_and_reference_frame();
   
-  SavedFractal savef = no_fractal;;
+  SavedFractal savef = no_fractal;
   SavedFractal * p_savf = &savef;
   int ix=0;
 
@@ -2387,7 +2442,7 @@ double get_new_zoom(sf::View &view, int delta) {
 
 // save a screenshot
 void save_screenshot(sf::RenderWindow &window, string name, sf::View & modelview,
-		     shared_ptr<FractalModel> p_model, shared_ptr<tgui::Gui> pgui, bool display_gui) {
+		     shared_ptr<FractalModel> p_model, shared_ptr<tgui::Gui> pgui, bool display_gui, std::string savename) {
   char buffer[80] = "no date";
   time_t rawtime;
   struct tm* timeinfop = nullptr;
@@ -2416,15 +2471,39 @@ void save_screenshot(sf::RenderWindow &window, string name, sf::View & modelview
   //texture.create(IMAGE_WIDTH, IMAGE_HEIGHT);
   texture.update(window);
   sf::Image screenshot = texture.copyToImage();
-  screenshot.saveToFile(name + timestring + ".png");
+  if (savename != "none")
+     screenshot.saveToFile(savename);
+  else
+     screenshot.saveToFile(name + timestring + ".png");
 };
 
 int main(int argc, char **argv) {
+   std::vector<std::string> argList;
+   bool save_and_exit = false;
+   std::string savename{"no key"};
+   std::string keyname{"no key"};
 
   if (std::is_trivially_copyable<SavedFractal>::value == false)
   {
     cout << "SavedFractal not serializable\n";
     return -1;
+  }
+
+  if (argc > 3)
+  {
+      for (auto val : argList) { cout << val << " "; }
+      cout << endl;
+
+      argList = std::vector<std::string>(argv, argv + argc);
+      // run one iteration using the supplied fractal_key and save the image to savename and exit
+      // in python you can edit the fractal key parameters and increment the savename and stitch together the images into a movie 
+      if (argList[1] == "save_and_exit")
+      {
+          keyname = argList[2];
+          savename = argList[3];
+          save_and_exit = true;
+      }
+
   }
   
   // Register signal and signal handler
@@ -2491,7 +2570,8 @@ int main(int argc, char **argv) {
   auto p_model =
       make_shared<FractalModel>(screenDimensions.x, screenDimensions.y);
 
-  p_model->cudaTest();
+  //p_model->cudaTest();
+  p_model->cudaPresent();
 
   // Create the worker threads:
   cout << "Machine supports " << thread::hardware_concurrency()
@@ -2522,15 +2602,32 @@ int main(int argc, char **argv) {
     std::future<void> futureObj = terminateThreadSignal[tix].get_future();
 
     threads[tix] = thread(&FractalModel::fractal_thread, p_model, tix,
-                          std::move(futureObj), &thread_asked_to_reset[0]);
+                          std::move(futureObj), &thread_asked_to_reset[0], &thread_iteration[0]);
   }
+
   bool display_gui = true;
   // Create the gui and attach it to the window
   auto pgui = make_shared<tgui::Gui>(window);
-  tgui::Theme theme{"themes/BabyBlue.txt"};
+  tgui::Theme theme{ "themes/BabyBlue.txt" };
   tgui::Theme::setDefault(&theme);
   createGuiElements(pgui, p_model);
   updateGuiElements(pgui, p_model);
+
+  // load the fractal key on startup
+  if (save_and_exit)
+  {
+      if (LoadProvidedKey(p_model, pgui, keyname))
+      {
+          // terminate threads in thread pool
+          for (unsigned int tix = 0; tix < num_threads; ++tix) {
+              terminateThreadSignal[tix].set_value();
+              //to make it check for terminate
+              for (unsigned int tix = 0; tix < num_threads; ++tix) { thread_asked_to_reset[tix] = true; }
+              threads[tix].join();
+          }
+          exit(-1);
+      }
+  }
 
   //Track attempted crops with mouse
   int crop_start_x=0;
@@ -2573,7 +2670,7 @@ int main(int argc, char **argv) {
             }
         }
         else if (event.key.code == sf::Keyboard::S) {
-            save_screenshot(window, FRAC[p_model->current_fractal].name, modelview, p_model, pgui, display_gui);
+            save_screenshot(window, FRAC[p_model->current_fractal].name, modelview, p_model, pgui, display_gui, "none");
         }
         else if (event.key.code == sf::Keyboard::E) {
             window.close();
@@ -2689,6 +2786,23 @@ int main(int argc, char **argv) {
             window.draw(selection); // draw mouse selection
         pgui->draw();               // Draw all GUI widgets
         window.display();           // if you always do this it will cause screen jitter, but if you alt-tabe you will get white screen
+    }
+
+    bool done = true;
+    for (unsigned int tix = 0; tix < num_threads; ++tix) {
+        if (thread_iteration[tix] < 2)
+        {
+            done = false;
+            break;
+        }
+    }
+
+    if ((save_and_exit) && (done)) 
+    {
+        //save screenshot
+        save_screenshot(window, FRAC[p_model->current_fractal].name, modelview, p_model, pgui, false, savename);
+        window.close();
+        break;
     }
   }
 

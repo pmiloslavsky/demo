@@ -26,6 +26,7 @@ Table of Contents:
 - [6. OS specific](#6-os-specific)
   - [6.1. Linux](#61-linux)
     - [6.1.1. perf](#611-perf)
+    - [6.1.2. system administration](#612-system-administration)
   - [6.2. AIX](#62-aix)
     - [6.2.1. system administration](#621-system-administration)
       - [6.2.1.1. processors and configuration](#6211-processors-and-configuration)
@@ -126,6 +127,8 @@ python -m cProfile -s time circuit.py
 * sudo apt-get dist-upgrade
 * sudo apt-get install --reinstall linux-tools-common linux-tools-generic linux-tools-`uname -r`
 * sudo perf top
+### 6.1.2. system administration
+* yum update yum install yum-utils  yum provides gtar  yum info tar-1.33-1.ppc repoquery -l tar-1.33-1.ppc
 ## 6.2. AIX
 ### 6.2.1. system administration
 ```sudo lssecattr -c /usr/sbin/lsattr

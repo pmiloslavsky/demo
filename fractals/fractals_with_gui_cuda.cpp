@@ -132,6 +132,13 @@ class ReferenceFrame {
   unsigned int escape_image_h;
   bool image_loaded;
 
+  // normal maps
+  double light_pos_r;
+  double light_pos_i;
+  double light_angle;
+  double light_height;
+
+
   //Random Sample faster but less exact rendering
   bool random_sample = false;
 
@@ -387,8 +394,8 @@ inline void get_iteration_color(const int iter_ix, const int iters_max, const co
   } 
   else if (R.color_algo == ColoringAlgo::SHADOW_MAP)
   {
-      const double h2 = 1.5;  // height factor of the incoming light
-      const double angle = 45 / 360; // incoming direction of light
+      const double h2 = R.light_height;  // height factor of the incoming light
+      const double angle = R.light_angle / 360; // incoming direction of light
       const complex<double> I(0.0, 1.0);
       complex<double> u;
       double t;
@@ -402,19 +409,9 @@ inline void get_iteration_color(const int iter_ix, const int iters_max, const co
       t = t / (1 + h2);  // rescale so that t does not get bigger than 1
       if (t < 0) t = 0;
       //a+t(b-a) black -> white
-#if 0
-      double smooth = ((iter_ix + 1 - log(log2(abs(zfinal))))); //0 -> iters_max
-      tinycolormap::Color color(0.0, 0.0, 0.0);
-      color = tinycolormap::GetColor(smooth / iters_max, tinycolormap::ColormapType::Gray);
-
-      *p_rcolor = t*255 * color.r();
-      *p_gcolor = t*255 * color.g();
-      *p_bcolor = t*255 * color.b();
-#else
       if (p_rcolor != 0) *p_rcolor = t * 255;
       if (p_gcolor != 0) *p_gcolor = t * 255;
       if (p_bcolor != 0) *p_bcolor = t * 255;
-#endif
       return;
   }
   
@@ -516,7 +513,7 @@ void mandelbrot_iterations_to_escape(double x, double y, unsigned int iters_max,
                                      unsigned long long &out) {
   complex<double> point(x, y);
   complex<double> z(0, 0);
-  complex<double> dc(0, 1);
+  complex<double> dc(R.light_pos_r, R.light_pos_i);
   complex<double> derivative = dc;
   unsigned int iter_ix = 0;
 
@@ -831,6 +828,10 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
     R.current_height = R.original_height;
     R.current_width = R.original_width;
     R.reflect_palette = false;
+    R.light_pos_r = 1;
+    R.light_pos_i = 0;
+    R.light_angle = 45;
+    R.light_height = 1.5;
     R.xdelta = (FRAC[current_fractal].xMinMax[1] - FRAC[current_fractal].xMinMax[0]) / R.original_width;
     R.ydelta = (FRAC[current_fractal].yMinMax[1] - FRAC[current_fractal].yMinMax[0]) / R.original_height;
     
@@ -871,6 +872,10 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
     R.current_height = R.original_height;
     R.current_width = R.original_width;
     R.show_selection = false; //mouse click on menu is not a selection
+    R.light_pos_r = 1;
+    R.light_pos_i = 0;
+    R.light_angle = 45;
+    R.light_height = 1.5;
     hitsums = 0;
     maxred = 0;
     maxgreen = 0;
@@ -2558,6 +2563,10 @@ int main(int argc, char **argv) {
     R.color_algo = ColoringAlgo::MULTICYCLE;
     R.image_loaded = false;
   }
+  R.light_pos_r = 1;
+  R.light_pos_i = 0;
+  R.light_angle = 45;
+  R.light_height = 1.5;
 
   
   

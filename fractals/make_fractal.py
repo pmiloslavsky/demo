@@ -60,7 +60,7 @@ q = SavedFractal()
 g.readinto(q)
 g.close()
 
-print("fractal_key:")
+print("\n\nfractal_key:")
 for field_name, field_type in q._fields_:
     print(field_name, getattr(q, field_name))
 
@@ -76,7 +76,7 @@ q = SavedFractal()
 g.readinto(q)
 g.close()
 
-print("modified fractal_key:")
+print("\n\nmodified fractal_key:")
 for field_name, field_type in q._fields_:
     print(field_name, getattr(q, field_name))
 

@@ -1,48 +1,48 @@
 Table of Contents:
 - [1. C/C++](#1-cc)
-  - [1.1. API Reference](#11-api-reference)
-  - [1.2. Supported Features by Compiler Version](#12-supported-features-by-compiler-version)
-  - [1.3. C++ Libraries](#13-c-libraries)
-    - [1.3.1. GNU libstdc++](#131-gnu-libstdc)
-    - [1.3.2. List of Libraries](#132-list-of-libraries)
-    - [1.3.3. GUI](#133-gui)
-    - [1.3.4. Intel TBB](#134-intel-tbb)
-  - [1.4. Replacing STL allocators:](#14-replacing-stl-allocators)
-  - [1.5. Cheat sheets](#15-cheat-sheets)
+	- [1.1. API Reference](#11-api-reference)
+	- [1.2. Supported Features by Compiler Version](#12-supported-features-by-compiler-version)
+	- [1.3. C++ Libraries](#13-c-libraries)
+		- [1.3.1. GNU libstdc++](#131-gnu-libstdc)
+		- [1.3.2. List of Libraries](#132-list-of-libraries)
+		- [1.3.3. GUI](#133-gui)
+		- [1.3.4. Intel TBB](#134-intel-tbb)
+	- [1.4. Replacing STL allocators:](#14-replacing-stl-allocators)
+	- [1.5. Cheat sheets](#15-cheat-sheets)
 - [2. Algorithms](#2-algorithms)
-  - [2.1. Reference](#21-reference)
-  - [2.2. Interviewing and Competitive Programming](#22-interviewing-and-competitive-programming)
+	- [2.1. Reference](#21-reference)
+	- [2.2. Interviewing and Competitive Programming](#22-interviewing-and-competitive-programming)
 - [3. Design Patterns and OO](#3-design-patterns-and-oo)
-  - [3.1. UML syntax](#31-uml-syntax)
+	- [3.1. UML syntax](#31-uml-syntax)
 - [4. Python](#4-python)
-  - [4.1. Tutorials](#41-tutorials)
-  - [4.2. Cheat Sheets](#42-cheat-sheets)
-  - [4.3. profiling](#43-profiling)
-  - [4.4. Source Code:](#44-source-code)
+	- [4.1. Tutorials](#41-tutorials)
+	- [4.2. Cheat Sheets](#42-cheat-sheets)
+	- [4.3. profiling](#43-profiling)
+	- [4.4. Source Code:](#44-source-code)
 - [5. Debugging,Analysis and Performance Tuning](#5-debugginganalysis-and-performance-tuning)
-  - [5.1. Automated](#51-automated)
-  - [5.2. GDB](#52-gdb)
-  - [5.3. Profiling](#53-profiling)
+	- [5.1. Automated](#51-automated)
+	- [5.2. GDB](#52-gdb)
+	- [5.3. Profiling](#53-profiling)
 - [6. OS specific](#6-os-specific)
-  - [6.1. Linux](#61-linux)
-    - [6.1.1. perf](#611-perf)
-    - [6.1.2. system administration](#612-system-administration)
-  - [6.2. AIX](#62-aix)
-    - [6.2.1. system administration](#621-system-administration)
-      - [6.2.1.1. processors and configuration](#6211-processors-and-configuration)
-  - [6.3. Docker](#63-docker)
-    - [6.3.1. Basic Commands](#631-basic-commands)
+	- [6.1. Linux](#61-linux)
+		- [6.1.1. perf](#611-perf)
+		- [6.1.2. system administration](#612-system-administration)
+	- [6.2. AIX](#62-aix)
+		- [6.2.1. system administration](#621-system-administration)
+			- [6.2.1.1. processors and configuration](#6211-processors-and-configuration)
+	- [6.3. Docker](#63-docker)
+		- [6.3.1. Basic Commands](#631-basic-commands)
 - [7. Unix tips](#7-unix-tips)
-  - [7.1. Why is computer slow?](#71-why-is-computer-slow)
-  - [7.2. Save terminal session with tmux](#72-save-terminal-session-with-tmux)
+	- [7.1. Why is computer slow?](#71-why-is-computer-slow)
+	- [7.2. Save terminal session with tmux](#72-save-terminal-session-with-tmux)
 - [8. Books](#8-books)
 - [9. Statistical Analysis and Machine Learning](#9-statistical-analysis-and-machine-learning)
-  - [9.1. Fundamentals of ML](#91-fundamentals-of-ml)
-  - [9.2. Statistical measures in python:](#92-statistical-measures-in-python)
-    - [9.2.1. Plotting:](#921-plotting)
-    - [9.2.2. Fitting:](#922-fitting)
-    - [9.2.3. Sampling:](#923-sampling)
-    - [9.2.4. Learning](#924-learning)
+	- [9.1. Fundamentals of ML](#91-fundamentals-of-ml)
+	- [9.2. Statistical measures in python:](#92-statistical-measures-in-python)
+		- [9.2.1. Plotting:](#921-plotting)
+		- [9.2.2. Fitting:](#922-fitting)
+		- [9.2.3. Sampling:](#923-sampling)
+		- [9.2.4. Learning](#924-learning)
 
 
 # 1. C/C++
@@ -131,12 +131,13 @@ python -m cProfile -s time circuit.py
 * yum update yum install yum-utils  yum provides gtar  yum info tar-1.33-1.ppc repoquery -l tar-1.33-1.ppc
 ## 6.2. AIX
 ### 6.2.1. system administration
+* command security
 ```sudo lssecattr -c /usr/sbin/lsattr
 1420-012 "/usr/sbin/lsattr" does not exist in the privileged command database.
 sudo lssecattr -c /usr/pmapi/tools/pmcycles
 /usr/pmapi/tools/pmcycles accessauths=aix.system.pmustat.global innateprivs=PV_PMU_CONFIG,PV_PMU_SYSTEM secflags=FSF_EPS
 ```
-
+* topas
 #### 6.2.1.1. processors and configuration
 * lscfg -lproc\*
 * lparstat -i | grep CPU

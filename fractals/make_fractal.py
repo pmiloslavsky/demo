@@ -1,19 +1,8 @@
 #!/usr/bin/env python3
+import os
+import math
 import subprocess
 from ctypes import *
-
-# class Point(Structure):
-#      _fields_ = [ ('x',c_double), ('y',c_double), ('z',c_double) ]
-# p = Point(2,3.5,6)
-# f = open("foo","wb")
-# f.write(p)       
-# f.close()
-# g = open("foo","rb")
-# q = Point()
-# g.readinto(q)
-# g.close()
-# print(q.x,q.y,q.z)
-
 
 class SavedFractal(Structure):
      _fields_ = [ 
@@ -55,30 +44,60 @@ class SavedFractal(Structure):
      #('wtf',c_uint*2)
      ]
 
-g = open("C:/Users/Philip/Documents/GitHub/demo/fractals/fractals_cuda/x64/Release/movie_base.fractal_key_version_1","rb")
+
+os.chdir(r"Documents/GitHub/demo/fractals/fractals_cuda/x64/Release")
+print(os.getcwd())
+
+g = open("movie_base.fractal_key_version_1","rb")
 q = SavedFractal()
 g.readinto(q)
 g.close()
 
-print("\n\nfractal_key:")
+print("\n\nBase fractal_key:")
 for field_name, field_type in q._fields_:
     print(field_name, getattr(q, field_name))
 
-q.current_max_iters0=100
+def create_shadow_series(i,e, basekey):
+    basename="shadow_"
+    for j in range(i,e):
+        keyname=basename + str(j) + ".fractal_key_version_1"
+        f = open(keyname,"wb")
+        basekey.current_max_iters0=1500
+        basekey.current_escape_r=50
+        angle=j*2*math.pi/(e-1)
+        radius=2
+        x = radius * math.cos(angle)
+        y = radius * math.sin(angle)
+        basekey.light_pos_r = x
+        basekey.light_pos_i = y
+        f.write(basekey)
+        f.close()
+        pngname="movie" + str(j) + ".png"
+        subprocess.run(['fractals_cuda.exe', 'save_and_exit', keyname, pngname], shell=True)
 
-f = open("C:/Users/Philip/Documents/GitHub/demo/fractals/fractals_cuda/x64/Release/movie_base_mod.fractal_key_version_1","r+b")
-f.seek(0)
-f.write(q)
-f.close()
+e=21
+create_shadow_series(0, e, q)
 
-g = open("C:/Users/Philip/Documents/GitHub/demo/fractals/fractals_cuda/x64/Release/movie_base_mod.fractal_key_version_1","rb")
-q = SavedFractal()
-g.readinto(q)
-g.close()
+from PIL import Image
+import glob
 
-print("\n\nmodified fractal_key:")
-for field_name, field_type in q._fields_:
-    print(field_name, getattr(q, field_name))
+# Create the frames
+frames = []
+imgs = sorted(glob.glob("movie*.png"), key=os.path.getmtime)
+print(imgs)
 
-subprocess.run(['fractals_cuda.exe', 'save_and_exit', 'movie_base_mod.fractal_key_version_1','movie1.png'], 
-                shell=True, cwd='C:/Users/Philip/Documents/GitHub/demo/fractals/fractals_cuda/x64/Release')
+for i in imgs:
+    new_frame = Image.open(i)
+    frames.append(new_frame)
+
+# Save into a GIF file that loops forever
+frames[0].save('shadow.gif', format='GIF',
+               append_images=frames[0:e],
+               save_all=True,
+               duration=10, loop=0)
+
+for i in range(e):
+    os.remove(imgs[i])
+    keyname="shadow_" + str(i) + ".fractal_key_version_1"
+    os.remove(keyname)
+

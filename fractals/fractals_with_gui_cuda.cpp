@@ -338,7 +338,7 @@ std::string key_version = std::string{"fractal_key_version_"} + to_string(FRACTA
 //Should be trivially_copyable/serializable
 class SavedFractal {
  public:
-  const static int version = FRACTAL_VERSION;
+  int version = FRACTAL_VERSION;
   // p_model->current_fractal
   // FRAC[p_model->current_fractal].current_power
   // FRAC[p_model->current_fractal].current_max_iters[0]
@@ -1721,7 +1721,7 @@ void signal_escape_r(shared_ptr<FractalModel> p_model,
         input = 0.0;
     }
     FRAC[p_model->current_fractal].current_escape_r = input;
-    p_model->reset_fractal_and_reference_frame();
+    //p_model->reset_fractal_and_reference_frame();
     setGuiElementsFromModel(pgui, p_model);
 }
 
@@ -1787,6 +1787,7 @@ void signalSaveFractal(shared_ptr<FractalModel> p_model,
   // TBD colors
 
   savf[frac_ix] = no_fractal;
+  savf[frac_ix].version = FRACTAL_VERSION;
   savf[frac_ix].valid = 1;
   savf[frac_ix].current_fractal = p_model->current_fractal;
   savf[frac_ix].current_power = FRAC[p_model->current_fractal].current_power;
@@ -1871,6 +1872,7 @@ void signalSaveKey(shared_ptr<FractalModel> p_model,
   updateGuiElements(pgui, p_model);
 
   savf[frac_ix] = no_fractal;
+  savf[frac_ix].version = FRACTAL_VERSION;
   savf[frac_ix].valid = 1;
   savf[frac_ix].current_fractal = p_model->current_fractal;
   savf[frac_ix].current_power = FRAC[p_model->current_fractal].current_power;

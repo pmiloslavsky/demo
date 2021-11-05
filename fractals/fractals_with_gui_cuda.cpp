@@ -2489,6 +2489,7 @@ int main(int argc, char **argv) {
    bool save_and_exit = false;
    std::string savename{"no key"};
    std::string keyname{"no key"};
+   update_and_draw = false;
 
   if (std::is_trivially_copyable<SavedFractal>::value == false)
   {
@@ -2639,6 +2640,7 @@ int main(int argc, char **argv) {
           exit(-1);
       }
   }
+  update_and_draw = true;
 
   //Track attempted crops with mouse
   int crop_start_x=0;

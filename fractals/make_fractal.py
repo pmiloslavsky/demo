@@ -75,7 +75,7 @@ def create_shadow_series(i,e, basekey):
         pngname="movie" + str(j) + ".png"
         subprocess.run(['fractals_cuda.exe', 'save_and_exit', keyname, pngname], shell=True)
 
-e=21
+e=41
 create_shadow_series(0, e, q)
 
 from PIL import Image
@@ -94,7 +94,7 @@ for i in imgs:
 frames[0].save('shadow.gif', format='GIF',
                append_images=frames[0:e],
                save_all=True,
-               duration=10, loop=0)
+               duration=20, loop=0)
 
 for i in range(e):
     os.remove(imgs[i])

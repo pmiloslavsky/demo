@@ -409,9 +409,23 @@ inline void get_iteration_color(const int iter_ix, const int iters_max, const co
       t = t / (1 + h2);  // rescale so that t does not get bigger than 1
       if (t < 0) t = 0;
       //a+t(b-a) black -> white
+#if 0
       if (p_rcolor != 0) *p_rcolor = t * 255;
       if (p_gcolor != 0) *p_gcolor = t * 255;
       if (p_bcolor != 0) *p_bcolor = t * 255;
+#else
+      //colormap
+      int i = (int)(t*256) % R.color_cycle_size;
+      tinycolormap::Color color(0.0, 0.0, 0.0);
+      if (R.reflect_palette)
+          color = tinycolormap::GetColorR(i / static_cast<double>(R.color_cycle_size), R.palette);
+      else
+          color = tinycolormap::GetColor(i / static_cast<double>(R.color_cycle_size), R.palette);
+
+      *p_rcolor = 255 * color.r();
+      *p_gcolor = 255 * color.g();
+      *p_bcolor = 255 * color.b();
+#endif
       return;
   }
   
@@ -941,7 +955,7 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
       // it into the threads
       if (terminate.wait_for(std::chrono::nanoseconds(0)) !=
           std::future_status::timeout) {
-        std::cout << "Terminate thread requested: " << tix << std::endl;
+        //std::cout << "Terminate thread requested: " << tix << std::endl;
         break;
       }
 
@@ -1982,6 +1996,12 @@ int LoadProvidedKey(shared_ptr<FractalModel> p_model,
     FRAC[p_model->current_fractal].current_zconst = p_savf->current_zconst;
     FRAC[p_model->current_fractal].current_escape_r = p_savf->current_escape_r;
     R = p_savf->RF;
+
+    p_model->zoomFractal(R.requested_zoom);
+
+    // R.original_width/2 R.original_height/2 is no change
+    // Assume the user changed xstart and ystart 
+    //p_model->panFractal(R.original_width / 2, R.original_width / 2);
 
     setGuiElementsFromModel(pgui, p_model);
     return 0;

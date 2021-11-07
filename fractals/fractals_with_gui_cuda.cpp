@@ -332,6 +332,10 @@ vector<SupportedFractal> FRAC = {
 
 bool update_and_draw = true; //stop using cpu for a bit
 
+bool save_and_exit = true;
+
+bool hide = false;
+
 const int FRACTAL_VERSION{1};
 
 std::string key_version = std::string{"fractal_key_version_"} + to_string(FRACTAL_VERSION);
@@ -943,21 +947,29 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
     for (auto &v : blueHits) v.resize(IMAGE_HEIGHT);
 
     while (1) {
+        // see if we should terminate - since we're exiting anyway dont bother to pass
+        // it into the threads
+        if (terminate.wait_for(std::chrono::nanoseconds(0)) !=
+            std::future_status::timeout) {
+            //std::cout << "Terminate thread requested: " << tix << std::endl;
+            break;
+        }
+
+        // Don't update if we want to draw just one
+        if ((save_and_exit == true) && (p_iteration[tix] == 2)) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            continue;
+        }
+
         // Don't update if we want to pause cpu usage
-        if (update_and_draw == false) {
+        if (update_and_draw == false){
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
             continue;
         }
 
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+      //std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-      // see if we should terminate - since we're exiting anyway dont bother to pass
-      // it into the threads
-      if (terminate.wait_for(std::chrono::nanoseconds(0)) !=
-          std::future_status::timeout) {
-        //std::cout << "Terminate thread requested: " << tix << std::endl;
-        break;
-      }
+
 
       // do work if we didnt terminate
 
@@ -1495,9 +1507,9 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
     R.displayed_zoom = newzoom;
 
     cout << "zoom: " << R.displayed_zoom;
-    cout << "  cdims: " << R.current_width << " " << R.current_height << endl;
+    cout << "  cdims: " << R.current_width << " " << R.current_height << " ";
     cout.precision(10);
-    cout << scientific << " starts: " << R.xstart << " " << R.ystart << endl;
+    cout << scientific << " starts: " << R.xstart << " " << R.ystart << " ";
     cout << "x range: " << scientific << xstart << " -> "
          << xstart + (R.original_width - 1) * xdelta;
     cout << "  y range: " << ystart << " -> "
@@ -1531,10 +1543,10 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
 
     R.ystart = ystart;
 
-    cout << "pan: " << xcenter << " " << ycenter <<endl;
+    cout << "pan: " << xcenter << " " << ycenter << " " ;
     cout << "  cdims: " << R.current_width << " " << R.current_height;
     cout.precision(10);
-    cout << scientific << " starts: " << R.xstart << " " << R.ystart << endl;
+    cout << scientific << " starts: " << R.xstart << " " << R.ystart << " ";
     cout << "x range: " << scientific << xstart << " -> "
          << xstart + (R.original_width - 1) * xdelta;
     cout << "  y range: " << ystart << " -> "
@@ -1881,8 +1893,9 @@ void signalImportKeys(shared_ptr<FractalModel> p_model,
 }
 
 void signalSaveKey(shared_ptr<FractalModel> p_model,
-                   shared_ptr<tgui::Gui> pgui) {
-
+                   shared_ptr<tgui::Gui> pgui,
+                   std::string infname = "") 
+{
   updateGuiElements(pgui, p_model);
 
   savf[frac_ix] = no_fractal;
@@ -1913,8 +1926,15 @@ void signalSaveKey(shared_ptr<FractalModel> p_model,
 
   uint32_t crc = crc32c(0,reinterpret_cast<unsigned char*>(p_savf), sizeof(*p_savf));
   
-  filename = key_version + separator + FRAC[p_model->current_fractal].name +
-      "_" + to_string(crc) + "." + key_version;
+  if (infname != "")
+  {
+      filename = infname + "." + key_version;
+  }
+  else
+  {
+      filename = key_version + separator + FRAC[p_model->current_fractal].name +
+          "_" + to_string(crc) + "." + key_version;
+  }
   key.open(filename.c_str(), ios::out | ios::binary);
   key.write(reinterpret_cast<char*>(p_savf), sizeof(*p_savf));
   key.close();
@@ -1984,7 +2004,7 @@ int LoadProvidedKey(shared_ptr<FractalModel> p_model,
     key.read(reinterpret_cast<char*>(p_savf), sizeof(*p_savf));
     key.close();
 
-    cout << "loaded provided key: " << keyname << " " << p_savf->current_fractal << endl;
+    cout << "LOADED PASSED IN KEY: " << keyname << " " << p_savf->current_fractal << " *****" << endl;
 
 
     p_model->current_fractal = p_savf->current_fractal;
@@ -1997,11 +2017,15 @@ int LoadProvidedKey(shared_ptr<FractalModel> p_model,
     FRAC[p_model->current_fractal].current_escape_r = p_savf->current_escape_r;
     R = p_savf->RF;
 
+
+    // R.original_width/2 R.original_height/2 is a click on the center
+    // Assume the user changed xstart and ystart 
+    cout << "Changes: " << R.original_width << " " << R.original_height << " " << R.requested_zoom << " " << R.xstart << " " << R.ystart << " " <<endl;
+    p_model->panFractal(R.original_width / 2.0, R.original_height / 2.0);
+
     p_model->zoomFractal(R.requested_zoom);
 
-    // R.original_width/2 R.original_height/2 is no change
-    // Assume the user changed xstart and ystart 
-    //p_model->panFractal(R.original_width / 2, R.original_width / 2);
+
 
     setGuiElementsFromModel(pgui, p_model);
     return 0;
@@ -2506,10 +2530,11 @@ void save_screenshot(sf::RenderWindow &window, string name, sf::View & modelview
 
 int main(int argc, char **argv) {
    std::vector<std::string> argList;
-   bool save_and_exit = false;
    std::string savename{"no key"};
    std::string keyname{"no key"};
    update_and_draw = false;
+   save_and_exit = false;
+   hide = false;
 
   if (std::is_trivially_copyable<SavedFractal>::value == false)
   {
@@ -2530,6 +2555,9 @@ int main(int argc, char **argv) {
           keyname = argList[2];
           savename = argList[3];
           save_and_exit = true;
+
+          if (argList[4] == "hide")
+              hide = true;
       }
 
   }
@@ -2538,9 +2566,13 @@ int main(int argc, char **argv) {
   signal(SIGINT, signal_callback_handler);
 
   sf::Vector2u screenDimensions(IMAGE_WIDTH, IMAGE_HEIGHT);
-  sf::RenderWindow window(sf::VideoMode(screenDimensions.x, screenDimensions.y),
-                          "Fractals!", sf::Style::Fullscreen); //sf::Style::Fullscreen
+  sf::RenderWindow window;
+  window.create(sf::VideoMode(screenDimensions.x, screenDimensions.y),
+      "Fractals!", sf::Style::None); //sf::Style::Fullscreen
+  if (hide) window.setVisible(false);
+
   window.setKeyRepeatEnabled(false);
+
 
   // // Display the list of all the video modes available for fullscreen
   // std::vector<sf::VideoMode> modes = sf::VideoMode::getFullscreenModes();
@@ -2571,7 +2603,7 @@ int main(int argc, char **argv) {
   R.color_algo = ColoringAlgo::MULTICYCLE;
 
   //R.color_algo = ColoringAlgo::USE_IMAGE;
-  if ((NSR.escape_texture.loadFromFile("escape_image.jpg")) || (NSR.escape_texture.loadFromFile("escape_image.png")))
+  if ((NSR.escape_texture.loadFromFile("escape_image.png")) || (NSR.escape_texture.loadFromFile("escape_image.jpg")))
   {
     NSR.escape_image = NSR.escape_texture.copyToImage();
     sf::Vector2u escape_image_dims = NSR.escape_image.getSize();
@@ -2603,7 +2635,7 @@ int main(int argc, char **argv) {
       make_shared<FractalModel>(screenDimensions.x, screenDimensions.y);
 
   //p_model->cudaTest();
-  p_model->cudaPresent();
+ if (!save_and_exit) p_model->cudaPresent();
 
   // Create the worker threads:
   cout << "Machine supports " << thread::hardware_concurrency()
@@ -2832,8 +2864,14 @@ int main(int argc, char **argv) {
 
     if ((save_and_exit) && (done)) 
     {
+        // Evolve the model independantly
+        sf::Time elapsed = clock_e.restart();
+        p_model->update(elapsed);  // rebuild the pixels from what threads did in background
+
+        cout << "saving " << savename << endl;
         //save screenshot
         save_screenshot(window, FRAC[p_model->current_fractal].name, modelview, p_model, pgui, false, savename);
+        signalSaveKey(p_model, pgui, "changed_key");
         window.close();
         break;
     }
@@ -2846,6 +2884,7 @@ int main(int argc, char **argv) {
     for (unsigned int tix = 0; tix < num_threads; ++tix) {thread_asked_to_reset[tix] = true;} 
     threads[tix].join();
   }
+  //cout << "joined threads" << endl;
 
   return 0;
 }

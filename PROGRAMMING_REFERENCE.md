@@ -22,7 +22,11 @@ Table of Contents:
 - [5. Debugging,Analysis and Performance Tuning](#5-debugginganalysis-and-performance-tuning)
 	- [5.1. Automated](#51-automated)
 	- [5.2. GDB](#52-gdb)
+	- [dbx (AIX)](#dbx-aix)
 	- [5.3. Profiling](#53-profiling)
+	- [5.4. What is the process doing?](#54-what-is-the-process-doing)
+	- [5.5. What is in the executable?](#55-what-is-in-the-executable)
+	- [Signals](#signals)
 - [6. OS specific](#6-os-specific)
 	- [6.1. Linux](#61-linux)
 		- [6.1.1. perf](#611-perf)
@@ -107,6 +111,7 @@ Composition: black diamond
 ## 4.3. profiling
 python -m cProfile -s time circuit.py
 ## 4.4. Source Code:
+
 # 5. Debugging,Analysis and Performance Tuning
 ## 5.1. Automated
 * valgrind
@@ -114,9 +119,28 @@ python -m cProfile -s time circuit.py
 ## 5.2. GDB
 * SIGSEGV: http://unknownroad.com/rtfm/gdbtut/gdbsegfault.html
 * Cheat sheet https://darkdust.net/files/GDB%20Cheat%20Sheet.pdf
+## dbx (AIX)
+* stop on load "pythonint.so"
+* step,next,continue
+* stop in PyInit_pythonint
+* use /nethome/pmilosla/perforce/projects/python_new/modules/pythonint
 ## 5.3. Profiling
 * with perf: https://www.brendangregg.com/FlameGraphs/cpuflamegraphs.html
 * with valgrind: https://developer.mantidproject.org/ProfilingWithValgrind.html
+## 5.4. What is the process doing?
+* lsof
+* pmap
+* truss
+* strace
+* rlimit files, semaphores, stack size
+* ulimit
+* pldd  (procldd -F on AIX)
+## 5.5. What is in the executable?
+* ldd
+* file
+* objdump   AIX: dump -X64 -t
+## Signals
+* kill -l lists all signals
 
 # 6. OS specific
 ## 6.1. Linux
@@ -138,6 +162,7 @@ sudo lssecattr -c /usr/pmapi/tools/pmcycles
 /usr/pmapi/tools/pmcycles accessauths=aix.system.pmustat.global innateprivs=PV_PMU_CONFIG,PV_PMU_SYSTEM secflags=FSF_EPS
 ```
 * topas
+* nmon   n,t, 0,1,2,3,4
 #### 6.2.1.1. processors and configuration
 * lscfg -lproc\*
 * lparstat -i | grep CPU

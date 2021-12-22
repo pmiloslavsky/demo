@@ -19,14 +19,17 @@ Table of Contents:
 	- [4.2. Cheat Sheets](#42-cheat-sheets)
 	- [4.3. profiling](#43-profiling)
 	- [4.4. Source Code:](#44-source-code)
+	- [4.5. 4.5 Embedding:](#45-45-embedding)
+	- [4.6. Debugging:](#46-debugging)
+	- [4.7. Package issues](#47-package-issues)
 - [5. Debugging,Analysis and Performance Tuning](#5-debugginganalysis-and-performance-tuning)
 	- [5.1. Automated](#51-automated)
 	- [5.2. GDB](#52-gdb)
-	- [dbx (AIX)](#dbx-aix)
-	- [5.3. Profiling](#53-profiling)
-	- [5.4. What is the process doing?](#54-what-is-the-process-doing)
-	- [5.5. What is in the executable?](#55-what-is-in-the-executable)
-	- [Signals](#signals)
+	- [5.3. dbx (AIX)](#53-dbx-aix)
+	- [5.4. Profiling](#54-profiling)
+	- [5.5. What is the process doing?](#55-what-is-the-process-doing)
+	- [5.6. What is in the executable?](#56-what-is-in-the-executable)
+	- [5.7. Signals](#57-signals)
 - [6. OS specific](#6-os-specific)
 	- [6.1. Linux](#61-linux)
 		- [6.1.1. perf](#611-perf)
@@ -34,8 +37,9 @@ Table of Contents:
 	- [6.2. AIX](#62-aix)
 		- [6.2.1. system administration](#621-system-administration)
 			- [6.2.1.1. processors and configuration](#6211-processors-and-configuration)
-	- [6.3. Docker](#63-docker)
-		- [6.3.1. Basic Commands](#631-basic-commands)
+	- [6.3. Windows](#63-windows)
+	- [6.4. Docker](#64-docker)
+		- [6.4.1. Basic Commands](#641-basic-commands)
 - [7. Unix tips](#7-unix-tips)
 	- [7.1. Why is computer slow?](#71-why-is-computer-slow)
 	- [7.2. Save terminal session with tmux](#72-save-terminal-session-with-tmux)
@@ -111,7 +115,25 @@ Composition: black diamond
 ## 4.3. profiling
 python -m cProfile -s time circuit.py
 ## 4.4. Source Code:
+## 4.5. 4.5 Embedding:
+    Py_Initialize(); 
+    if ( !Py_IsInitialized() ) 
+    { 
+        return -1; 
+    } 
 
+    printf("doing import math in libbar.so:\n");
+    PyRun_SimpleString("import math");
+    printf("import done\n");
+
+    Py_Finalize();
+## 4.6. Debugging:
+* sudo apt-get install python3-dbg
+* sudo wget https://www.python.org/ftp/python/3.8.10/Python-3.8.10.tgz
+## 4.7. Package issues
+* on windows use py instead of python
+* pip freeze   shows everything installed by pip
+* pip install  uninstall   cache purge
 # 5. Debugging,Analysis and Performance Tuning
 ## 5.1. Automated
 * valgrind
@@ -119,15 +141,15 @@ python -m cProfile -s time circuit.py
 ## 5.2. GDB
 * SIGSEGV: http://unknownroad.com/rtfm/gdbtut/gdbsegfault.html
 * Cheat sheet https://darkdust.net/files/GDB%20Cheat%20Sheet.pdf
-## dbx (AIX)
+## 5.3. dbx (AIX)
 * stop on load "pythonint.so"
 * step,next,continue
 * stop in PyInit_pythonint
 * use /nethome/pmilosla/perforce/projects/python_new/modules/pythonint
-## 5.3. Profiling
+## 5.4. Profiling
 * with perf: https://www.brendangregg.com/FlameGraphs/cpuflamegraphs.html
 * with valgrind: https://developer.mantidproject.org/ProfilingWithValgrind.html
-## 5.4. What is the process doing?
+## 5.5. What is the process doing?
 * lsof
 * pmap
 * truss
@@ -135,11 +157,11 @@ python -m cProfile -s time circuit.py
 * rlimit files, semaphores, stack size
 * ulimit
 * pldd  (procldd -F on AIX)
-## 5.5. What is in the executable?
+## 5.6. What is in the executable?
 * ldd
 * file
 * objdump   AIX: dump -X64 -t
-## Signals
+## 5.7. Signals
 * kill -l lists all signals
 
 # 6. OS specific
@@ -153,6 +175,8 @@ python -m cProfile -s time circuit.py
 * sudo perf top
 ### 6.1.2. system administration
 * yum update yum install yum-utils  yum provides gtar  yum info tar-1.33-1.ppc repoquery -l tar-1.33-1.ppc
+* dnf is replacing yum
+* sudo rpm -ivh python3-3.7.11-1.rpm
 ## 6.2. AIX
 ### 6.2.1. system administration
 * command security
@@ -161,16 +185,21 @@ python -m cProfile -s time circuit.py
 sudo lssecattr -c /usr/pmapi/tools/pmcycles
 /usr/pmapi/tools/pmcycles accessauths=aix.system.pmustat.global innateprivs=PV_PMU_CONFIG,PV_PMU_SYSTEM secflags=FSF_EPS
 ```
+* lslpp -Lqc 
 * topas
 * nmon   n,t, 0,1,2,3,4
+* sudo   slibclean
 #### 6.2.1.1. processors and configuration
 * lscfg -lproc\*
 * lparstat -i | grep CPU
 * also lparstat without args (shows smt4 sometimes)
 * bindprocessor -q
 * lsattr -El proc0
-## 6.3. Docker
-### 6.3.1. Basic Commands
+## 6.3. Windows
+* procmon (https://docs.microsoft.com/en-us/sysinternals/downloads/procmon) can show what ddls are being loaded (you need to filter on pid or name)
+* ListDlls  dlls in a process   /cygdrive/c/users/pmilosla/Downloads/ListDlls/Listdlls64.exe python.exe
+## 6.4. Docker
+### 6.4.1. Basic Commands
 Install docker:
 https://docs.docker.com/engine/install/ubuntu/#installation-methods
 Hello world doesn’t work at first – eventually it started working for me

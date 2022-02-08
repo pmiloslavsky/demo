@@ -38,6 +38,8 @@ Table of Contents:
 		- [6.2.1. system administration](#621-system-administration)
 			- [6.2.1.1. processors and configuration](#6211-processors-and-configuration)
 	- [6.3. Windows](#63-windows)
+		- [6.3.1. CLI compilation and linking](#631-cli-compilation-and-linking)
+		- [6.3.2. Debugging python modules](#632-debugging-python-modules)
 	- [6.4. Docker](#64-docker)
 		- [6.4.1. Basic Commands](#641-basic-commands)
 - [7. Unix tips](#7-unix-tips)
@@ -141,6 +143,7 @@ python -m cProfile -s time circuit.py
 ## 5.2. GDB
 * SIGSEGV: http://unknownroad.com/rtfm/gdbtut/gdbsegfault.html
 * Cheat sheet https://darkdust.net/files/GDB%20Cheat%20Sheet.pdf
+* step into s  step over n   finish   dir  b   d 1(delete first breakpoint)
 ## 5.3. dbx (AIX)
 * stop on load "pythonint.so"
 * step,next,continue
@@ -198,6 +201,19 @@ sudo lssecattr -c /usr/pmapi/tools/pmcycles
 ## 6.3. Windows
 * procmon (https://docs.microsoft.com/en-us/sysinternals/downloads/procmon) can show what ddls are being loaded (you need to filter on pid or name)
 * ListDlls  dlls in a process   /cygdrive/c/users/pmilosla/Downloads/ListDlls/Listdlls64.exe python.exe
+* process Explorer http://live.sysinternals.com/  procexp for when you cant see pids in task manager
+* DLL dependancy walker: https://github.com/lucasg/Dependencies
+### 6.3.1. CLI compilation and linking
+* open Visual studio native x64 shell
+* copy in subordinate DLLs your DLL will need (may need to set PATH for run time DLL search)
+* cl -c /Zi /W3 test.cpp
+* link /debug /MACHINE:X64 test.obj C:\libfavoritedll.lib
+### 6.3.2. Debugging python modules
+* Recompile your windows .pyd extension with debug See here: https://docs.microsoft.com/en-us/visualstudio/python/working-with-c-cpp-python-in-visual-studio?view=vs-2022    and here: https://stackoverflow.com/questions/28805401/debugging-my-python-c-extension-lead-to-pythreadstate-get-no-current-thread and here:
+https://stackoverflow.com/questions/66162568/lnk1104cannot-open-file-python39-d-lib
+* Click on your 3.9.5 python installer and install the debug libraries symbols. Copy python39_d.dll and python39_d.pdb to where your application is. (instance/bin)
+* Get the 3.9.5 source code from here for later: https://www.python.org/downloads/source/
+* start python3 do os.getpid(), Use procmon to start debugging it since task manager doesnt work https://docs.microsoft.com/en-us/sysinternals/downloads/procmon
 ## 6.4. Docker
 ### 6.4.1. Basic Commands
 Install docker:

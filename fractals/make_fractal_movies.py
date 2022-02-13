@@ -3,105 +3,111 @@ import os
 import math
 import subprocess
 from ctypes import *
+from tabnanny import filename_only
 from PIL import Image
 import glob
 import moviepy.video.io.ImageSequenceClip
 
 class SavedFractal(Structure):
-     _fields_ = [ 
-     ('version',c_int),
-     ('valid',c_int),
-     ('current_fractal',c_uint),
-     ('current_max_iters0',c_uint),
-     ('current_max_iters1',c_uint),
-     ('current_max_iters2',c_uint),
-     ('current_power',c_double),
-     ('current_zconst0',c_double), #complex
-     ('current_zconst1',c_double), #complex
-     ('current_escape_r',c_double),
-     #RF
-     ('theta',c_float),
-     ('xstart',c_double),
-     ('ystart',c_double),
-     ('xdelta',c_double),
-     ('ydelta',c_double),
-     ('current_width',c_double),
-     ('current_height',c_double),
-     ('displayed_zoom',c_double),
-     ('requested_zoom',c_double),
-     ('show_selection',c_bool),
-     ('coloring_algo',c_int),
-     ('color_cycle_size',c_int),
-     ('palette',c_uint),
-     ('reflect_palette',c_bool),
-     ('escape_image_w',c_uint),
-     ('escape_image_h',c_uint),
-     ('image_loaded',c_bool),
-     ('light_pos_r',c_double),
-     ('light_pos_i',c_double),
-     ('light_angle',c_double),
-     ('light_height',c_double),
-     ('random_sample',c_bool),
-     ('original_width',c_double),
-     ('original_height',c_double),
-     #('wtf',c_uint*2)
-     ]
+    """Shared between C and Python via ctypes and a .key file. Controls Fractal Generation. This is sensitive to small changes in the C code."""
+    _fields_ = [ 
+    ('version',c_int),
+    ('valid',c_int),
+    ('current_fractal',c_uint),
+    ('current_max_iters0',c_uint),
+    ('current_max_iters1',c_uint),
+    ('current_max_iters2',c_uint),
+    ('current_power',c_double),
+    ('current_zconst0',c_double), #complex
+    ('current_zconst1',c_double), #complex
+    ('current_escape_r',c_double),
+    # Reference Frame - see C code for details
+    ('theta',c_float),
+    ('xstart',c_double),
+    ('ystart',c_double),
+    ('xdelta',c_double),
+    ('ydelta',c_double),
+    ('current_width',c_double),
+    ('current_height',c_double),
+    ('displayed_zoom',c_double),
+    ('requested_zoom',c_double),
+    ('show_selection',c_bool),
+    ('coloring_algo',c_int),
+    ('color_cycle_size',c_int),
+    ('palette',c_uint),
+    ('reflect_palette',c_bool),
+    ('escape_image_w',c_uint),
+    ('escape_image_h',c_uint),
+    ('image_loaded',c_bool),
+    ('light_pos_r',c_double),
+    ('light_pos_i',c_double),
+    ('light_angle',c_double),
+    ('light_height',c_double),
+    ('random_sample',c_bool),
+    ('original_width',c_double),
+    ('original_height',c_double),
+    ]
 
 
-os.chdir(r"Documents/GitHub/demo/fractals/fractals_cuda/x64/Release")
-print(os.getcwd())
-key_version=".fractal_key_version_1"
-seedkey="movie_base" + key_version
-changedkey = "changed_key" + key_version
-base_frame_name="shadow_"
-png_basename="movie"
-finalname="shadow"
+def os_setup():
+    """Go to where the fractals generator is."""
+    #os.chdir(r"Documents/GitHub/demo/fractals/fractals_cuda/x64/Release")
+    os.chdir(r"fractals_cuda/x64/Release")
+    print("Currently in dir: ", os.getcwd())
 
-g = open(seedkey,"rb")
-q = SavedFractal()
-g.readinto(q)
-g.close()
+def refresh_fractal_key(input_key_name):
+    """Use ctypes to create a python data structure from the binary file."""
+    g = open(input_key_name,"rb")
+    output_key = SavedFractal()
+    g.readinto(output_key)
+    g.close()
+    return output_key
 
-print("\n\nBase fractal_key:")
-for field_name, field_type in q._fields_:
-    print(field_name, getattr(q, field_name))
+def fileio_setup():
+    """Set up input files, output files and temporary filenames."""
+    global key_version, seedkey_name, changedkey_name, png_basename, frame_basename, final_basename
+    key_version = ".fractal_key_version_1"
+    # full file names
+    seedkey_name="movie_base" + key_version
+    changedkey_name = "changed_key" + key_version
+    # partial file names
+    frame_basename="shadow_"
+    png_basename="movie"
+    final_basename="shadow"
+    
+    fkey = refresh_fractal_key(seedkey_name)
+    print("\n\n{} data layout from ctypes:".format(key_version))
+    for field_name, field_type in fkey._fields_:
+        print(field_name, getattr(fkey, field_name))
 
-def create_shadow_frames(end, seedkey, hide=False):
+def create_shadow_frames(end, seedkey_name, hide=False):
     count = end - 1
     if end > 50:
         if (end - 1) % 50 != 0:
             return
 
-    g = open(seedkey,"rb")
-    basekey = SavedFractal()
-    g.readinto(basekey)
-    g.close()
-
-    basename=base_frame_name
+    changedkey = refresh_fractal_key(seedkey_name)
 
     for j in range(0,end):
-        # get the basekey 
+        """Create each png frame of the gif"""
         if j !=0 :
-            g = open(changedkey,"rb")
-            basekey = SavedFractal()
-            g.readinto(basekey)
-            g.close()
+            changedkey = refresh_fractal_key(changedkey_name)
 
-        keyname=basename + str(j) + key_version
-        f = open(keyname,"wb")
-        #basekey.current_max_iters0=1500
-        #basekey.current_escape_r=50
+        framekey_name=frame_basename + str(j) + key_version
+        f = open(framekey_name,"wb")
+        #changedkey.current_max_iters0=1500
+        #changedkey.current_escape_r=50
 
         # if you zoom it will change xstart so be careful
 
         # pan (fractal coordinates)
-        basekey.xstart = basekey.xstart + 5*basekey.xdelta
+        #changedkey.xstart = changedkey.xstart + 5*changedkey.xdelta
         
         # zoom
-        # if count > 50:
-        #     basekey.requested_zoom=basekey.requested_zoom/(1.0 + (1/50)) #zoom in fast
-        # else:
-        #     basekey.requested_zoom=basekey.requested_zoom/(1.0 + (0.1/count)) #zoom in slowly
+        if count > 50:
+            changedkey.requested_zoom=changedkey.requested_zoom/(1.0 + (1/50)) #zoom in fast
+        else:
+            changedkey.requested_zoom=changedkey.requested_zoom/(1.0 + (0.1/count)) #zoom in slowly
         
 
         # rotate light
@@ -114,18 +120,18 @@ def create_shadow_frames(end, seedkey, hide=False):
         radius=2
         x = radius * math.cos(angle)
         y = radius * math.sin(angle)
-        basekey.light_pos_r = x
-        basekey.light_pos_i = y
+        changedkey.light_pos_r = x
+        changedkey.light_pos_i = y
 
-        f.write(basekey)
+        f.write(changedkey)
         f.close()
         pngname=png_basename + str(j) + ".png"
         if (hide == False):
-            subprocess.run(['fractals_cuda.exe', 'save_and_exit', keyname, pngname], shell=True)
+            subprocess.run(['fractals_cuda.exe', 'save_and_exit', changedkey_name, pngname], shell=True)
         else:
-            subprocess.run(['fractals_cuda.exe', 'save_and_exit', keyname, pngname, "hide"], shell=True)
+            subprocess.run(['fractals_cuda.exe', 'save_and_exit', changedkey_name, pngname, "hide"], shell=True)
         
-        # this exports the new basekey into a file
+        # this exports the new changedkey into a file
 
 
 def create_gif(end, time):
@@ -140,30 +146,38 @@ def create_gif(end, time):
 
     # Save into a GIF file that loops forever
     # duration -> display time of each frame in ms
-    frames[0].save(finalname + ".gif", format='GIF',
+    frames[0].save(final_basename + ".gif", format='GIF',
                append_images=frames[0:len(imgs)],
                save_all=True,
                duration=time, loop=0)    
 
-def create_movie(end, fps, basename):
+def create_movie(end, fps, movie_name):
     imgs = sorted(glob.glob(png_basename+"*.png"), key=os.path.getmtime)
     clip = moviepy.video.io.ImageSequenceClip.ImageSequenceClip(imgs, fps=fps)
-    clip.write_videofile(basename + ".mp4")
+    clip.write_videofile(movie_name + ".mp4")
 
-#total frames to go around circle with light
-total_frames=201
-if total_frames > 6:
-    create_shadow_frames(total_frames, seedkey, True)
-else:
-    create_shadow_frames(total_frames, seedkey)
+def main():
+    os_setup()
+    fileio_setup()
 
-create_gif(total_frames, 100)
+    #total frames to go around circle with light
+    total_frames=7
+    if total_frames > 6:
+        create_shadow_frames(total_frames, seedkey_name, True)
+    else:
+        create_shadow_frames(total_frames, seedkey_name)
 
-create_movie(total_frames, 5, finalname + "_slow")
-create_movie(total_frames, 30, finalname + "_fast")
+    create_gif(total_frames, 100)
 
-imgs = sorted(glob.glob(png_basename+"*.png"), key=os.path.getmtime)
-for i in range(len(imgs)):
-    os.remove(imgs[i]) 
-    keyname=base_frame_name + str(i) + key_version
-    os.remove(keyname)
+    create_movie(total_frames, 5, final_basename + "_slow")
+    create_movie(total_frames, 30, final_basename + "_fast")
+
+    imgs = sorted(glob.glob(png_basename+"*.png"), key=os.path.getmtime)
+    for i in range(len(imgs)):
+        os.remove(imgs[i]) 
+        framekey_name=frame_basename + str(i) + key_version
+        os.remove(framekey_name)
+    os.remove(changedkey_name)
+
+if __name__=="__main__":
+    main()

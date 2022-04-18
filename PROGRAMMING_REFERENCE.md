@@ -24,7 +24,7 @@ Table of Contents:
 	- [4.7. Package issues](#47-package-issues)
 - [5. Debugging,Analysis and Performance Tuning](#5-debugginganalysis-and-performance-tuning)
 	- [5.1. Automated](#51-automated)
-	- [5.2. GDB](#52-gdb)
+	- [5.2. GDB (Linux or AIX)](#52-gdb-linux-or-aix)
 	- [5.3. dbx (AIX)](#53-dbx-aix)
 	- [5.4. Profiling](#54-profiling)
 	- [5.5. What is the process doing?](#55-what-is-the-process-doing)
@@ -43,16 +43,20 @@ Table of Contents:
 	- [6.4. Docker](#64-docker)
 		- [6.4.1. Basic Commands](#641-basic-commands)
 - [7. Unix tips](#7-unix-tips)
-	- [7.1. Why is computer slow?](#71-why-is-computer-slow)
-	- [7.2. Save terminal session with tmux](#72-save-terminal-session-with-tmux)
+	- [7.1. Common Unix Commands in different UNIX OS:](#71-common-unix-commands-in-different-unix-os)
+	- [7.2. Why is computer slow?](#72-why-is-computer-slow)
+	- [7.3. Save terminal session with tmux](#73-save-terminal-session-with-tmux)
 - [8. Books](#8-books)
-- [9. Statistical Analysis and Machine Learning](#9-statistical-analysis-and-machine-learning)
-	- [9.1. Fundamentals of ML](#91-fundamentals-of-ml)
-	- [9.2. Statistical measures in python:](#92-statistical-measures-in-python)
-		- [9.2.1. Plotting:](#921-plotting)
-		- [9.2.2. Fitting:](#922-fitting)
-		- [9.2.3. Sampling:](#923-sampling)
-		- [9.2.4. Learning](#924-learning)
+- [9. ICU/Unicode](#9-icuunicode)
+- [10. SQL](#10-sql)
+	- [10.1. Cheat Sheet](#101-cheat-sheet)
+- [11. Statistical Analysis and Machine Learning](#11-statistical-analysis-and-machine-learning)
+	- [11.1. Fundamentals of ML](#111-fundamentals-of-ml)
+	- [11.2. Statistical measures in python:](#112-statistical-measures-in-python)
+		- [11.2.1. Plotting:](#1121-plotting)
+		- [11.2.2. Fitting:](#1122-fitting)
+		- [11.2.3. Sampling:](#1123-sampling)
+		- [11.2.4. Learning](#1124-learning)
 
 
 # 1. C/C++
@@ -140,15 +144,23 @@ python -m cProfile -s time circuit.py
 ## 5.1. Automated
 * valgrind
 * cachegrind (find cache thrashing)
-## 5.2. GDB
+## 5.2. GDB (Linux or AIX)
 * SIGSEGV: http://unknownroad.com/rtfm/gdbtut/gdbsegfault.html
-* Cheat sheet https://darkdust.net/files/GDB%20Cheat%20Sheet.pdf
-* step into s  step over n   finish   dir  b   d 1(delete first breakpoint)
+* Cheat sheets: https://darkdust.net/files/GDB%20Cheat%20Sheet.pdf
+*               https://cs.brown.edu/courses/cs033/docs/guides/gdb.pdf
+* step into s  step over n   finish   dir  b   d 1(delete first breakpoint) 
+* p $r3 $eax  p/x $r3  x/8xw 0x110075770+27048 ([x]/(number)(format)(unit_size=bhwg) <address>)
+* gdb tui   layout split asm src regs   layout next     focus next
+* gdb -batch -ex "disassemble/rs mainsub" mux.o | more
+* If CTRL-C crashes gdb -> kill -TRAP <pid> from another window
 ## 5.3. dbx (AIX)
+* multiproc child
 * stop on load "pythonint.so"
 * step,next,continue
 * stop in PyInit_pythonint
 * use /nethome/pmilosla/perforce/projects/python_new/modules/pythonint
+* sudo dbx /home/pmilosla/iris/IBMCLANGD/bin/irisdb /home/pmilosla/iris/IBMCLANGD/mgr/user/core
+* https://www.ibm.com/docs/en/aix/7.2?topic=overview-register-usage-conventions
 ## 5.4. Profiling
 * with perf: https://www.brendangregg.com/FlameGraphs/cpuflamegraphs.html
 * with valgrind: https://developer.mantidproject.org/ProfilingWithValgrind.html
@@ -166,6 +178,9 @@ python -m cProfile -s time circuit.py
 * objdump   AIX: dump -X64 -t
 ## 5.7. Signals
 * kill -l lists all signals
+* echo $? gives 128+signum that says what killed you
+* sudo kill -TRAP 10486072 to the process gdb is debugging causes gdb to break
+
 
 # 6. OS specific
 ## 6.1. Linux
@@ -180,8 +195,12 @@ python -m cProfile -s time circuit.py
 * yum update yum install yum-utils  yum provides gtar  yum info tar-1.33-1.ppc repoquery -l tar-1.33-1.ppc
 * dnf is replacing yum
 * sudo rpm -ivh python3-3.7.11-1.rpm
+* yum list installed | grep python
+* repoquery -l rh-python38-python-devel
 ## 6.2. AIX
 ### 6.2.1. system administration
+* PTFs come from IBM's "Fix Central", while the GA images (with the embedded licenses) come from either Passport Advantage 
+  (software sales) or ESS (hardware bundles). https://www.ibm.com/support/pages/fix-list-xl-cc-aix
 * command security
 ```sudo lssecattr -c /usr/sbin/lsattr
 1420-012 "/usr/sbin/lsattr" does not exist in the privileged command database.
@@ -192,12 +211,17 @@ sudo lssecattr -c /usr/pmapi/tools/pmcycles
 * topas
 * nmon   n,t, 0,1,2,3,4
 * sudo   slibclean
+* df -Pg  disk space left
+* oslevel -s (what TL version)
+* yum list installed | grep python
 #### 6.2.1.1. processors and configuration
 * lscfg -lproc\*
 * lparstat -i | grep CPU
 * also lparstat without args (shows smt4 sometimes)
 * bindprocessor -q
 * lsattr -El proc0
+* sudo pmcycles -m
+* sudo smtctl
 ## 6.3. Windows
 * procmon (https://docs.microsoft.com/en-us/sysinternals/downloads/procmon) can show what ddls are being loaded (you need to filter on pid or name)
 * ListDlls  dlls in a process   /cygdrive/c/users/pmilosla/Downloads/ListDlls/Listdlls64.exe python.exe
@@ -208,6 +232,7 @@ sudo lssecattr -c /usr/pmapi/tools/pmcycles
 * copy in subordinate DLLs your DLL will need (may need to set PATH for run time DLL search)
 * cl -c /Zi /W3 test.cpp
 * link /debug /MACHINE:X64 test.obj C:\libfavoritedll.lib
+* & 'C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\MSBuild\Current\Bin\MSBuild' .\XXXtest.vcxproj -p:Configuration="Debug" -p:Platform="x64" -maxcpucount
 ### 6.3.2. Debugging python modules
 * Recompile your windows .pyd extension with debug See here: https://docs.microsoft.com/en-us/visualstudio/python/working-with-c-cpp-python-in-visual-studio?view=vs-2022    and here: https://stackoverflow.com/questions/28805401/debugging-my-python-c-extension-lead-to-pythreadstate-get-no-current-thread and here:
 https://stackoverflow.com/questions/66162568/lnk1104cannot-open-file-python39-d-lib
@@ -239,12 +264,14 @@ sudo docker exec -it iris ls -la /usr/irissys/bin/libirisHLL.so
 ```
 
 # 7. Unix tips
-## 7.1. Why is computer slow?
+## 7.1. Common Unix Commands in different UNIX OS:
+* A Sysadmin's Unixersal Translator (ROSETTA STONE) : http://bhami.com/rosetta.html
+## 7.2. Why is computer slow?
 * top
 * free
 * dstat
 * iostat
-## 7.2. Save terminal session with tmux
+## 7.3. Save terminal session with tmux
 * sudo apt install tmux
 * tmux
 * export TERM=xterm-256color
@@ -255,11 +282,15 @@ sudo docker exec -it iris ls -la /usr/irissys/bin/libirisHLL.so
 # 8. Books
 * (Stroustrop’s paper about C++ evolution) https://dl.acm.org/doi/abs/10.1145/3386320
 * Fedor G Pikus Hands on Design Patterns with C++
-
-# 9. Statistical Analysis and Machine Learning
-## 9.1. Fundamentals of ML
+# 9. ICU/Unicode
+* Example code: https://begriffs.com/posts/2019-05-23-unicode-icu.html#changing-case
+# 10. SQL
+## 10.1. Cheat Sheet
+* https://dataschool.com/learn-sql/sql-cheat-sheet/
+# 11. Statistical Analysis and Machine Learning
+## 11.1. Fundamentals of ML
 * https://github.com/ageron/handson-ml2
-## 9.2. Statistical measures in python:
+## 11.2. Statistical measures in python:
 ```
 popSD = numpy.std(population)
 
@@ -305,7 +336,7 @@ Area in standard deviation:
 
               'std =', round(area, 4))
 ```
-### 9.2.1. Plotting:
+### 11.2.1. Plotting:
 pylab.plot   pylab.hist   pylab.table
 ```
     pylab.errorbar(xVals, sizeMeans,
@@ -314,7 +345,7 @@ pylab.plot   pylab.hist   pylab.table
 
                    label = '95% Confidence Interval')
 ```
-### 9.2.2. Fitting:
+### 11.2.2. Fitting:
 ```
 def genFits(xVals, yVals, degrees):
 
@@ -328,7 +359,7 @@ def genFits(xVals, yVals, degrees):
 
 estYVals = pylab.polyval(model, xVals)
 ```
-### 9.2.3. Sampling:
+### 11.2.3. Sampling:
 ```
 random.sample(population, sampleSize)
 
@@ -340,7 +371,7 @@ If the samples are not random and independent don’t make conclusions……
 
 Survivor bias, non response bias, cherry picking
 ```
-### 9.2.4. Learning
+### 11.2.4. Learning
 Clustering (kNearestNeighbor) is Unsupervised Learning
 Classification (Logistic Regresion and k-means(greedy)) is Supervised Learning:
 Logistic Regression comes in 2 kinds:

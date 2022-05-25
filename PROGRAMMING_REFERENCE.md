@@ -19,7 +19,7 @@ Table of Contents:
 	- [4.2. Cheat Sheets](#42-cheat-sheets)
 	- [4.3. profiling](#43-profiling)
 	- [4.4. Source Code:](#44-source-code)
-	- [4.5. 4.5 Embedding:](#45-45-embedding)
+	- [4.5. Embedding:](#45-embedding)
 	- [4.6. Debugging:](#46-debugging)
 	- [4.7. Package issues](#47-package-issues)
 - [5. Debugging,Analysis and Performance Tuning](#5-debugginganalysis-and-performance-tuning)
@@ -27,12 +27,13 @@ Table of Contents:
 	- [5.2. GDB (Linux or AIX)](#52-gdb-linux-or-aix)
 	- [5.3. dbx (AIX)](#53-dbx-aix)
 	- [5.4. Profiling](#54-profiling)
+		- [5.4.1. Sample session:](#541-sample-session)
 	- [5.5. What is the process doing?](#55-what-is-the-process-doing)
 	- [5.6. What is in the executable?](#56-what-is-in-the-executable)
 	- [5.7. Signals](#57-signals)
 - [6. OS specific](#6-os-specific)
 	- [6.1. Linux](#61-linux)
-		- [6.1.1. perf](#611-perf)
+		- [6.1.1. how to install perf on ubuntu](#611-how-to-install-perf-on-ubuntu)
 		- [6.1.2. system administration](#612-system-administration)
 	- [6.2. AIX](#62-aix)
 		- [6.2.1. system administration](#621-system-administration)
@@ -46,17 +47,20 @@ Table of Contents:
 	- [7.1. Common Unix Commands in different UNIX OS:](#71-common-unix-commands-in-different-unix-os)
 	- [7.2. Why is computer slow?](#72-why-is-computer-slow)
 	- [7.3. Save terminal session with tmux](#73-save-terminal-session-with-tmux)
-- [8. Books](#8-books)
-- [9. ICU/Unicode](#9-icuunicode)
-- [10. SQL](#10-sql)
-	- [10.1. Cheat Sheet](#101-cheat-sheet)
-- [11. Statistical Analysis and Machine Learning](#11-statistical-analysis-and-machine-learning)
-	- [11.1. Fundamentals of ML](#111-fundamentals-of-ml)
-	- [11.2. Statistical measures in python:](#112-statistical-measures-in-python)
-		- [11.2.1. Plotting:](#1121-plotting)
-		- [11.2.2. Fitting:](#1122-fitting)
-		- [11.2.3. Sampling:](#1123-sampling)
-		- [11.2.4. Learning](#1124-learning)
+- [8. Editors](#8-editors)
+	- [8.1. Emacs](#81-emacs)
+	- [8.2. visual studio code](#82-visual-studio-code)
+- [9. Books](#9-books)
+- [10. ICU/Unicode](#10-icuunicode)
+- [11. SQL](#11-sql)
+	- [11.1. Cheat Sheet](#111-cheat-sheet)
+- [12. Statistical Analysis and Machine Learning](#12-statistical-analysis-and-machine-learning)
+	- [12.1. Fundamentals of ML](#121-fundamentals-of-ml)
+	- [12.2. Statistical measures in python:](#122-statistical-measures-in-python)
+		- [12.2.1. Plotting:](#1221-plotting)
+		- [12.2.2. Fitting:](#1222-fitting)
+		- [12.2.3. Sampling:](#1223-sampling)
+		- [12.2.4. Learning](#1224-learning)
 
 
 # 1. C/C++
@@ -121,7 +125,7 @@ Composition: black diamond
 ## 4.3. profiling
 python -m cProfile -s time circuit.py
 ## 4.4. Source Code:
-## 4.5. 4.5 Embedding:
+## 4.5. Embedding:
     Py_Initialize(); 
     if ( !Py_IsInitialized() ) 
     { 
@@ -153,6 +157,7 @@ python -m cProfile -s time circuit.py
 * gdb tui   layout split asm src regs   layout next     focus next
 * gdb -batch -ex "disassemble/rs mainsub" mux.o | more
 * If CTRL-C crashes gdb -> kill -TRAP <pid> from another window
+* b vec_op_varith<int64_t>
 ## 5.3. dbx (AIX)
 * multiproc child
 * stop on load "pythonint.so"
@@ -164,6 +169,10 @@ python -m cProfile -s time circuit.py
 ## 5.4. Profiling
 * with perf: https://www.brendangregg.com/FlameGraphs/cpuflamegraphs.html
 * with valgrind: https://developer.mantidproject.org/ProfilingWithValgrind.html
+### 5.4.1. Sample session:
+* start your process doing a heavy loop of what you are interested in
+* sudo perf record -F 999 -g -p 2277501 --call-graph dwarf    (creates perf.data file)
+* sudo perf report
 ## 5.5. What is the process doing?
 * lsof
 * pmap
@@ -180,13 +189,11 @@ python -m cProfile -s time circuit.py
 * kill -l lists all signals
 * echo $? gives 128+signum that says what killed you
 * sudo kill -TRAP 10486072 to the process gdb is debugging causes gdb to break
-
-
 # 6. OS specific
 ## 6.1. Linux
 * Search kernel source: https://elixir.bootlin.com/linux/v5.14.10/source
 * Search kernel Docs: https://www.kernel.org/doc/html/latest/search.html
-### 6.1.1. perf
+### 6.1.1. how to install perf on ubuntu
 * sudo apt-get update
 * sudo apt-get dist-upgrade
 * sudo apt-get install --reinstall linux-tools-common linux-tools-generic linux-tools-`uname -r`
@@ -279,18 +286,22 @@ sudo docker exec -it iris ls -la /usr/irissys/bin/libirisHLL.so
 * tmux ls
 * tmux attach-session -t 0
 * CTRL-B D  (detach)
-# 8. Books
+# 8. Editors
+## 8.1. Emacs
+## 8.2. visual studio code
+* view -> command     Markdown All in One Add/update section numbers  open preview to the side
+# 9. Books
 * (Stroustrop’s paper about C++ evolution) https://dl.acm.org/doi/abs/10.1145/3386320
 * Fedor G Pikus Hands on Design Patterns with C++
-# 9. ICU/Unicode
+# 10. ICU/Unicode
 * Example code: https://begriffs.com/posts/2019-05-23-unicode-icu.html#changing-case
-# 10. SQL
-## 10.1. Cheat Sheet
+# 11. SQL
+## 11.1. Cheat Sheet
 * https://dataschool.com/learn-sql/sql-cheat-sheet/
-# 11. Statistical Analysis and Machine Learning
-## 11.1. Fundamentals of ML
+# 12. Statistical Analysis and Machine Learning
+## 12.1. Fundamentals of ML
 * https://github.com/ageron/handson-ml2
-## 11.2. Statistical measures in python:
+## 12.2. Statistical measures in python:
 ```
 popSD = numpy.std(population)
 
@@ -336,7 +347,7 @@ Area in standard deviation:
 
               'std =', round(area, 4))
 ```
-### 11.2.1. Plotting:
+### 12.2.1. Plotting:
 pylab.plot   pylab.hist   pylab.table
 ```
     pylab.errorbar(xVals, sizeMeans,
@@ -345,7 +356,7 @@ pylab.plot   pylab.hist   pylab.table
 
                    label = '95% Confidence Interval')
 ```
-### 11.2.2. Fitting:
+### 12.2.2. Fitting:
 ```
 def genFits(xVals, yVals, degrees):
 
@@ -359,7 +370,7 @@ def genFits(xVals, yVals, degrees):
 
 estYVals = pylab.polyval(model, xVals)
 ```
-### 11.2.3. Sampling:
+### 12.2.3. Sampling:
 ```
 random.sample(population, sampleSize)
 
@@ -371,7 +382,7 @@ If the samples are not random and independent don’t make conclusions……
 
 Survivor bias, non response bias, cherry picking
 ```
-### 11.2.4. Learning
+### 12.2.4. Learning
 Clustering (kNearestNeighbor) is Unsupervised Learning
 Classification (Logistic Regresion and k-means(greedy)) is Supervised Learning:
 Logistic Regression comes in 2 kinds:

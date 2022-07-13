@@ -41,8 +41,9 @@ Table of Contents:
 	- [6.3. Windows](#63-windows)
 		- [6.3.1. CLI compilation and linking](#631-cli-compilation-and-linking)
 		- [6.3.2. Debugging python modules](#632-debugging-python-modules)
-	- [6.4. Docker](#64-docker)
-		- [6.4.1. Basic Commands](#641-basic-commands)
+	- [6.4. Containers](#64-containers)
+		- [6.4.1. Docker Basic Commands](#641-docker-basic-commands)
+		- [6.4.2. podman](#642-podman)
 - [7. Unix tips](#7-unix-tips)
 	- [7.1. Common Unix Commands in different UNIX OS:](#71-common-unix-commands-in-different-unix-os)
 	- [7.2. Why is computer slow?](#72-why-is-computer-slow)
@@ -166,6 +167,9 @@ python -m cProfile -s time circuit.py
 * use /nethome/pmilosla/perforce/projects/python_new/modules/pythonint
 * sudo dbx /home/pmilosla/iris/IBMCLANGD/bin/irisdb /home/pmilosla/iris/IBMCLANGD/mgr/user/core
 * https://www.ibm.com/docs/en/aix/7.2?topic=overview-register-usage-conventions
+* stepi listi stepi 4   p $r21
+* (dbx) listi 0x100919884,0x100919994
+* https://www.ibm.com/docs/en/aix/7.1?topic=d-dbx-command
 ## 5.4. Profiling
 * with perf: https://www.brendangregg.com/FlameGraphs/cpuflamegraphs.html
 * with valgrind: https://developer.mantidproject.org/ProfilingWithValgrind.html
@@ -221,6 +225,8 @@ sudo lssecattr -c /usr/pmapi/tools/pmcycles
 * df -Pg  disk space left
 * oslevel -s (what TL version)
 * yum list installed | grep python
+* yum install yum-utils   repoquery -l
+* yum install emacs-nox
 #### 6.2.1.1. processors and configuration
 * lscfg -lproc\*
 * lparstat -i | grep CPU
@@ -246,8 +252,8 @@ https://stackoverflow.com/questions/66162568/lnk1104cannot-open-file-python39-d-
 * Click on your 3.9.5 python installer and install the debug libraries symbols. Copy python39_d.dll and python39_d.pdb to where your application is. (instance/bin)
 * Get the 3.9.5 source code from here for later: https://www.python.org/downloads/source/
 * start python3 do os.getpid(), Use procmon to start debugging it since task manager doesnt work https://docs.microsoft.com/en-us/sysinternals/downloads/procmon
-## 6.4. Docker
-### 6.4.1. Basic Commands
+## 6.4. Containers
+### 6.4.1. Docker Basic Commands
 Install docker:
 https://docs.docker.com/engine/install/ubuntu/#installation-methods
 Hello world doesn’t work at first – eventually it started working for me
@@ -269,6 +275,46 @@ sudo docker network inspect bridge
 sudo docker network inspect host
 sudo docker exec -it iris ls -la /usr/irissys/bin/libirisHLL.so
 ```
+### 6.4.2. podman
+bash
+ps -p $$
+. /xxx/.podman_setup
+id
+cat /etc/subuid
+podman info
+
+cap-add is to get gdb to work --cap-add=SYS_PTRACE in particular
+
+podman run -it \
+-v /nethome/pmilosla:/nethome/pmilosla \
+--cap-add=all \
+docker_image \
+bash
+
+podman run -it \
+-v /nethome/pmilosla:/nethome/pmilosla \
+--cap-add=all \
+docker_image \
+bash
+
+podman ps
+podman rename c54467946b78 instance_gdb
+
+podman stop <>
+podman start instance_gdb
+podman inspect instance_gdb
+podman exec -it instance_gdb bash
+podman ps -a
+podman rm <>
+
+podman cp xxx.tar.gz dd978b62fdd9:/tmp
+
+apt-get update
+apt-get install gdb emacs strace
+
+dnf install gdb strace
+
+strace -p $$
 
 # 7. Unix tips
 ## 7.1. Common Unix Commands in different UNIX OS:

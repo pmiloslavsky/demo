@@ -31,6 +31,7 @@ Table of Contents:
 	- [5.5. What is the process doing?](#55-what-is-the-process-doing)
 	- [5.6. What is in the executable?](#56-what-is-in-the-executable)
 	- [5.7. Signals](#57-signals)
+	- [5.8. gcc target options -march vs -mnative](#58-gcc-target-options--march-vs--mnative)
 - [6. OS specific](#6-os-specific)
 	- [6.1. Linux](#61-linux)
 		- [6.1.1. how to install perf on ubuntu](#611-how-to-install-perf-on-ubuntu)
@@ -38,6 +39,7 @@ Table of Contents:
 	- [6.2. AIX](#62-aix)
 		- [6.2.1. system administration](#621-system-administration)
 			- [6.2.1.1. processors and configuration](#6211-processors-and-configuration)
+			- [6.2.1.2. Compilers:](#6212-compilers)
 	- [6.3. Windows](#63-windows)
 		- [6.3.1. CLI compilation and linking](#631-cli-compilation-and-linking)
 		- [6.3.2. Debugging python modules](#632-debugging-python-modules)
@@ -193,6 +195,11 @@ python -m cProfile -s time circuit.py
 * kill -l lists all signals
 * echo $? gives 128+signum that says what killed you
 * sudo kill -TRAP 10486072 to the process gdb is debugging causes gdb to break
+## 5.8. gcc target options -march vs -mnative
+* gcc -v
+* gcc -dumpmachine
+* gcc -march=native -Q --help=target
+* gcc -march=aarch64-redhat-linux -Q --help=target
 # 6. OS specific
 ## 6.1. Linux
 * Search kernel source: https://elixir.bootlin.com/linux/v5.14.10/source
@@ -227,6 +234,9 @@ sudo lssecattr -c /usr/pmapi/tools/pmcycles
 * yum list installed | grep python
 * yum install yum-utils   repoquery -l
 * yum install emacs-nox
+* dnf update
+* dnf install emacs-nox
+* dnf install dnf-utils
 #### 6.2.1.1. processors and configuration
 * lscfg -lproc\*
 * lparstat -i | grep CPU
@@ -235,6 +245,8 @@ sudo lssecattr -c /usr/pmapi/tools/pmcycles
 * lsattr -El proc0
 * sudo pmcycles -m
 * sudo smtctl
+#### 6.2.1.2. Compilers:
+* preprocessor defines: ibm-clang++_r -dM -E - < /dev/null
 ## 6.3. Windows
 * procmon (https://docs.microsoft.com/en-us/sysinternals/downloads/procmon) can show what ddls are being loaded (you need to filter on pid or name)
 * ListDlls  dlls in a process   /cygdrive/c/users/pmilosla/Downloads/ListDlls/Listdlls64.exe python.exe

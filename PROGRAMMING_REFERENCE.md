@@ -19,38 +19,49 @@ Table of Contents:
 	- [4.2. Cheat Sheets](#42-cheat-sheets)
 	- [4.3. profiling](#43-profiling)
 	- [4.4. Source Code:](#44-source-code)
-	- [4.5. 4.5 Embedding:](#45-45-embedding)
+	- [4.5. Embedding:](#45-embedding)
 	- [4.6. Debugging:](#46-debugging)
 	- [4.7. Package issues](#47-package-issues)
 - [5. Debugging,Analysis and Performance Tuning](#5-debugginganalysis-and-performance-tuning)
 	- [5.1. Automated](#51-automated)
-	- [5.2. GDB](#52-gdb)
+	- [5.2. GDB (Linux or AIX)](#52-gdb-linux-or-aix)
 	- [5.3. dbx (AIX)](#53-dbx-aix)
 	- [5.4. Profiling](#54-profiling)
+		- [5.4.1. Sample session:](#541-sample-session)
 	- [5.5. What is the process doing?](#55-what-is-the-process-doing)
 	- [5.6. What is in the executable?](#56-what-is-in-the-executable)
 	- [5.7. Signals](#57-signals)
 - [6. OS specific](#6-os-specific)
 	- [6.1. Linux](#61-linux)
-		- [6.1.1. perf](#611-perf)
+		- [6.1.1. how to install perf on ubuntu](#611-how-to-install-perf-on-ubuntu)
 		- [6.1.2. system administration](#612-system-administration)
 	- [6.2. AIX](#62-aix)
 		- [6.2.1. system administration](#621-system-administration)
 			- [6.2.1.1. processors and configuration](#6211-processors-and-configuration)
 	- [6.3. Windows](#63-windows)
-	- [6.4. Docker](#64-docker)
-		- [6.4.1. Basic Commands](#641-basic-commands)
+		- [6.3.1. CLI compilation and linking](#631-cli-compilation-and-linking)
+		- [6.3.2. Debugging python modules](#632-debugging-python-modules)
+	- [6.4. Containers](#64-containers)
+		- [6.4.1. Docker Basic Commands](#641-docker-basic-commands)
+		- [6.4.2. podman](#642-podman)
 - [7. Unix tips](#7-unix-tips)
-	- [7.1. Why is computer slow?](#71-why-is-computer-slow)
-	- [7.2. Save terminal session with tmux](#72-save-terminal-session-with-tmux)
-- [8. Books](#8-books)
-- [9. Statistical Analysis and Machine Learning](#9-statistical-analysis-and-machine-learning)
-	- [9.1. Fundamentals of ML](#91-fundamentals-of-ml)
-	- [9.2. Statistical measures in python:](#92-statistical-measures-in-python)
-		- [9.2.1. Plotting:](#921-plotting)
-		- [9.2.2. Fitting:](#922-fitting)
-		- [9.2.3. Sampling:](#923-sampling)
-		- [9.2.4. Learning](#924-learning)
+	- [7.1. Common Unix Commands in different UNIX OS:](#71-common-unix-commands-in-different-unix-os)
+	- [7.2. Why is computer slow?](#72-why-is-computer-slow)
+	- [7.3. Save terminal session with tmux](#73-save-terminal-session-with-tmux)
+- [8. Editors](#8-editors)
+	- [8.1. Emacs](#81-emacs)
+	- [8.2. visual studio code](#82-visual-studio-code)
+- [9. Books](#9-books)
+- [10. ICU/Unicode](#10-icuunicode)
+- [11. SQL](#11-sql)
+	- [11.1. Cheat Sheet](#111-cheat-sheet)
+- [12. Statistical Analysis and Machine Learning](#12-statistical-analysis-and-machine-learning)
+	- [12.1. Fundamentals of ML](#121-fundamentals-of-ml)
+	- [12.2. Statistical measures in python:](#122-statistical-measures-in-python)
+		- [12.2.1. Plotting:](#1221-plotting)
+		- [12.2.2. Fitting:](#1222-fitting)
+		- [12.2.3. Sampling:](#1223-sampling)
+		- [12.2.4. Learning](#1224-learning)
 
 
 # 1. C/C++
@@ -115,7 +126,7 @@ Composition: black diamond
 ## 4.3. profiling
 python -m cProfile -s time circuit.py
 ## 4.4. Source Code:
-## 4.5. 4.5 Embedding:
+## 4.5. Embedding:
     Py_Initialize(); 
     if ( !Py_IsInitialized() ) 
     { 
@@ -138,17 +149,34 @@ python -m cProfile -s time circuit.py
 ## 5.1. Automated
 * valgrind
 * cachegrind (find cache thrashing)
-## 5.2. GDB
+## 5.2. GDB (Linux or AIX)
 * SIGSEGV: http://unknownroad.com/rtfm/gdbtut/gdbsegfault.html
-* Cheat sheet https://darkdust.net/files/GDB%20Cheat%20Sheet.pdf
+* Cheat sheets: https://darkdust.net/files/GDB%20Cheat%20Sheet.pdf
+*               https://cs.brown.edu/courses/cs033/docs/guides/gdb.pdf
+* step into s  step over n   finish   dir  b   d 1(delete first breakpoint) 
+* p $r3 $eax  p/x $r3  x/8xw 0x110075770+27048 ([x]/(number)(format)(unit_size=bhwg) <address>)
+* gdb tui   layout split asm src regs   layout next     focus next
+* gdb -batch -ex "disassemble/rs mainsub" mux.o | more
+* If CTRL-C crashes gdb -> kill -TRAP <pid> from another window
+* b vec_op_varith<int64_t>
 ## 5.3. dbx (AIX)
+* multiproc child
 * stop on load "pythonint.so"
 * step,next,continue
 * stop in PyInit_pythonint
 * use /nethome/pmilosla/perforce/projects/python_new/modules/pythonint
+* sudo dbx /home/pmilosla/iris/IBMCLANGD/bin/irisdb /home/pmilosla/iris/IBMCLANGD/mgr/user/core
+* https://www.ibm.com/docs/en/aix/7.2?topic=overview-register-usage-conventions
+* stepi listi stepi 4   p $r21
+* (dbx) listi 0x100919884,0x100919994
+* https://www.ibm.com/docs/en/aix/7.1?topic=d-dbx-command
 ## 5.4. Profiling
 * with perf: https://www.brendangregg.com/FlameGraphs/cpuflamegraphs.html
 * with valgrind: https://developer.mantidproject.org/ProfilingWithValgrind.html
+### 5.4.1. Sample session:
+* start your process doing a heavy loop of what you are interested in
+* sudo perf record -F 999 -g -p 2277501 --call-graph dwarf    (creates perf.data file)
+* sudo perf report
 ## 5.5. What is the process doing?
 * lsof
 * pmap
@@ -163,12 +191,13 @@ python -m cProfile -s time circuit.py
 * objdump   AIX: dump -X64 -t
 ## 5.7. Signals
 * kill -l lists all signals
-
+* echo $? gives 128+signum that says what killed you
+* sudo kill -TRAP 10486072 to the process gdb is debugging causes gdb to break
 # 6. OS specific
 ## 6.1. Linux
 * Search kernel source: https://elixir.bootlin.com/linux/v5.14.10/source
 * Search kernel Docs: https://www.kernel.org/doc/html/latest/search.html
-### 6.1.1. perf
+### 6.1.1. how to install perf on ubuntu
 * sudo apt-get update
 * sudo apt-get dist-upgrade
 * sudo apt-get install --reinstall linux-tools-common linux-tools-generic linux-tools-`uname -r`
@@ -177,8 +206,12 @@ python -m cProfile -s time circuit.py
 * yum update yum install yum-utils  yum provides gtar  yum info tar-1.33-1.ppc repoquery -l tar-1.33-1.ppc
 * dnf is replacing yum
 * sudo rpm -ivh python3-3.7.11-1.rpm
+* yum list installed | grep python
+* repoquery -l rh-python38-python-devel
 ## 6.2. AIX
 ### 6.2.1. system administration
+* PTFs come from IBM's "Fix Central", while the GA images (with the embedded licenses) come from either Passport Advantage 
+  (software sales) or ESS (hardware bundles). https://www.ibm.com/support/pages/fix-list-xl-cc-aix
 * command security
 ```sudo lssecattr -c /usr/sbin/lsattr
 1420-012 "/usr/sbin/lsattr" does not exist in the privileged command database.
@@ -189,17 +222,38 @@ sudo lssecattr -c /usr/pmapi/tools/pmcycles
 * topas
 * nmon   n,t, 0,1,2,3,4
 * sudo   slibclean
+* df -Pg  disk space left
+* oslevel -s (what TL version)
+* yum list installed | grep python
+* yum install yum-utils   repoquery -l
+* yum install emacs-nox
 #### 6.2.1.1. processors and configuration
 * lscfg -lproc\*
 * lparstat -i | grep CPU
 * also lparstat without args (shows smt4 sometimes)
 * bindprocessor -q
 * lsattr -El proc0
+* sudo pmcycles -m
+* sudo smtctl
 ## 6.3. Windows
 * procmon (https://docs.microsoft.com/en-us/sysinternals/downloads/procmon) can show what ddls are being loaded (you need to filter on pid or name)
 * ListDlls  dlls in a process   /cygdrive/c/users/pmilosla/Downloads/ListDlls/Listdlls64.exe python.exe
-## 6.4. Docker
-### 6.4.1. Basic Commands
+* process Explorer http://live.sysinternals.com/  procexp for when you cant see pids in task manager
+* DLL dependancy walker: https://github.com/lucasg/Dependencies
+### 6.3.1. CLI compilation and linking
+* open Visual studio native x64 shell
+* copy in subordinate DLLs your DLL will need (may need to set PATH for run time DLL search)
+* cl -c /Zi /W3 test.cpp
+* link /debug /MACHINE:X64 test.obj C:\libfavoritedll.lib
+* & 'C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\MSBuild\Current\Bin\MSBuild' .\XXXtest.vcxproj -p:Configuration="Debug" -p:Platform="x64" -maxcpucount
+### 6.3.2. Debugging python modules
+* Recompile your windows .pyd extension with debug See here: https://docs.microsoft.com/en-us/visualstudio/python/working-with-c-cpp-python-in-visual-studio?view=vs-2022    and here: https://stackoverflow.com/questions/28805401/debugging-my-python-c-extension-lead-to-pythreadstate-get-no-current-thread and here:
+https://stackoverflow.com/questions/66162568/lnk1104cannot-open-file-python39-d-lib
+* Click on your 3.9.5 python installer and install the debug libraries symbols. Copy python39_d.dll and python39_d.pdb to where your application is. (instance/bin)
+* Get the 3.9.5 source code from here for later: https://www.python.org/downloads/source/
+* start python3 do os.getpid(), Use procmon to start debugging it since task manager doesnt work https://docs.microsoft.com/en-us/sysinternals/downloads/procmon
+## 6.4. Containers
+### 6.4.1. Docker Basic Commands
 Install docker:
 https://docs.docker.com/engine/install/ubuntu/#installation-methods
 Hello world doesn’t work at first – eventually it started working for me
@@ -221,14 +275,56 @@ sudo docker network inspect bridge
 sudo docker network inspect host
 sudo docker exec -it iris ls -la /usr/irissys/bin/libirisHLL.so
 ```
+### 6.4.2. podman
+bash
+ps -p $$
+. /xxx/.podman_setup
+id
+cat /etc/subuid
+podman info
+
+cap-add is to get gdb to work --cap-add=SYS_PTRACE in particular
+
+podman run -it \
+-v /nethome/pmilosla:/nethome/pmilosla \
+--cap-add=all \
+docker_image \
+bash
+
+podman run -it \
+-v /nethome/pmilosla:/nethome/pmilosla \
+--cap-add=all \
+docker_image \
+bash
+
+podman ps
+podman rename c54467946b78 instance_gdb
+
+podman stop <>
+podman start instance_gdb
+podman inspect instance_gdb
+podman exec -it instance_gdb bash
+podman ps -a
+podman rm <>
+
+podman cp xxx.tar.gz dd978b62fdd9:/tmp
+
+apt-get update
+apt-get install gdb emacs strace
+
+dnf install gdb strace
+
+strace -p $$
 
 # 7. Unix tips
-## 7.1. Why is computer slow?
+## 7.1. Common Unix Commands in different UNIX OS:
+* A Sysadmin's Unixersal Translator (ROSETTA STONE) : http://bhami.com/rosetta.html
+## 7.2. Why is computer slow?
 * top
 * free
 * dstat
 * iostat
-## 7.2. Save terminal session with tmux
+## 7.3. Save terminal session with tmux
 * sudo apt install tmux
 * tmux
 * export TERM=xterm-256color
@@ -236,14 +332,22 @@ sudo docker exec -it iris ls -la /usr/irissys/bin/libirisHLL.so
 * tmux ls
 * tmux attach-session -t 0
 * CTRL-B D  (detach)
-# 8. Books
+# 8. Editors
+## 8.1. Emacs
+## 8.2. visual studio code
+* view -> command     Markdown All in One Add/update section numbers  open preview to the side
+# 9. Books
 * (Stroustrop’s paper about C++ evolution) https://dl.acm.org/doi/abs/10.1145/3386320
 * Fedor G Pikus Hands on Design Patterns with C++
-
-# 9. Statistical Analysis and Machine Learning
-## 9.1. Fundamentals of ML
+# 10. ICU/Unicode
+* Example code: https://begriffs.com/posts/2019-05-23-unicode-icu.html#changing-case
+# 11. SQL
+## 11.1. Cheat Sheet
+* https://dataschool.com/learn-sql/sql-cheat-sheet/
+# 12. Statistical Analysis and Machine Learning
+## 12.1. Fundamentals of ML
 * https://github.com/ageron/handson-ml2
-## 9.2. Statistical measures in python:
+## 12.2. Statistical measures in python:
 ```
 popSD = numpy.std(population)
 
@@ -289,7 +393,7 @@ Area in standard deviation:
 
               'std =', round(area, 4))
 ```
-### 9.2.1. Plotting:
+### 12.2.1. Plotting:
 pylab.plot   pylab.hist   pylab.table
 ```
     pylab.errorbar(xVals, sizeMeans,
@@ -298,7 +402,7 @@ pylab.plot   pylab.hist   pylab.table
 
                    label = '95% Confidence Interval')
 ```
-### 9.2.2. Fitting:
+### 12.2.2. Fitting:
 ```
 def genFits(xVals, yVals, degrees):
 
@@ -312,7 +416,7 @@ def genFits(xVals, yVals, degrees):
 
 estYVals = pylab.polyval(model, xVals)
 ```
-### 9.2.3. Sampling:
+### 12.2.3. Sampling:
 ```
 random.sample(population, sampleSize)
 
@@ -324,7 +428,7 @@ If the samples are not random and independent don’t make conclusions……
 
 Survivor bias, non response bias, cherry picking
 ```
-### 9.2.4. Learning
+### 12.2.4. Learning
 Clustering (kNearestNeighbor) is Unsupervised Learning
 Classification (Logistic Regresion and k-means(greedy)) is Supervised Learning:
 Logistic Regression comes in 2 kinds:

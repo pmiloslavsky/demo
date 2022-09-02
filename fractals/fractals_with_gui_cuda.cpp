@@ -31,6 +31,7 @@
 //  Nebulabrot cuda
 //  Spiral Septagon
 // TODO
+// Allow fractal panning by arrow keys
 // Mandelbrot coloring improvements
 //  Work on smooth coloring and colormaps more
 // Orbit Traps: Point, Lines, Shapes, pickover stalk
@@ -151,7 +152,7 @@ class ReferenceFrame {
 
 };  // ReferenceFrame
 
-//non serializable
+// Non Serializable part of Fractal description thats too big to store in a key
 class NSReferenceFrame {
  public:
   vector<string> color_cycle_size_names{string("8"), string("16"), string("32"), string("64"), string("128"), string("256")};
@@ -361,7 +362,6 @@ class SavedFractal {
       : valid{0},RF{_thetaxy,_zoom} {};
 };
 
-
 //#include "fractals.h" SampleStats
 // struct SampleStats {
 //   unsigned long long rejected; // skipInSet check
@@ -472,7 +472,7 @@ inline void get_iteration_color(const int iter_ix, const int iters_max, const co
   //Using tinycolormap
   
   if (R.color_algo == ColoringAlgo::MULTICYCLE)
-  {    
+  {
     //colormap non smooth
     int i = iter_ix % R.color_cycle_size;
     tinycolormap::Color color(0.0,0.0,0.0);
@@ -1798,7 +1798,8 @@ SavedFractal no_fractal{0,1.0};
 int last_loaded_key_ix = -1;
 int frac_ix = 0;
 int displayed_frac_ix = -1;
-vector<SavedFractal> savf(max_saved,no_fractal);
+vector<SavedFractal> savf(max_saved,no_fractal); // for saving good looking ones
+SavedFractal Last(no_fractal); // for undo
 
 void signalSaveFractal(shared_ptr<FractalModel> p_model,
                        shared_ptr<tgui::Gui> pgui) {
@@ -1828,6 +1829,20 @@ void signalSaveFractal(shared_ptr<FractalModel> p_model,
   if (frac_ix > max_saved) frac_ix = 0;
   
   setGuiElementsFromModel(pgui, p_model);
+}
+
+void SaveLast(shared_ptr<FractalModel> p_model) {
+  Last = no_fractal;
+  Last.version = FRACTAL_VERSION;
+  Last.valid = 1;
+  Last.current_fractal = p_model->current_fractal;
+  Last.current_power = FRAC[p_model->current_fractal].current_power;
+  Last.current_max_iters[0] = FRAC[p_model->current_fractal].current_max_iters[0];
+  Last.current_max_iters[1] = FRAC[p_model->current_fractal].current_max_iters[1];
+  Last.current_max_iters[2] = FRAC[p_model->current_fractal].current_max_iters[2];
+  Last.current_zconst = FRAC[p_model->current_fractal].current_zconst;
+  Last.current_escape_r = FRAC[p_model->current_fractal].current_escape_r;
+  Last.RF = R;
 }
 
 /* CRC-32C (iSCSI) polynomial in reversed bit order. */
@@ -1977,6 +1992,27 @@ void signalLoadNextSaved(shared_ptr<FractalModel> p_model,
   R = p_savf->RF;
 
   setGuiElementsFromModel(pgui, p_model);
+}
+
+void LoadLast(shared_ptr<FractalModel> p_model,
+    shared_ptr<tgui::Gui> pgui) {
+
+    updateGuiElements(pgui, p_model);
+    p_model->reset_fractal_and_reference_frame();
+
+    SavedFractal* p_savf = &Last;
+
+    p_model->current_fractal = p_savf->current_fractal;
+
+    FRAC[p_model->current_fractal].current_power = p_savf->current_power;
+    FRAC[p_model->current_fractal].current_max_iters[0] = p_savf->current_max_iters[0];
+    FRAC[p_model->current_fractal].current_max_iters[1] = p_savf->current_max_iters[1];
+    FRAC[p_model->current_fractal].current_max_iters[2] = p_savf->current_max_iters[2];
+    FRAC[p_model->current_fractal].current_zconst = p_savf->current_zconst;
+    FRAC[p_model->current_fractal].current_escape_r = p_savf->current_escape_r;
+    R = p_savf->RF;
+
+    setGuiElementsFromModel(pgui, p_model);
 }
 
 int LoadProvidedKey(shared_ptr<FractalModel> p_model,
@@ -2159,6 +2195,7 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   menu->addMenuItem("Type c to turn cuda on/off");
   menu->addMenuItem("Type f for fullscreen on/off (buggy)");
   menu->addMenuItem("Type s to take a screenshot");
+  menu->addMenuItem("Type z to undo last zoom/pan");
   menu->addMenuItem("Type e to exit");
 
 
@@ -2726,6 +2763,12 @@ int main(int argc, char **argv) {
             display_all_widgets(pgui, false);
           }
         }
+        else if (event.key.code == sf::Keyboard::Z) {
+            update_and_draw = false;
+            for (unsigned int tix = 0; tix < num_threads; ++tix) { thread_asked_to_reset[tix] = true; }
+            LoadLast(p_model, pgui);
+            update_and_draw = true;
+        }
         else if (event.key.code == sf::Keyboard::P) {
             if (update_and_draw == false) {
                 update_and_draw = true;
@@ -2761,6 +2804,7 @@ int main(int argc, char **argv) {
       // Zoom the whole sim if mouse wheel moved
       if (event.type == sf::Event::MouseWheelScrolled) {
         if (event.mouseWheelScroll.wheel == sf::Mouse::VerticalWheel) {
+          SaveLast(p_model);
           double newzoom =
               get_new_zoom(modelview, event.mouseWheelScroll.delta);
           cout << "New zoom: " << newzoom << endl;
@@ -2772,6 +2816,8 @@ int main(int argc, char **argv) {
       // record center for right mouse button and crop for left
       if (event.type == sf::Event::MouseButtonPressed) {
         if (event.mouseButton.button == sf::Mouse::Right) {
+          // Pan
+          SaveLast(p_model);
           cout << "New center: ";
           cout << "x: " << event.mouseButton.x;
           cout << " y: " << event.mouseButton.y << endl;
@@ -2780,13 +2826,15 @@ int main(int argc, char **argv) {
         }
 
         if (event.mouseButton.button == sf::Mouse::Left) {
+          // Crop start
+          SaveLast(p_model);
           crop_start_x = event.mouseButton.x;
           crop_start_y = event.mouseButton.y;
         }
         
       }
 
-      //crop finish
+      // Crop finish
       if (event.type == sf::Event::MouseButtonReleased) {
         if (event.mouseButton.button == sf::Mouse::Left) {
           crop_end_x = event.mouseButton.x;
@@ -2801,6 +2849,7 @@ int main(int argc, char **argv) {
             //Now fake a new zoom -> update R.requested_zoom
             R.requested_zoom = R.requested_zoom*(abs(crop_end_x - crop_start_x)/R.original_width);
             p_model->zoomFractal(R.requested_zoom);
+            R.show_selection = false;
             //tell threads to start drawing new stuff
             for (unsigned int tix = 0; tix < num_threads; ++tix) {thread_asked_to_reset[tix] = true;}
         

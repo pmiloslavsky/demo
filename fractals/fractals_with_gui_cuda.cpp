@@ -2829,8 +2829,17 @@ void save_screenshot(sf::RenderWindow &window, string name, sf::View &modelview,
   sf::Image screenshot = texture.copyToImage();
   if (savename != "none")
     screenshot.saveToFile(savename);
-  else
-    screenshot.saveToFile(name + timestring + ".png");
+  else {
+#ifdef _WINDOWS
+    screenshot.saveToFile(string{".."} + separator + string{".."} + separator +
+                          string{".."} + separator + string{"screenshots"} + separator + name +
+                          timestring +
+                          ".png");
+#else
+    screenshot.saveToFile(string{"screenshots"} + separator + name + timestring +
+                          ".png");
+#endif
+  }
 };
 
 int main(int argc, char **argv) {

@@ -2989,7 +2989,11 @@ int main(int argc, char **argv) {
   bool display_gui = true;
   // Create the gui and attach it to the window
   auto pgui = make_shared<tgui::Gui>(window);
+#ifdef _WINDOWS
+  tgui::Theme theme{"../../../themes/BabyBlue.txt"};
+#else
   tgui::Theme theme{"themes/BabyBlue.txt"};
+#endif
   tgui::Theme::setDefault(&theme);
   createGuiElements(pgui, p_model);
   updateGuiElements(pgui, p_model);

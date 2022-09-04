@@ -17,8 +17,6 @@ into where the windows build is.
 Sample commands on my computer:
 * mkdir x64
 * mkdir x64/Release/
-* cp -r themes x64/Release/
-* cp escape_image.jpg x64/Release/
-* cp ../../SFML-2.5.1/bin/*.dll x64/Release/
-* cp ../../TGUI-0.8/bin/*.dll x64/Release/
+* cp ../../../SFML-2.5.1/bin/*.dll x64/Release/
+* cp ../../../TGUI-0.8/bin/*.dll x64/Release/
 * [Run Visual Studio]

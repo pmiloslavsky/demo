@@ -99,7 +99,6 @@ enum class InteriorColoringAlgo {
   DISTANCE
 };
 #define LAST_INTERIOR_COLOR_ALGO ((unsigned int)InteriorColoringAlgo::DISTANCE)
-InteriorColoringAlgo interior_color_algo = InteriorColoringAlgo::SOLID;
 unsigned int interior_color_adjust = 0;
 
 // std::is_trivially_copyable
@@ -170,6 +169,26 @@ class NSReferenceFrame {
 
 ReferenceFrame R(0, 1.0);
 NSReferenceFrame NSR;  // non serializable
+
+
+class ReferenceFrameInt {
+ public:
+  // Color Palletes
+  InteriorColoringAlgo color_algo;
+  int color_cycle_size;
+
+  tinycolormap::ColormapType palette;
+  bool reflect_palette;
+  ReferenceFrameInt(InteriorColoringAlgo _ca, int _ccs, tinycolormap::ColormapType _p, bool _rp)
+      : color_algo{_ca},
+        color_cycle_size{_ccs},
+        palette{_p},
+        reflect_palette{_rp} {};
+};  // ReferenceFrameInt
+
+ReferenceFrameInt RI(InteriorColoringAlgo::SOLID, 256,
+                     tinycolormap::ColormapType::UF16, false);
+
 
 // Submodel for different fractals
 // #include "fractals.h" SupportedFractal (shared with cuda)
@@ -578,7 +597,7 @@ inline void get_iteration_interior_color(const complex<double> &zstart,
   //*p_gcolor = 255 * (atan(zstart.imag() / zstart.real()) / pi + 0.5);
   //*p_bcolor = 255 * (atan(zstart.imag() / zstart.real()) / pi + 0.5);
 
-  switch (interior_color_algo) {
+  switch (RI.color_algo) {
     case InteriorColoringAlgo::SOLID: {
       *p_rcolor = interior_color_adjust & 0xff;
       *p_gcolor = (interior_color_adjust & 0xff00) >> 8;
@@ -586,7 +605,7 @@ inline void get_iteration_interior_color(const complex<double> &zstart,
       return;
     } break;
     case InteriorColoringAlgo::MULTICYCLE: {
-      if (R.palette == tinycolormap::ColormapType::UF16) {
+      if (RI.palette == tinycolormap::ColormapType::UF16) {
         // Ultra Fractal Default non smooth
         vector<vector<int>> mapping(16, std::vector<int>(3));
         mapping[0] = {66, 30, 15};
@@ -619,14 +638,14 @@ inline void get_iteration_interior_color(const complex<double> &zstart,
       }
 
       // colormap non smooth
-      int i = (1 * (int)(distancer + distancei)) % R.color_cycle_size;
+      int i = (1 * (int)(distancer + distancei)) % RI.color_cycle_size;
       tinycolormap::Color color(0.0, 0.0, 0.0);
-      if (R.reflect_palette)
+      if (RI.reflect_palette)
         color = tinycolormap::GetColorR(
-            i / static_cast<double>(R.color_cycle_size), R.palette);
+            i / static_cast<double>(RI.color_cycle_size), RI.palette);
       else
         color = tinycolormap::GetColor(
-            i / static_cast<double>(R.color_cycle_size), R.palette);
+            i / static_cast<double>(RI.color_cycle_size), RI.palette);
 
       *p_rcolor = 255 * color.r();
       *p_gcolor = 255 * color.g();
@@ -1861,6 +1880,23 @@ void signal_escape_r(shared_ptr<FractalModel> p_model,
   setGuiElementsFromModel(pgui, p_model);
 }
 
+void signalSamplingButton(shared_ptr<FractalModel> p_model) {
+  if (R.random_sample == true)
+    R.random_sample = false;
+  else
+    R.random_sample = true;
+
+  for (unsigned int tix = 0; tix < p_model->num_threads; ++tix) {
+    thread_asked_to_reset[tix] = true;
+    thread_iteration[tix] = 0;
+    p_model->image_wraps[tix] = 0;
+    p_model->current_x[tix] =
+        FRAC[p_model->current_fractal].xMinMax[0] + p_model->deltax * tix;
+    p_model->current_y[tix] =
+        FRAC[p_model->current_fractal].yMinMax[0] + p_model->deltay * tix;
+  }
+}
+
 void signalColorBox(const int selected) {
   R.palette = static_cast<tinycolormap::ColormapType>(selected);
 }
@@ -1887,48 +1923,47 @@ void signalButton() {
     R.reflect_palette = true;
 }
 
-void signalSamplingButton(shared_ptr<FractalModel> p_model) {
-  if (R.random_sample == true)
-    R.random_sample = false;
-  else
-    R.random_sample = true;
-
-  for (unsigned int tix = 0; tix < p_model->num_threads; ++tix) {
-    thread_asked_to_reset[tix] = true;
-    thread_iteration[tix] = 0;
-    p_model->image_wraps[tix] = 0;
-    p_model->current_x[tix] =
-        FRAC[p_model->current_fractal].xMinMax[0] + p_model->deltax * tix;
-    p_model->current_y[tix] =
-        FRAC[p_model->current_fractal].yMinMax[0] + p_model->deltay * tix;
-  }
-}
-
 // Interior Color
-void signalIntColor(shared_ptr<FractalModel> p_model,
-                    shared_ptr<tgui::Gui> pgui, const sf::String &value) {
-  unsigned int input = (unsigned int)InteriorColoringAlgo::SOLID;
-  try {
-    input = std::stoi(value.toAnsiString());
-  } catch (const std::invalid_argument &ia) {
-    cout << "Invalid " << ia.what() << endl;
-    input = (unsigned int)InteriorColoringAlgo::SOLID;
-  }
-  if (input > LAST_INTERIOR_COLOR_ALGO)
-    input = (unsigned int)InteriorColoringAlgo::SOLID;
-  interior_color_algo = (InteriorColoringAlgo)input;
-}
-
 void signalIntColorAdj(shared_ptr<FractalModel> p_model,
                        shared_ptr<tgui::Gui> pgui, const sf::String &value) {
   unsigned int input = 0;
   try {
-    input = std::stoi(value.toAnsiString());
+    input = (unsigned int)std::stoul(value.toAnsiString(),nullptr,16);
+    interior_color_adjust = input;
   } catch (const std::invalid_argument &ia) {
     cout << "Invalid " << ia.what() << endl;
-    input = 0;
+    //input = 0;
+  } catch (...) {
+    // input = 0;
   }
-  interior_color_adjust = input;
+}
+
+void signalIntColorBox(const int selected) {
+  RI.palette = static_cast<tinycolormap::ColormapType>(selected);
+}
+
+void signalIntColorCycleBox(const int selected) {
+  RI.color_cycle_size = 8 * pow(2, selected);
+}
+
+void signalIntCAlgoBox(const int selected) {
+  if (selected == 0)
+    RI.color_algo = InteriorColoringAlgo::SOLID;
+  else if (selected == 1)
+    RI.color_algo = InteriorColoringAlgo::MULTICYCLE;
+  else if ((selected == 2) && (true == R.image_loaded))
+    RI.color_algo = InteriorColoringAlgo::USE_IMAGE;
+  else if (selected == 3)
+    RI.color_algo = InteriorColoringAlgo::ATAN;
+  else if (selected == 4)
+    RI.color_algo = InteriorColoringAlgo::DISTANCE;
+}
+
+void signalIntButton() {
+  if (RI.reflect_palette == true)
+    RI.reflect_palette = false;
+  else
+    RI.reflect_palette = true;
 }
 
 const int max_saved = 30;
@@ -2546,13 +2581,6 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   pgui->add(lbox, "CycleBox");
   lbox->connect("ItemSelected", signalColorCycleBox);
 
-  // auto button = tgui::Button::create();
-  // button->setPosition("parent.left + 900", "parent.bottom - 150");
-  // button->setText("Reflect");
-  // button->setSize(100, 30);
-  // pgui->add(button, "Reflect");
-  // button->connect("Pressed", signalButton);
-
   cbox = tgui::CheckBox::create();
   cbox->setPosition("parent.left + 900", "parent.bottom - 150");
   cbox->setText("Reflect");
@@ -2573,24 +2601,52 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   lbox->connect("ItemSelected", signalCAlgoBox);
 
   // Interior Coloring Column
-  current = tgui::Label::create("Interior:");
-  current->setPosition("parent.left + 1050", "parent.bottom - 300");
-  current->setTextSize(14);
-  pgui->add(current, "interior_label");
+  lbox = tgui::ListBox::create();
+  lbox->setPosition("parent.left + 1000", "parent.bottom - 300");
+  lbox->setSize(100.f, 250.f);
+  for (auto e : NSR.color_names) {
+    lbox->addItem(e);
+  }
+
+  pgui->add(lbox, "IntColorBox");
+  lbox->connect("ItemSelected", signalIntColorBox);
+
+  lbox = tgui::ListBox::create();
+  lbox->setPosition("parent.left + 1100", "parent.bottom - 300");
+  lbox->setSize(60.f, 130.f);
+  for (auto e : NSR.color_cycle_size_names) {
+    lbox->addItem(e);
+  }
+
+  pgui->add(lbox, "IntCycleBox");
+  lbox->connect("ItemSelected", signalIntColorCycleBox);
+
+  cbox = tgui::CheckBox::create();
+  cbox->setPosition("parent.left + 1100", "parent.bottom - 150");
+  cbox->setText("Reflect");
+  cbox->setSize(30, 30);
+  pgui->add(cbox, "IntReflect");
+  cbox->connect("Checked", signalIntButton);
+  cbox->connect("Unchecked", signalIntButton);
+
+  lbox = tgui::ListBox::create();
+  lbox->setPosition("parent.left + 1100", "parent.bottom - 100");
+  lbox->setSize(100.f, 100.f);
+  lbox->addItem("SOLID");
+  lbox->addItem("MULTICYCLE");
+  lbox->addItem("USE_IMAGE");
+  lbox->addItem("ATAN");
+  lbox->addItem("DISTANCE");
+
+  pgui->add(lbox, "IntCAlgoBox");
+  lbox->connect("ItemSelected", signalIntCAlgoBox);
+
 
   editBox = tgui::EditBox::create();
   editBox->setSize(100, 20);
   editBox->setTextSize(14);
-  editBox->setPosition("parent.left + 1050", "parent.bottom - 250");
-  editBox->setDefaultText("0");
-  pgui->add(editBox, "interior_color_algrithm");
-  editBox->connect("TextChanged", signalIntColor, p_model, pgui);
-
-  editBox = tgui::EditBox::create();
-  editBox->setSize(100, 20);
-  editBox->setTextSize(14);
-  editBox->setPosition("parent.left + 1050", "parent.bottom - 200");
-  editBox->setDefaultText("0");
+  editBox->setPosition("parent.left + 1200", "parent.bottom - 300");
+  editBox->setDefaultText("hex triple");
   pgui->add(editBox, "interior_color_adjust");
   editBox->connect("TextChanged", signalIntColorAdj, p_model, pgui);
 

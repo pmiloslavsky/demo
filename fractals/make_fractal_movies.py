@@ -80,7 +80,7 @@ def fileio_setup():
     for field_name, field_type in fkey._fields_:
         print(field_name, getattr(fkey, field_name))
 
-def create_shadow_frames(end, seedkey_name, hide=False):
+def create_shadow_frames(end, seedkey_name):
     count = end - 1
     if end > 50:
         if (end - 1) % 50 != 0:
@@ -126,10 +126,8 @@ def create_shadow_frames(end, seedkey_name, hide=False):
         f.write(changedkey)
         f.close()
         pngname=png_basename + str(j) + ".png"
-        if (hide == False):
-            subprocess.run(['fractals_cuda.exe', 'save_and_exit', changedkey_name, pngname], shell=True)
-        else:
-            subprocess.run(['fractals_cuda.exe', 'save_and_exit', changedkey_name, pngname, "hide"], shell=True)
+        hide = "hide"   # hide the C++ GUI
+        subprocess.run(['fractals_cuda.exe', 'save_and_exit', changedkey_name, pngname, hide], shell=True)
         
         # this exports the new changedkey into a file
 
@@ -161,11 +159,8 @@ def main():
     fileio_setup()
 
     #total frames to go around circle with light
-    total_frames=7
-    if total_frames > 6:
-        create_shadow_frames(total_frames, seedkey_name, True)
-    else:
-        create_shadow_frames(total_frames, seedkey_name)
+    total_frames=3
+    create_shadow_frames(total_frames, seedkey_name)
 
     create_gif(total_frames, 100)
 

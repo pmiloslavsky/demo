@@ -1928,11 +1928,10 @@ void signalIntColorAdj(shared_ptr<FractalModel> p_model,
                        shared_ptr<tgui::Gui> pgui, const sf::String &value) {
   unsigned int input = 0;
   try {
-    input = (unsigned int)std::stoul(value.toAnsiString(),nullptr,16);
+    input = (unsigned int)stoul(value.toAnsiString(),nullptr,0);
     interior_color_adjust = input;
   } catch (const std::invalid_argument &ia) {
     cout << "Invalid " << ia.what() << endl;
-    //input = 0;
   } catch (...) {
     // input = 0;
   }
@@ -2646,7 +2645,7 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   editBox->setSize(100, 20);
   editBox->setTextSize(14);
   editBox->setPosition("parent.left + 1200", "parent.bottom - 300");
-  editBox->setDefaultText("hex triple");
+  editBox->setDefaultText("dec triple");
   pgui->add(editBox, "interior_color_adjust");
   editBox->connect("TextChanged", signalIntColorAdj, p_model, pgui);
 

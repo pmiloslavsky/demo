@@ -3,7 +3,7 @@ To build for windows you will need to install:
 * SFML
 * TGUI
 * CUDA
-* Visual Studio (has CUDA C++ project)
+* Visual Studio (has CUDA 11.7 C++ project)
 <br>
 Set your include directories and library directories correctly.
 Define _WINDOWS in the preprocessor.
@@ -17,8 +17,6 @@ into where the windows build is.
 Sample commands on my computer:
 * mkdir x64
 * mkdir x64/Release/
-* cp -r themes x64/Release/
-* cp escape_image.jpg x64/Release/
-* cp ../../SFML-2.5.1/bin/*.dll x64/Release/
-* cp ../../TGUI-0.8/bin/*.dll x64/Release/
+* cp ../../../SFML-2.5.1/bin/*.dll x64/Release/
+* cp ../../../TGUI-0.8/bin/*.dll x64/Release/
 * [Run Visual Studio]

@@ -55,15 +55,16 @@ Table of Contents:
 	- [8.2. visual studio code](#82-visual-studio-code)
 - [9. Books](#9-books)
 - [10. ICU/Unicode](#10-icuunicode)
-- [11. SQL](#11-sql)
-	- [11.1. Cheat Sheet](#111-cheat-sheet)
-- [12. Statistical Analysis and Machine Learning](#12-statistical-analysis-and-machine-learning)
-	- [12.1. Fundamentals of ML](#121-fundamentals-of-ml)
-	- [12.2. Statistical measures in python:](#122-statistical-measures-in-python)
-		- [12.2.1. Plotting:](#1221-plotting)
-		- [12.2.2. Fitting:](#1222-fitting)
-		- [12.2.3. Sampling:](#1223-sampling)
-		- [12.2.4. Learning](#1224-learning)
+- [11. REST APIs/JSON](#11-rest-apisjson)
+- [12. SQL](#12-sql)
+	- [12.1. Cheat Sheet](#121-cheat-sheet)
+- [13. Statistical Analysis and Machine Learning](#13-statistical-analysis-and-machine-learning)
+	- [13.1. Fundamentals of ML](#131-fundamentals-of-ml)
+	- [13.2. Statistical measures in python:](#132-statistical-measures-in-python)
+		- [13.2.1. Plotting:](#1321-plotting)
+		- [13.2.2. Fitting:](#1322-fitting)
+		- [13.2.3. Sampling:](#1323-sampling)
+		- [13.2.4. Learning](#1324-learning)
 
 
 # 1. C/C++
@@ -160,6 +161,7 @@ python -m cProfile -s time circuit.py
 * gdb tui   layout split asm src regs   layout next     focus next
 * gdb -batch -ex "disassemble/rs mainsub" mux.o | more
 * If CTRL-C crashes gdb -> kill -TRAP <pid> from another window
+* Sometimes you should do     (gdb)handle SIGUSR1 pass
 * b vec_op_varith<int64_t>
 ## 5.3. dbx (AIX)
 * multiproc child
@@ -353,13 +355,15 @@ strace -p $$
 * Fedor G Pikus Hands on Design Patterns with C++
 # 10. ICU/Unicode
 * Example code: https://begriffs.com/posts/2019-05-23-unicode-icu.html#changing-case
-# 11. SQL
-## 11.1. Cheat Sheet
+# 11. REST APIs/JSON
+* CRUD up some nouns (create/read/update/delete) (post/get/put/delete) 
+# 12. SQL
+## 12.1. Cheat Sheet
 * https://dataschool.com/learn-sql/sql-cheat-sheet/
-# 12. Statistical Analysis and Machine Learning
-## 12.1. Fundamentals of ML
+# 13. Statistical Analysis and Machine Learning
+## 13.1. Fundamentals of ML
 * https://github.com/ageron/handson-ml2
-## 12.2. Statistical measures in python:
+## 13.2. Statistical measures in python:
 ```
 popSD = numpy.std(population)
 
@@ -405,7 +409,7 @@ Area in standard deviation:
 
               'std =', round(area, 4))
 ```
-### 12.2.1. Plotting:
+### 13.2.1. Plotting:
 pylab.plot   pylab.hist   pylab.table
 ```
     pylab.errorbar(xVals, sizeMeans,
@@ -414,7 +418,7 @@ pylab.plot   pylab.hist   pylab.table
 
                    label = '95% Confidence Interval')
 ```
-### 12.2.2. Fitting:
+### 13.2.2. Fitting:
 ```
 def genFits(xVals, yVals, degrees):
 
@@ -428,7 +432,7 @@ def genFits(xVals, yVals, degrees):
 
 estYVals = pylab.polyval(model, xVals)
 ```
-### 12.2.3. Sampling:
+### 13.2.3. Sampling:
 ```
 random.sample(population, sampleSize)
 
@@ -440,7 +444,7 @@ If the samples are not random and independent don’t make conclusions……
 
 Survivor bias, non response bias, cherry picking
 ```
-### 12.2.4. Learning
+### 13.2.4. Learning
 Clustering (kNearestNeighbor) is Unsupervised Learning
 Classification (Logistic Regresion and k-means(greedy)) is Supervised Learning:
 Logistic Regression comes in 2 kinds:

@@ -597,6 +597,10 @@ inline void get_iteration_interior_color(const complex<double> &zstart,
   //*p_gcolor = 255 * (atan(zstart.imag() / zstart.real()) / pi + 0.5);
   //*p_bcolor = 255 * (atan(zstart.imag() / zstart.real()) / pi + 0.5);
 
+  if ((interior_color_adjust == 0) &&
+      (RI.color_algo != InteriorColoringAlgo::SOLID))
+    interior_color_adjust = 1;
+
   switch (RI.color_algo) {
     case InteriorColoringAlgo::SOLID: {
       *p_rcolor = interior_color_adjust & 0xff;
@@ -625,9 +629,9 @@ inline void get_iteration_interior_color(const complex<double> &zstart,
         mapping[14] = {153, 87, 0};
         mapping[15] = {106, 52, 3};
 
-        int i = (10 * (int)(distancer + distancei)) % 16;
+        int i = (interior_color_adjust *10 * (int)(distancer + distancei)) % 16;
         if (R.reflect_palette) {
-          i = (10 * (int)(distancer + distancei)) % 32;
+          i = (interior_color_adjust * 10 * (int)(distancer + distancei)) % 32;
           if (i >= 16) i = 31 - i;
         }
 
@@ -638,7 +642,8 @@ inline void get_iteration_interior_color(const complex<double> &zstart,
       }
 
       // colormap non smooth
-      int i = (1 * (int)(distancer + distancei)) % RI.color_cycle_size;
+      int i = (interior_color_adjust * (int)(distancer + distancei)) %
+              RI.color_cycle_size;
       tinycolormap::Color color(0.0, 0.0, 0.0);
       if (RI.reflect_palette)
         color = tinycolormap::GetColorR(
@@ -655,8 +660,11 @@ inline void get_iteration_interior_color(const complex<double> &zstart,
     case InteriorColoringAlgo::USE_IMAGE: {
       double rd, ri;
       double xi, yi;
-      xi = abs(modf(zstart.real() * (2/R.displayed_zoom), &rd));  // -1 -> 1
-      yi = abs(modf(zstart.imag() * (2/R.displayed_zoom), &ri));
+      xi = abs(
+          modf(zstart.real() * (2 / (interior_color_adjust*R.displayed_zoom)),
+               &rd));  // -1 -> 1
+      yi = abs(modf(
+          zstart.imag() * (2 / (interior_color_adjust * R.displayed_zoom)), &ri));
       // xi = abs(zstart.real() - (long long)zstart.real());
       // yi = abs(zstart.imag() - (long long)zstart.imag());
       double xp = (xi) * (R.escape_image_w - 1);
@@ -669,17 +677,21 @@ inline void get_iteration_interior_color(const complex<double> &zstart,
     } break;
     case InteriorColoringAlgo::ATAN: {
       *p_rcolor = 255 * (atan(zfinal.imag() / zfinal.real()) / pi + 0.5) *
-                  (10 * (distancer)) / (iters_max);
+                  ((interior_color_adjust / R.displayed_zoom) *
+                   (distancer + distancei))  / (iters_max);
       *p_gcolor = 255 * (atan(zfinal.imag() / zfinal.real()) / pi + 0.5) *
-                  (10 * (distancei)) / (iters_max);
+                  ((interior_color_adjust / R.displayed_zoom) *
+                   (distancer + distancei))  / (iters_max);
       *p_bcolor = 255 * (atan(zfinal.imag() / zfinal.real()) / pi + 0.5) *
-                  (10 * (distancer + distancei)) / (iters_max);
+                  ((interior_color_adjust / R.displayed_zoom) *
+                   (distancer + distancei)) / (iters_max);
       return;
     } break;
     case InteriorColoringAlgo::DISTANCE: {
-      *p_rcolor = 10 * 255 * (distancer) / (iters_max);
-      *p_gcolor = 10 * 255 * (distancei) / (iters_max);
-      *p_bcolor = 10 * 255 * (distancer + distancei) / (iters_max);
+      *p_rcolor = interior_color_adjust * 255 * (distancer) / (iters_max);
+      *p_gcolor = interior_color_adjust * 255 * (distancei) / (iters_max);
+      *p_bcolor =
+          interior_color_adjust * 255 * (distancer + distancei) / (iters_max);
       return;
     } break;
   }

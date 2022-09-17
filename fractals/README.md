@@ -25,9 +25,24 @@ Nevertheless, its a massive improvement over one hw thread doing the work.
 
 This has been ported to Windows and Ubuntu.
 <p align="center">
-<img src="interface_fractal1.png" width="800" height="266">
-<img src="interface_fractal2.png" width="800" height="266">
-<img src="interface_fractal3.png" width="800" height="266">
+<img src="screenshots/Mandelbrot_30004-09-2022_12_06_24.png" width="400" height="266">
+<img src="screenshots/Mandelbrot_30004-09-2022_13_18_20.png" width="400" height="266">
+<img src="screenshots/Mandelbrot_30004-09-2022_13_20_56.png" width="400" height="266">
+<img src="screenshots/Mandelbrot_30004-09-2022_14_16_05.png" width="400" height="266">
+<img src="screenshots/Mandelbrot_30004-09-2022_18_03_54.png" width="400" height="266">
+<img src="screenshots/Mandelbrot_30004-09-2022_20_11_29.png" width="400" height="266">
+<img src="screenshots/Mandelbrot_30005-09-2022_11_57_08.png" width="400" height="266">
+<img src="screenshots/Mandelbrot_30005-09-2022_12_00_41.png" width="400" height="266">
+<img src="screenshots/Mandelbrot_30005-09-2022_17_23_49.png" width="400" height="266">
+<img src="screenshots/Mandelbrot_30006-09-2022_18_33_18.png" width="400" height="266">
+<img src="screenshots/Mandelbrot_30010-09-2022_07_57_20.png" width="400" height="266">
+<img src="screenshots/Mandelbrot_30010-09-2022_08_02_25.png" width="400" height="266">
+<img src="screenshots/Mandelbrot_30011-09-2022_11_13_13.png" width="400" height="266">
+<img src="screenshots/Mandelbrot_30011-09-2022_14_11_13.png" width="400" height="266">
+<img src="screenshots/Mandelbrot_30013-09-2022_16_42_43.png" width="400" height="266">
+<img src="screenshots/Mandelbrot_30013-09-2022_17_57_50.png" width="400" height="266">
+<img src="screenshots/Mandelbrot_30017-09-2022_08_14_45.png" width="400" height="266">
+<img src="screenshots/Mandelbrot_30017-09-2022_08_33_27.png" width="400" height="266">
 <img src="fractal1.png" width="400" height="266">
 <img src="fractal2.png" width="400" height="266">
 <img src="fractal3.png" width="400" height="266">
@@ -36,4 +51,7 @@ This has been ported to Windows and Ubuntu.
 <img src="fractal6.png" width="400" height="266">
 <img src="fractal7.png" width="400" height="266">
 <img src="fractal8.png" width="400" height="266">
+<img src="interface_fractal1.png" width="800" height="266">
+<img src="interface_fractal2.png" width="800" height="266">
+<img src="interface_fractal3.png" width="800" height="266">
 </p>

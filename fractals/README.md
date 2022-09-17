@@ -8,6 +8,7 @@ A C++/sfml/tgui/CUDA GUI framework to display/explore fractals. Threaded and CUD
 * GUI settable fractal parameters: power and zconst(julia style) and max iterations
 * GUI selectable color palettes and color cycle size options
 * GUI palette reflection button to prevent discontinuities
+* Other coloring options including interior coloring, shadow maps, image tiling
 * Screenshot hotkey and hide all widgets hotkey and pause cpu usage hotkey
 * Crop an area of the fractal (displays border) and it will zoom to crop.
 * Save and Load fractal key support from file and from memory

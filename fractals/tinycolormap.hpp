@@ -1,14 +1,18 @@
 /*
  MIT License
- Copyright (c) 2018 Yuki Koyama
+
+ Copyright (c) 2018-2020 Yuki Koyama
+
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
  in the Software without restriction, including without limitation the rights
  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  copies of the Software, and to permit persons to whom the Software is
  furnished to do so, subject to the following conditions:
+
  The above copyright notice and this permission notice shall be included in all
  copies or substantial portions of the Software.
+
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -16,13 +20,37 @@
  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
+
+ -------------------------------------------------------------------------------
+
+ The lookup table for Turbo is derived by Shot511 in his PR,
+ https://github.com/yuki-koyama/tinycolormap/pull/27 , from
+ https://gist.github.com/mikhailov-work/6a308c20e494d9e0ccc29036b28faa7a , which
+ is released by Anton Mikhailov, copyrighted by Google LLC, and licensed under
+ the Apache 2.0 license. To the best of our knowledge, the Apache 2.0 license is
+ compatible with the MIT license, and thus we release the merged entire code
+ under the MIT license. The license notice for Anton's code is posted here:
+
+ Copyright 2019 Google LLC.
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+     http://www.apache.org/licenses/LICENSE-2.0
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+
  */
 
 #ifndef TINYCOLORMAP_HPP_
 #define TINYCOLORMAP_HPP_
 
 #include <cmath>
-#include <array>
+#include <cstdint>
+#include <algorithm>
 
 #if defined(TINYCOLORMAP_WITH_EIGEN)
 #include <Eigen/Core>
@@ -32,7 +60,7 @@
 #include <QColor>
 #endif
 
-#if defined(TINYCOLORMAP_WITH_QT5) and defined(TINYCOLORMAP_WITH_EIGEN)
+#if defined(TINYCOLORMAP_WITH_QT5) && defined(TINYCOLORMAP_WITH_EIGEN)
 #include <QImage>
 #include <QString>
 #endif
@@ -49,30 +77,41 @@ namespace tinycolormap
 
     enum class ColormapType
     {
-      Parula, Heat, Jet, Hot, Gray, Magma, Inferno, Plasma, Viridis, Cividis, Github, UF16
+      Parula, Heat, Jet, Turbo, Hot, Gray, Magma, Inferno, Plasma, Viridis, Cividis, Github, Cubehelix, UF16
     };
 
     struct Color
     {
-        constexpr Color(double r, double g, double b) : data({{ r, g, b }}) {}
+        explicit constexpr Color(double gray) noexcept : data{ gray, gray, gray } {}
+        constexpr Color(double r, double g, double b) noexcept : data{ r, g, b } {}
 
-        std::array<double, 3> data;
+        double data[3];
 
-        double& r() { return data[0]; }
-        double& g() { return data[1]; }
-        double& b() { return data[2]; }
-        const double& r() const { return data[0]; }
-        const double& g() const { return data[1]; }
-        const double& b() const { return data[2]; }
+        double& r() noexcept { return data[0]; }
+        double& g() noexcept { return data[1]; }
+        double& b() noexcept { return data[2]; }
+        constexpr double r() const noexcept { return data[0]; }
+        constexpr double g() const noexcept { return data[1]; }
+        constexpr double b() const noexcept { return data[2]; }
 
-        uint8_t ri() const { return static_cast<uint8_t>(data[0] * 255.0); }
-        uint8_t gi() const { return static_cast<uint8_t>(data[1] * 255.0); }
-        uint8_t bi() const { return static_cast<uint8_t>(data[2] * 255.0); }
+        constexpr uint8_t ri() const noexcept { return static_cast<uint8_t>(data[0] * 255.0); }
+        constexpr uint8_t gi() const noexcept { return static_cast<uint8_t>(data[1] * 255.0); }
+        constexpr uint8_t bi() const noexcept { return static_cast<uint8_t>(data[2] * 255.0); }
 
-        double& operator[](size_t n) { return data[n]; }
-        const double& operator[](size_t n) const { return data[n]; }
-        double& operator()(size_t n) { return data[n]; }
-        const double& operator()(size_t n) const { return data[n]; }
+        double& operator[](std::size_t n) noexcept { return data[n]; }
+        constexpr double operator[](std::size_t n) const noexcept { return data[n]; }
+        double& operator()(std::size_t n) noexcept { return data[n]; }
+        constexpr double operator()(std::size_t n) const noexcept { return data[n]; }
+
+        friend constexpr Color operator+(const Color& c0, const Color& c1) noexcept
+        {
+            return { c0.r() + c1.r(), c0.g() + c1.g(), c0.b() + c1.b() };
+        }
+
+        friend constexpr Color operator*(double s, const Color& c) noexcept
+        {
+            return { s * c.r(), s * c.g(), s * c.b() };
+        }
 
 #if defined(TINYCOLORMAP_WITH_QT5)
         QColor ConvertToQColor() const { return QColor(data[0] * 255.0, data[1] * 255.0, data[2] * 255.0); }
@@ -86,44 +125,84 @@ namespace tinycolormap
     };
 
     inline Color GetColor(double x, ColormapType type = ColormapType::Viridis);
+    inline Color GetColorR(double x, ColormapType type = ColormapType::Viridis);
+    inline Color GetQuantizedColor(double x, unsigned int num_levels, ColormapType type = ColormapType::Viridis);
     inline Color GetParulaColor(double x);
     inline Color GetHeatColor(double x);
     inline Color GetJetColor(double x);
+    inline Color GetTurboColor(double x);
     inline Color GetHotColor(double x);
-    inline Color GetGrayColor(double x);
+    inline constexpr Color GetGrayColor(double x) noexcept;
     inline Color GetMagmaColor(double x);
     inline Color GetInfernoColor(double x);
     inline Color GetPlasmaColor(double x);
     inline Color GetViridisColor(double x);
     inline Color GetCividisColor(double x);
     inline Color GetGithubColor(double x);
+    inline Color GetCubehelixColor(double x);
 
-#if defined(TINYCOLORMAP_WITH_QT5) and defined(TINYCOLORMAP_WITH_EIGEN)
+#if defined(TINYCOLORMAP_WITH_QT5) && defined(TINYCOLORMAP_WITH_EIGEN)
     inline QImage CreateMatrixVisualization(const Eigen::MatrixXd& matrix);
     inline void ExportMatrixVisualization(const Eigen::MatrixXd& matrix, const std::string& path);
 #endif
 
     //////////////////////////////////////////////////////////////////////////////////
-    // Implementation
+    // Private Implementation - public usage is not intended
     //////////////////////////////////////////////////////////////////////////////////
 
-    inline Color operator+(const Color& c0, const Color& c1)
+    namespace internal
     {
-        return { c0[0] + c1[0], c0[1] + c1[1], c0[2] + c1[2] };
-    }
+        inline constexpr double Clamp01(double x) noexcept
+        {
+            return (x < 0.0) ? 0.0 : (x > 1.0) ? 1.0 : x;
+        }
 
-    inline Color operator*(double s, const Color& c)
-    {
-        return { s * c[0], s * c[1], s * c[2] };
+        // A helper function to calculate linear interpolation
+        template <std::size_t N>
+        Color CalcLerp(double x, const Color (&data)[N])
+        {
+            const double a  = Clamp01(x) * (N - 1);
+            const double i  = std::floor(a);
+            const double t  = a - i;
+            const Color& c0 = data[static_cast<std::size_t>(i)];
+            const Color& c1 = data[static_cast<std::size_t>(std::ceil(a))];
+
+            return (1.0 - t) * c0 + t * c1;
+        }
+
+        inline double QuantizeArgument(double x, unsigned int num_levels)
+        {
+            // Clamp num_classes to range [1, 255].
+            num_levels = (std::max)(1u, (std::min)(num_levels, 255u));
+    
+            const double interval_length = 255.0 / num_levels;
+
+            // Calculate index of the interval to which the given x belongs to.
+            // Substracting eps prevents getting out of bounds index.
+            constexpr double eps = 0.0005;
+            const unsigned int index = static_cast<unsigned int>((x * 255.0 - eps) / interval_length);
+
+            // Calculate upper and lower bounds of the given interval.
+            const unsigned int upper_boundary = static_cast<unsigned int>(index * interval_length + interval_length);
+            const unsigned int lower_boundary = static_cast<unsigned int>(upper_boundary - interval_length);
+
+            // Get middle "coordinate" of the given interval and move it back to [0.0, 1.0] interval.
+            const double xx = static_cast<double>(upper_boundary + lower_boundary) * 0.5 / 255.0;
+
+            return xx;
+        }
     }
+    //////////////////////////////////////////////////////////////////////////////////
+    // Public Implementation
+    //////////////////////////////////////////////////////////////////////////////////
 
     //reflected palette
     inline Color GetColorR(double x, ColormapType type)
     {
-      if (x < 0.5)
-        return GetColor(2.0*x, type);
-      else
-        return GetColor(1.0 - 2.0*(x - 0.5), type);
+        if (x < 0.5)
+            return GetColor(2.0*x, type);
+        else
+            return GetColor(1.0 - 2.0*(x - 0.5), type);
     }
 
     inline Color GetColor(double x, ColormapType type)
@@ -136,6 +215,8 @@ namespace tinycolormap
                 return GetHeatColor(x);
             case ColormapType::Jet:
                 return GetJetColor(x);
+            case ColormapType::Turbo:
+                return GetTurboColor(x);
             case ColormapType::Hot:
                 return GetHotColor(x);
             case ColormapType::Gray:
@@ -152,6 +233,8 @@ namespace tinycolormap
                 return GetCividisColor(x);
             case ColormapType::Github:
                 return GetGithubColor(x);
+            case ColormapType::Cubehelix:
+                return GetCubehelixColor(x);
             default:
                 break;
         }
@@ -159,10 +242,13 @@ namespace tinycolormap
         return GetViridisColor(x);
     }
 
+    inline Color GetQuantizedColor(double x, unsigned int num_levels, ColormapType type)
+    {
+        return GetColor(internal::QuantizeArgument(x, num_levels), type);
+    }
+
     inline Color GetParulaColor(double x)
     {
-        x = std::max(0.0, std::min(1.0, x));
-
         constexpr Color data[] =
         {
             { 0.2081, 0.1663, 0.5292 },
@@ -423,13 +509,11 @@ namespace tinycolormap
             { 0.9763, 0.9831, 0.0538 }
         };
 
-        return data[static_cast<size_t>(std::round(x * 255.0))];
+        return internal::CalcLerp(x, data);
     }
 
     inline Color GetHeatColor(double x)
     {
-        x = std::max(0.0, std::min(1.0, x));
-
         constexpr Color data[] =
         {
             { 0.0, 0.0, 1.0 },
@@ -439,18 +523,11 @@ namespace tinycolormap
             { 1.0, 0.0, 0.0 }
         };
 
-        const double a  = x * ((sizeof(data) / sizeof(Color)) - 1);
-        const double t  = a - std::floor(a);
-        const Color  c0 = data[static_cast<size_t>(std::floor(a))];
-        const Color  c1 = data[static_cast<size_t>(std::ceil (a))];
-
-        return (1.0 - t) * c0 + t * c1;
+        return internal::CalcLerp(x, data);
     }
 
     inline Color GetJetColor(double x)
     {
-        x = std::max(0.0, std::min(1.0, x));
-
         constexpr Color data[] =
         {
             { 0.0, 0.0, 0.5 },
@@ -464,17 +541,277 @@ namespace tinycolormap
             { 0.5, 0.0, 0.0 }
         };
 
-        const double a  = x * ((sizeof(data) / sizeof(Color)) - 1);
-        const double t  = a - std::floor(a);
-        const Color  c0 = data[static_cast<size_t>(std::floor(a))];
-        const Color  c1 = data[static_cast<size_t>(std::ceil (a))];
+        return internal::CalcLerp(x, data);
+    }
 
-        return (1.0 - t) * c0 + t * c1;
+    inline Color GetTurboColor(double x)
+    {
+        constexpr Color data[] =
+        {
+            { 0.18995, 0.07176, 0.23217 },
+            { 0.19483, 0.08339, 0.26149 },
+            { 0.19956, 0.09498, 0.29024 },
+            { 0.20415, 0.10652, 0.31844 },
+            { 0.20860, 0.11802, 0.34607 },
+            { 0.21291, 0.12947, 0.37314 },
+            { 0.21708, 0.14087, 0.39964 },
+            { 0.22111, 0.15223, 0.42558 },
+            { 0.22500, 0.16354, 0.45096 },
+            { 0.22875, 0.17481, 0.47578 },
+            { 0.23236, 0.18603, 0.50004 },
+            { 0.23582, 0.19720, 0.52373 },
+            { 0.23915, 0.20833, 0.54686 },
+            { 0.24234, 0.21941, 0.56942 },
+            { 0.24539, 0.23044, 0.59142 },
+            { 0.24830, 0.24143, 0.61286 },
+            { 0.25107, 0.25237, 0.63374 },
+            { 0.25369, 0.26327, 0.65406 },
+            { 0.25618, 0.27412, 0.67381 },
+            { 0.25853, 0.28492, 0.69300 },
+            { 0.26074, 0.29568, 0.71162 },
+            { 0.26280, 0.30639, 0.72968 },
+            { 0.26473, 0.31706, 0.74718 },
+            { 0.26652, 0.32768, 0.76412 },
+            { 0.26816, 0.33825, 0.78050 },
+            { 0.26967, 0.34878, 0.79631 },
+            { 0.27103, 0.35926, 0.81156 },
+            { 0.27226, 0.36970, 0.82624 },
+            { 0.27334, 0.38008, 0.84037 },
+            { 0.27429, 0.39043, 0.85393 },
+            { 0.27509, 0.40072, 0.86692 },
+            { 0.27576, 0.41097, 0.87936 },
+            { 0.27628, 0.42118, 0.89123 },
+            { 0.27667, 0.43134, 0.90254 },
+            { 0.27691, 0.44145, 0.91328 },
+            { 0.27701, 0.45152, 0.92347 },
+            { 0.27698, 0.46153, 0.93309 },
+            { 0.27680, 0.47151, 0.94214 },
+            { 0.27648, 0.48144, 0.95064 },
+            { 0.27603, 0.49132, 0.95857 },
+            { 0.27543, 0.50115, 0.96594 },
+            { 0.27469, 0.51094, 0.97275 },
+            { 0.27381, 0.52069, 0.97899 },
+            { 0.27273, 0.53040, 0.98461 },
+            { 0.27106, 0.54015, 0.98930 },
+            { 0.26878, 0.54995, 0.99303 },
+            { 0.26592, 0.55979, 0.99583 },
+            { 0.26252, 0.56967, 0.99773 },
+            { 0.25862, 0.57958, 0.99876 },
+            { 0.25425, 0.58950, 0.99896 },
+            { 0.24946, 0.59943, 0.99835 },
+            { 0.24427, 0.60937, 0.99697 },
+            { 0.23874, 0.61931, 0.99485 },
+            { 0.23288, 0.62923, 0.99202 },
+            { 0.22676, 0.63913, 0.98851 },
+            { 0.22039, 0.64901, 0.98436 },
+            { 0.21382, 0.65886, 0.97959 },
+            { 0.20708, 0.66866, 0.97423 },
+            { 0.20021, 0.67842, 0.96833 },
+            { 0.19326, 0.68812, 0.96190 },
+            { 0.18625, 0.69775, 0.95498 },
+            { 0.17923, 0.70732, 0.94761 },
+            { 0.17223, 0.71680, 0.93981 },
+            { 0.16529, 0.72620, 0.93161 },
+            { 0.15844, 0.73551, 0.92305 },
+            { 0.15173, 0.74472, 0.91416 },
+            { 0.14519, 0.75381, 0.90496 },
+            { 0.13886, 0.76279, 0.89550 },
+            { 0.13278, 0.77165, 0.88580 },
+            { 0.12698, 0.78037, 0.87590 },
+            { 0.12151, 0.78896, 0.86581 },
+            { 0.11639, 0.79740, 0.85559 },
+            { 0.11167, 0.80569, 0.84525 },
+            { 0.10738, 0.81381, 0.83484 },
+            { 0.10357, 0.82177, 0.82437 },
+            { 0.10026, 0.82955, 0.81389 },
+            { 0.09750, 0.83714, 0.80342 },
+            { 0.09532, 0.84455, 0.79299 },
+            { 0.09377, 0.85175, 0.78264 },
+            { 0.09287, 0.85875, 0.77240 },
+            { 0.09267, 0.86554, 0.76230 },
+            { 0.09320, 0.87211, 0.75237 },
+            { 0.09451, 0.87844, 0.74265 },
+            { 0.09662, 0.88454, 0.73316 },
+            { 0.09958, 0.89040, 0.72393 },
+            { 0.10342, 0.89600, 0.71500 },
+            { 0.10815, 0.90142, 0.70599 },
+            { 0.11374, 0.90673, 0.69651 },
+            { 0.12014, 0.91193, 0.68660 },
+            { 0.12733, 0.91701, 0.67627 },
+            { 0.13526, 0.92197, 0.66556 },
+            { 0.14391, 0.92680, 0.65448 },
+            { 0.15323, 0.93151, 0.64308 },
+            { 0.16319, 0.93609, 0.63137 },
+            { 0.17377, 0.94053, 0.61938 },
+            { 0.18491, 0.94484, 0.60713 },
+            { 0.19659, 0.94901, 0.59466 },
+            { 0.20877, 0.95304, 0.58199 },
+            { 0.22142, 0.95692, 0.56914 },
+            { 0.23449, 0.96065, 0.55614 },
+            { 0.24797, 0.96423, 0.54303 },
+            { 0.26180, 0.96765, 0.52981 },
+            { 0.27597, 0.97092, 0.51653 },
+            { 0.29042, 0.97403, 0.50321 },
+            { 0.30513, 0.97697, 0.48987 },
+            { 0.32006, 0.97974, 0.47654 },
+            { 0.33517, 0.98234, 0.46325 },
+            { 0.35043, 0.98477, 0.45002 },
+            { 0.36581, 0.98702, 0.43688 },
+            { 0.38127, 0.98909, 0.42386 },
+            { 0.39678, 0.99098, 0.41098 },
+            { 0.41229, 0.99268, 0.39826 },
+            { 0.42778, 0.99419, 0.38575 },
+            { 0.44321, 0.99551, 0.37345 },
+            { 0.45854, 0.99663, 0.36140 },
+            { 0.47375, 0.99755, 0.34963 },
+            { 0.48879, 0.99828, 0.33816 },
+            { 0.50362, 0.99879, 0.32701 },
+            { 0.51822, 0.99910, 0.31622 },
+            { 0.53255, 0.99919, 0.30581 },
+            { 0.54658, 0.99907, 0.29581 },
+            { 0.56026, 0.99873, 0.28623 },
+            { 0.57357, 0.99817, 0.27712 },
+            { 0.58646, 0.99739, 0.26849 },
+            { 0.59891, 0.99638, 0.26038 },
+            { 0.61088, 0.99514, 0.25280 },
+            { 0.62233, 0.99366, 0.24579 },
+            { 0.63323, 0.99195, 0.23937 },
+            { 0.64362, 0.98999, 0.23356 },
+            { 0.65394, 0.98775, 0.22835 },
+            { 0.66428, 0.98524, 0.22370 },
+            { 0.67462, 0.98246, 0.21960 },
+            { 0.68494, 0.97941, 0.21602 },
+            { 0.69525, 0.97610, 0.21294 },
+            { 0.70553, 0.97255, 0.21032 },
+            { 0.71577, 0.96875, 0.20815 },
+            { 0.72596, 0.96470, 0.20640 },
+            { 0.73610, 0.96043, 0.20504 },
+            { 0.74617, 0.95593, 0.20406 },
+            { 0.75617, 0.95121, 0.20343 },
+            { 0.76608, 0.94627, 0.20311 },
+            { 0.77591, 0.94113, 0.20310 },
+            { 0.78563, 0.93579, 0.20336 },
+            { 0.79524, 0.93025, 0.20386 },
+            { 0.80473, 0.92452, 0.20459 },
+            { 0.81410, 0.91861, 0.20552 },
+            { 0.82333, 0.91253, 0.20663 },
+            { 0.83241, 0.90627, 0.20788 },
+            { 0.84133, 0.89986, 0.20926 },
+            { 0.85010, 0.89328, 0.21074 },
+            { 0.85868, 0.88655, 0.21230 },
+            { 0.86709, 0.87968, 0.21391 },
+            { 0.87530, 0.87267, 0.21555 },
+            { 0.88331, 0.86553, 0.21719 },
+            { 0.89112, 0.85826, 0.21880 },
+            { 0.89870, 0.85087, 0.22038 },
+            { 0.90605, 0.84337, 0.22188 },
+            { 0.91317, 0.83576, 0.22328 },
+            { 0.92004, 0.82806, 0.22456 },
+            { 0.92666, 0.82025, 0.22570 },
+            { 0.93301, 0.81236, 0.22667 },
+            { 0.93909, 0.80439, 0.22744 },
+            { 0.94489, 0.79634, 0.22800 },
+            { 0.95039, 0.78823, 0.22831 },
+            { 0.95560, 0.78005, 0.22836 },
+            { 0.96049, 0.77181, 0.22811 },
+            { 0.96507, 0.76352, 0.22754 },
+            { 0.96931, 0.75519, 0.22663 },
+            { 0.97323, 0.74682, 0.22536 },
+            { 0.97679, 0.73842, 0.22369 },
+            { 0.98000, 0.73000, 0.22161 },
+            { 0.98289, 0.72140, 0.21918 },
+            { 0.98549, 0.71250, 0.21650 },
+            { 0.98781, 0.70330, 0.21358 },
+            { 0.98986, 0.69382, 0.21043 },
+            { 0.99163, 0.68408, 0.20706 },
+            { 0.99314, 0.67408, 0.20348 },
+            { 0.99438, 0.66386, 0.19971 },
+            { 0.99535, 0.65341, 0.19577 },
+            { 0.99607, 0.64277, 0.19165 },
+            { 0.99654, 0.63193, 0.18738 },
+            { 0.99675, 0.62093, 0.18297 },
+            { 0.99672, 0.60977, 0.17842 },
+            { 0.99644, 0.59846, 0.17376 },
+            { 0.99593, 0.58703, 0.16899 },
+            { 0.99517, 0.57549, 0.16412 },
+            { 0.99419, 0.56386, 0.15918 },
+            { 0.99297, 0.55214, 0.15417 },
+            { 0.99153, 0.54036, 0.14910 },
+            { 0.98987, 0.52854, 0.14398 },
+            { 0.98799, 0.51667, 0.13883 },
+            { 0.98590, 0.50479, 0.13367 },
+            { 0.98360, 0.49291, 0.12849 },
+            { 0.98108, 0.48104, 0.12332 },
+            { 0.97837, 0.46920, 0.11817 },
+            { 0.97545, 0.45740, 0.11305 },
+            { 0.97234, 0.44565, 0.10797 },
+            { 0.96904, 0.43399, 0.10294 },
+            { 0.96555, 0.42241, 0.09798 },
+            { 0.96187, 0.41093, 0.09310 },
+            { 0.95801, 0.39958, 0.08831 },
+            { 0.95398, 0.38836, 0.08362 },
+            { 0.94977, 0.37729, 0.07905 },
+            { 0.94538, 0.36638, 0.07461 },
+            { 0.94084, 0.35566, 0.07031 },
+            { 0.93612, 0.34513, 0.06616 },
+            { 0.93125, 0.33482, 0.06218 },
+            { 0.92623, 0.32473, 0.05837 },
+            { 0.92105, 0.31489, 0.05475 },
+            { 0.91572, 0.30530, 0.05134 },
+            { 0.91024, 0.29599, 0.04814 },
+            { 0.90463, 0.28696, 0.04516 },
+            { 0.89888, 0.27824, 0.04243 },
+            { 0.89298, 0.26981, 0.03993 },
+            { 0.88691, 0.26152, 0.03753 },
+            { 0.88066, 0.25334, 0.03521 },
+            { 0.87422, 0.24526, 0.03297 },
+            { 0.86760, 0.23730, 0.03082 },
+            { 0.86079, 0.22945, 0.02875 },
+            { 0.85380, 0.22170, 0.02677 },
+            { 0.84662, 0.21407, 0.02487 },
+            { 0.83926, 0.20654, 0.02305 },
+            { 0.83172, 0.19912, 0.02131 },
+            { 0.82399, 0.19182, 0.01966 },
+            { 0.81608, 0.18462, 0.01809 },
+            { 0.80799, 0.17753, 0.01660 },
+            { 0.79971, 0.17055, 0.01520 },
+            { 0.79125, 0.16368, 0.01387 },
+            { 0.78260, 0.15693, 0.01264 },
+            { 0.77377, 0.15028, 0.01148 },
+            { 0.76476, 0.14374, 0.01041 },
+            { 0.75556, 0.13731, 0.00942 },
+            { 0.74617, 0.13098, 0.00851 },
+            { 0.73661, 0.12477, 0.00769 },
+            { 0.72686, 0.11867, 0.00695 },
+            { 0.71692, 0.11268, 0.00629 },
+            { 0.70680, 0.10680, 0.00571 },
+            { 0.69650, 0.10102, 0.00522 },
+            { 0.68602, 0.09536, 0.00481 },
+            { 0.67535, 0.08980, 0.00449 },
+            { 0.66449, 0.08436, 0.00424 },
+            { 0.65345, 0.07902, 0.00408 },
+            { 0.64223, 0.07380, 0.00401 },
+            { 0.63082, 0.06868, 0.00401 },
+            { 0.61923, 0.06367, 0.00410 },
+            { 0.60746, 0.05878, 0.00427 },
+            { 0.59550, 0.05399, 0.00453 },
+            { 0.58336, 0.04931, 0.00486 },
+            { 0.57103, 0.04474, 0.00529 },
+            { 0.55852, 0.04028, 0.00579 },
+            { 0.54583, 0.03593, 0.00638 },
+            { 0.53295, 0.03169, 0.00705 },
+            { 0.51989, 0.02756, 0.00780 },
+            { 0.50664, 0.02354, 0.00863 },
+            { 0.49321, 0.01963, 0.00955 },
+            { 0.47960, 0.01583, 0.01055 }
+        };
+
+        return internal::CalcLerp(x, data);
     }
 
     inline Color GetHotColor(double x)
     {
-        x = std::max(0.0, std::min(1.0, x));
+        x = internal::Clamp01(x);
 
         constexpr Color r{ 1.0, 0.0, 0.0 };
         constexpr Color g{ 0.0, 1.0, 0.0 };
@@ -497,17 +834,13 @@ namespace tinycolormap
         }
     }
 
-    inline Color GetGrayColor(double x)
+    inline constexpr Color GetGrayColor(double x) noexcept
     {
-        x = std::max(0.0, std::min(1.0, x));
-
-        return (1.0 - x) * Color{ 1.0, 1.0, 1.0 };
+        return Color{ 1.0 - internal::Clamp01(x) };
     }
 
     inline Color GetMagmaColor(double x)
     {
-        x = std::max(0.0, std::min(1.0, x));
-
         constexpr Color data[] =
         {
             { 0.001462, 0.000466, 0.013866 },
@@ -768,13 +1101,11 @@ namespace tinycolormap
             { 0.987053, 0.991438, 0.749504 }
         };
 
-        return data[static_cast<size_t>(std::round(x * 255.0))];
+        return internal::CalcLerp(x, data);
     }
 
     inline Color GetInfernoColor(double x)
     {
-        x = std::max(0.0, std::min(1.0, x));
-
         constexpr Color data[] =
         {
             { 0.001462, 0.000466, 0.013866 },
@@ -1035,13 +1366,11 @@ namespace tinycolormap
             { 0.988362, 0.998364, 0.644924 }
         };
 
-        return data[static_cast<size_t>(std::round(x * 255.0))];
+        return internal::CalcLerp(x, data);
     }
 
     inline Color GetPlasmaColor(double x)
     {
-        x = std::max(0.0, std::min(1.0, x));
-
         constexpr Color data[] =
         {
             { 0.050383, 0.029803, 0.527975 },
@@ -1302,13 +1631,11 @@ namespace tinycolormap
             { 0.940015, 0.975158, 0.131326 }
         };
 
-        return data[static_cast<size_t>(std::round(x * 255.0))];
+        return internal::CalcLerp(x, data);
     }
 
     inline Color GetViridisColor(double x)
     {
-        x = std::max(0.0, std::min(1.0, x));
-
         constexpr Color data[] =
         {
             { 0.267004, 0.004874, 0.329415 },
@@ -1569,13 +1896,11 @@ namespace tinycolormap
             { 0.993248, 0.906157, 0.143936 }
         };
 
-        return data[static_cast<size_t>(std::round(x * 255.0))];
+        return internal::CalcLerp(x, data);
     }
 
     inline Color GetCividisColor(double x)
     {
-        x = std::max(0.0, std::min(1.0, x));
-
         constexpr Color data[] =
         {
             { 0.0000, 0.1262, 0.3015 },
@@ -1836,13 +2161,11 @@ namespace tinycolormap
             { 1.0000, 0.9169, 0.2731 }
         };
 
-        return data[static_cast<size_t>(std::round(x * 255.0))];
+        return internal::CalcLerp(x, data);
     }
 
     inline Color GetGithubColor(double x)
     {
-        x = std::max(0.0, std::min(1.0, x));
-
         constexpr Color data[] =
         {
             { 0.933333, 0.933333, 0.933333 },
@@ -1852,15 +2175,275 @@ namespace tinycolormap
             { 0.098039, 0.380392, 0.152941 }
         };
 
-        const double a  = x * ((sizeof(data) / sizeof(Color)) - 1);
-        const double t  = a - std::floor(a);
-        const Color  c0 = data[static_cast<size_t>(std::floor(a))];
-        const Color  c1 = data[static_cast<size_t>(std::ceil (a))];
-
-        return (1.0 - t) * c0 + t * c1;
+        return internal::CalcLerp(x, data);
     }
 
-#if defined(TINYCOLORMAP_WITH_QT5) and defined(TINYCOLORMAP_WITH_EIGEN)
+    inline Color GetCubehelixColor(double x)
+    {
+        constexpr Color data[] =
+        {
+            { 0.000000, 0.000000, 0.000000 },
+            { 0.006716, 0.002119, 0.005970 },
+            { 0.013252, 0.004287, 0.012162 },
+            { 0.019599, 0.006514, 0.018563 },
+            { 0.025748, 0.008803, 0.025162 },
+            { 0.031691, 0.011164, 0.031946 },
+            { 0.037421, 0.013600, 0.038902 },
+            { 0.042932, 0.016118, 0.046016 },
+            { 0.048217, 0.018724, 0.053275 },
+            { 0.053271, 0.021423, 0.060666 },
+            { 0.058090, 0.024220, 0.068173 },
+            { 0.062670, 0.027119, 0.075781 },
+            { 0.067008, 0.030126, 0.083478 },
+            { 0.071101, 0.033243, 0.091246 },
+            { 0.074947, 0.036475, 0.099072 },
+            { 0.078546, 0.039824, 0.106939 },
+            { 0.081898, 0.043295, 0.114834 },
+            { 0.085002, 0.046889, 0.122740 },
+            { 0.087860, 0.050609, 0.130643 },
+            { 0.090474, 0.054457, 0.138527 },
+            { 0.092845, 0.058434, 0.146378 },
+            { 0.094978, 0.062542, 0.154180 },
+            { 0.096875, 0.066781, 0.161918 },
+            { 0.098542, 0.071152, 0.169579 },
+            { 0.099984, 0.075655, 0.177147 },
+            { 0.101205, 0.080290, 0.184609 },
+            { 0.102212, 0.085055, 0.191951 },
+            { 0.103013, 0.089951, 0.199159 },
+            { 0.103615, 0.094975, 0.206221 },
+            { 0.104025, 0.100126, 0.213124 },
+            { 0.104252, 0.105403, 0.219855 },
+            { 0.104305, 0.110801, 0.226402 },
+            { 0.104194, 0.116320, 0.232755 },
+            { 0.103929, 0.121956, 0.238903 },
+            { 0.103519, 0.127705, 0.244834 },
+            { 0.102976, 0.133564, 0.250541 },
+            { 0.102310, 0.139529, 0.256012 },
+            { 0.101534, 0.145596, 0.261240 },
+            { 0.100659, 0.151759, 0.266217 },
+            { 0.099697, 0.158016, 0.270935 },
+            { 0.098661, 0.164359, 0.275388 },
+            { 0.097563, 0.170785, 0.279569 },
+            { 0.096415, 0.177287, 0.283474 },
+            { 0.095232, 0.183860, 0.287097 },
+            { 0.094026, 0.190498, 0.290434 },
+            { 0.092810, 0.197194, 0.293483 },
+            { 0.091597, 0.203943, 0.296240 },
+            { 0.090402, 0.210739, 0.298703 },
+            { 0.089237, 0.217573, 0.300873 },
+            { 0.088115, 0.224441, 0.302747 },
+            { 0.087051, 0.231334, 0.304327 },
+            { 0.086056, 0.238247, 0.305612 },
+            { 0.085146, 0.245171, 0.306606 },
+            { 0.084331, 0.252101, 0.307310 },
+            { 0.083626, 0.259028, 0.307728 },
+            { 0.083043, 0.265946, 0.307863 },
+            { 0.082594, 0.272848, 0.307720 },
+            { 0.082291, 0.279726, 0.307304 },
+            { 0.082148, 0.286573, 0.306621 },
+            { 0.082174, 0.293383, 0.305677 },
+            { 0.082381, 0.300147, 0.304480 },
+            { 0.082780, 0.306860, 0.303037 },
+            { 0.083383, 0.313514, 0.301356 },
+            { 0.084198, 0.320102, 0.299448 },
+            { 0.085235, 0.326618, 0.297320 },
+            { 0.086504, 0.333055, 0.294984 },
+            { 0.088014, 0.339406, 0.292449 },
+            { 0.089772, 0.345666, 0.289728 },
+            { 0.091787, 0.351829, 0.286831 },
+            { 0.094066, 0.357887, 0.283771 },
+            { 0.096615, 0.363836, 0.280560 },
+            { 0.099441, 0.369671, 0.277211 },
+            { 0.102549, 0.375385, 0.273736 },
+            { 0.105944, 0.380974, 0.270151 },
+            { 0.109630, 0.386433, 0.266468 },
+            { 0.113611, 0.391757, 0.262703 },
+            { 0.117891, 0.396943, 0.258868 },
+            { 0.122472, 0.401985, 0.254979 },
+            { 0.127356, 0.406881, 0.251051 },
+            { 0.132543, 0.411627, 0.247099 },
+            { 0.138035, 0.416220, 0.243137 },
+            { 0.143832, 0.420656, 0.239182 },
+            { 0.149933, 0.424934, 0.235247 },
+            { 0.156336, 0.429052, 0.231350 },
+            { 0.163040, 0.433007, 0.227504 },
+            { 0.170042, 0.436798, 0.223726 },
+            { 0.177339, 0.440423, 0.220029 },
+            { 0.184927, 0.443882, 0.216431 },
+            { 0.192802, 0.447175, 0.212944 },
+            { 0.200958, 0.450301, 0.209585 },
+            { 0.209391, 0.453260, 0.206367 },
+            { 0.218092, 0.456053, 0.203306 },
+            { 0.227057, 0.458680, 0.200415 },
+            { 0.236277, 0.461144, 0.197707 },
+            { 0.245744, 0.463444, 0.195197 },
+            { 0.255451, 0.465584, 0.192898 },
+            { 0.265388, 0.467565, 0.190822 },
+            { 0.275545, 0.469391, 0.188982 },
+            { 0.285913, 0.471062, 0.187389 },
+            { 0.296481, 0.472584, 0.186055 },
+            { 0.307239, 0.473959, 0.184992 },
+            { 0.318175, 0.475191, 0.184208 },
+            { 0.329277, 0.476285, 0.183716 },
+            { 0.340534, 0.477243, 0.183523 },
+            { 0.351934, 0.478072, 0.183638 },
+            { 0.363463, 0.478776, 0.184071 },
+            { 0.375109, 0.479360, 0.184829 },
+            { 0.386858, 0.479829, 0.185918 },
+            { 0.398697, 0.480190, 0.187345 },
+            { 0.410613, 0.480448, 0.189115 },
+            { 0.422591, 0.480609, 0.191235 },
+            { 0.434618, 0.480679, 0.193708 },
+            { 0.446680, 0.480665, 0.196538 },
+            { 0.458762, 0.480574, 0.199728 },
+            { 0.470850, 0.480412, 0.203280 },
+            { 0.482930, 0.480186, 0.207197 },
+            { 0.494987, 0.479903, 0.211478 },
+            { 0.507008, 0.479572, 0.216124 },
+            { 0.518978, 0.479198, 0.221136 },
+            { 0.530883, 0.478789, 0.226510 },
+            { 0.542708, 0.478353, 0.232247 },
+            { 0.554441, 0.477898, 0.238342 },
+            { 0.566067, 0.477430, 0.244794 },
+            { 0.577573, 0.476958, 0.251597 },
+            { 0.588945, 0.476490, 0.258747 },
+            { 0.600171, 0.476032, 0.266239 },
+            { 0.611237, 0.475592, 0.274067 },
+            { 0.622132, 0.475178, 0.282223 },
+            { 0.632842, 0.474798, 0.290702 },
+            { 0.643357, 0.474459, 0.299495 },
+            { 0.653665, 0.474168, 0.308593 },
+            { 0.663755, 0.473933, 0.317987 },
+            { 0.673616, 0.473761, 0.327668 },
+            { 0.683239, 0.473658, 0.337626 },
+            { 0.692613, 0.473632, 0.347849 },
+            { 0.701729, 0.473690, 0.358327 },
+            { 0.710579, 0.473838, 0.369047 },
+            { 0.719155, 0.474083, 0.379998 },
+            { 0.727448, 0.474430, 0.391167 },
+            { 0.735453, 0.474886, 0.402541 },
+            { 0.743162, 0.475457, 0.414106 },
+            { 0.750569, 0.476148, 0.425849 },
+            { 0.757669, 0.476964, 0.437755 },
+            { 0.764458, 0.477911, 0.449811 },
+            { 0.770932, 0.478994, 0.462001 },
+            { 0.777086, 0.480216, 0.474310 },
+            { 0.782918, 0.481583, 0.486725 },
+            { 0.788426, 0.483098, 0.499228 },
+            { 0.793609, 0.484765, 0.511805 },
+            { 0.798465, 0.486587, 0.524441 },
+            { 0.802993, 0.488567, 0.537119 },
+            { 0.807196, 0.490708, 0.549824 },
+            { 0.811072, 0.493013, 0.562540 },
+            { 0.814625, 0.495483, 0.575253 },
+            { 0.817855, 0.498121, 0.587945 },
+            { 0.820767, 0.500927, 0.600602 },
+            { 0.823364, 0.503903, 0.613208 },
+            { 0.825649, 0.507050, 0.625748 },
+            { 0.827628, 0.510368, 0.638207 },
+            { 0.829305, 0.513857, 0.650570 },
+            { 0.830688, 0.517516, 0.662822 },
+            { 0.831781, 0.521346, 0.674949 },
+            { 0.832593, 0.525345, 0.686938 },
+            { 0.833130, 0.529511, 0.698773 },
+            { 0.833402, 0.533844, 0.710443 },
+            { 0.833416, 0.538342, 0.721933 },
+            { 0.833181, 0.543001, 0.733232 },
+            { 0.832708, 0.547820, 0.744327 },
+            { 0.832006, 0.552795, 0.755206 },
+            { 0.831086, 0.557924, 0.765859 },
+            { 0.829958, 0.563202, 0.776274 },
+            { 0.828633, 0.568627, 0.786443 },
+            { 0.827124, 0.574193, 0.796354 },
+            { 0.825442, 0.579897, 0.805999 },
+            { 0.823599, 0.585733, 0.815370 },
+            { 0.821608, 0.591698, 0.824459 },
+            { 0.819482, 0.597785, 0.833258 },
+            { 0.817233, 0.603990, 0.841761 },
+            { 0.814875, 0.610307, 0.849963 },
+            { 0.812421, 0.616730, 0.857858 },
+            { 0.809884, 0.623252, 0.865441 },
+            { 0.807278, 0.629869, 0.872709 },
+            { 0.804617, 0.636573, 0.879658 },
+            { 0.801914, 0.643359, 0.886286 },
+            { 0.799183, 0.650218, 0.892592 },
+            { 0.796438, 0.657146, 0.898574 },
+            { 0.793692, 0.664134, 0.904231 },
+            { 0.790959, 0.671176, 0.909565 },
+            { 0.788253, 0.678264, 0.914576 },
+            { 0.785586, 0.685392, 0.919267 },
+            { 0.782973, 0.692553, 0.923639 },
+            { 0.780425, 0.699738, 0.927695 },
+            { 0.777957, 0.706942, 0.931441 },
+            { 0.775579, 0.714157, 0.934879 },
+            { 0.773305, 0.721375, 0.938016 },
+            { 0.771147, 0.728589, 0.940857 },
+            { 0.769116, 0.735793, 0.943409 },
+            { 0.767224, 0.742979, 0.945678 },
+            { 0.765481, 0.750140, 0.947673 },
+            { 0.763898, 0.757269, 0.949402 },
+            { 0.762485, 0.764360, 0.950874 },
+            { 0.761251, 0.771405, 0.952098 },
+            { 0.760207, 0.778399, 0.953084 },
+            { 0.759360, 0.785335, 0.953843 },
+            { 0.758718, 0.792207, 0.954386 },
+            { 0.758290, 0.799008, 0.954724 },
+            { 0.758082, 0.805734, 0.954869 },
+            { 0.758101, 0.812378, 0.954833 },
+            { 0.758353, 0.818934, 0.954629 },
+            { 0.758842, 0.825399, 0.954270 },
+            { 0.759575, 0.831767, 0.953769 },
+            { 0.760554, 0.838033, 0.953140 },
+            { 0.761784, 0.844192, 0.952397 },
+            { 0.763267, 0.850242, 0.951554 },
+            { 0.765006, 0.856178, 0.950625 },
+            { 0.767001, 0.861997, 0.949624 },
+            { 0.769255, 0.867695, 0.948567 },
+            { 0.771766, 0.873270, 0.947467 },
+            { 0.774535, 0.878718, 0.946340 },
+            { 0.777561, 0.884039, 0.945201 },
+            { 0.780841, 0.889230, 0.944063 },
+            { 0.784374, 0.894289, 0.942942 },
+            { 0.788156, 0.899216, 0.941853 },
+            { 0.792184, 0.904010, 0.940809 },
+            { 0.796453, 0.908669, 0.939825 },
+            { 0.800958, 0.913194, 0.938916 },
+            { 0.805694, 0.917586, 0.938095 },
+            { 0.810654, 0.921845, 0.937376 },
+            { 0.815832, 0.925971, 0.936772 },
+            { 0.821221, 0.929967, 0.936297 },
+            { 0.826811, 0.933833, 0.935962 },
+            { 0.832595, 0.937572, 0.935781 },
+            { 0.838565, 0.941187, 0.935766 },
+            { 0.844709, 0.944679, 0.935927 },
+            { 0.851018, 0.948053, 0.936275 },
+            { 0.857482, 0.951311, 0.936822 },
+            { 0.864090, 0.954457, 0.937578 },
+            { 0.870830, 0.957495, 0.938550 },
+            { 0.877690, 0.960430, 0.939749 },
+            { 0.884659, 0.963266, 0.941183 },
+            { 0.891723, 0.966009, 0.942858 },
+            { 0.898871, 0.968662, 0.944783 },
+            { 0.906088, 0.971233, 0.946962 },
+            { 0.913362, 0.973726, 0.949402 },
+            { 0.920679, 0.976147, 0.952108 },
+            { 0.928026, 0.978504, 0.955083 },
+            { 0.935387, 0.980802, 0.958331 },
+            { 0.942750, 0.983048, 0.961854 },
+            { 0.950101, 0.985249, 0.965654 },
+            { 0.957424, 0.987412, 0.969733 },
+            { 0.964706, 0.989543, 0.974090 },
+            { 0.971932, 0.991652, 0.978724 },
+            { 0.979088, 0.993744, 0.983635 },
+            { 0.986161, 0.995828, 0.988820 },
+            { 0.993136, 0.997910, 0.994276 },
+            { 1.000000, 1.000000, 1.000000 }
+        };
+
+        return internal::CalcLerp(x, data);
+    }
+
+#if defined(TINYCOLORMAP_WITH_QT5) && defined(TINYCOLORMAP_WITH_EIGEN)
     inline QImage CreateMatrixVisualization(const Eigen::MatrixXd& matrix)
     {
         const int w = matrix.cols();

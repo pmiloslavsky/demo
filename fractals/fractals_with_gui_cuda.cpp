@@ -159,10 +159,20 @@ class NSReferenceFrame {
   vector<string> color_cycle_size_names{string("8"),   string("16"),
                                         string("32"),  string("64"),
                                         string("128"), string("256")};
-  vector<string> color_names{
-      string("Parula"),  string("Heat"),    string("Jet"),     string("Hot"),
-      string("Gray"),    string("Magma"),   string("Inferno"), string("Plasma"),
-      string("Viridis"), string("Cividis"), string("Github"),  string("UF16")};
+  vector<string> color_names{string("Parula"),
+                             string("Heat"),
+                             string("Jet"),
+                             string("Hot"),
+                             string("Turbo"),
+                             string("Gray"),
+                             string("Magma"),
+                             string("Inferno"),
+                             string("Plasma"),
+                             string("Viridis"),
+                             string("Cividis"),
+                             string("Github"),
+                             string("Cubehelix"),
+                             string("UF16")};
   sf::Texture escape_texture;
   sf::Image escape_image;
 };  // NSReferenceFrame
@@ -2574,7 +2584,7 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   // Palette Column
   auto lbox = tgui::ListBox::create();
   lbox->setPosition("parent.left + 800", "parent.bottom - 300");
-  lbox->setSize(100.f, 250.f);
+  lbox->setSize(100.f, 290.f);
   for (auto e : NSR.color_names) {
     lbox->addItem(e);
   }
@@ -2614,7 +2624,7 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   // Interior Coloring Column
   lbox = tgui::ListBox::create();
   lbox->setPosition("parent.left + 1000", "parent.bottom - 300");
-  lbox->setSize(100.f, 250.f);
+  lbox->setSize(100.f, 290.f);
   for (auto e : NSR.color_names) {
     lbox->addItem(e);
   }

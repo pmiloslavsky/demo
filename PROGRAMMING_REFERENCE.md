@@ -174,6 +174,10 @@ python -m cProfile -s time circuit.py
 * stepi listi stepi 4   p $r21
 * (dbx) listi 0x100919884,0x100919994
 * https://www.ibm.com/docs/en/aix/7.1?topic=d-dbx-command
+## GDB or DBX AIX binary?
+* To see if binary was compiled with -ggdb do: sudo nm -X64 binary | grep "\.dwstr"
+-	For -ggdb, by default it will use non-inline strings, means it will use `.dwstr` section and strings in `.dwinfo` section will use offsets to the `dwstr` section.
+-	For -gdbx, by default it will use inline strings, means, it will not use `.dwstr` section, all strings in `.dwinfo` section will be inlined in the `.dwinfo` section.
 ## 5.4. Profiling
 * with perf: https://www.brendangregg.com/FlameGraphs/cpuflamegraphs.html
 * with valgrind: https://developer.mantidproject.org/ProfilingWithValgrind.html

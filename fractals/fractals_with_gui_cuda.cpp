@@ -95,8 +95,11 @@ enum class InteriorColoringAlgo {
   SOLID,
   MULTICYCLE,
   USE_IMAGE,
-  ATAN,
-  DISTANCE
+  TRIG,
+  TRIG2,
+  DIST,
+  DIST2,
+  TEMP
 };
 #define LAST_INTERIOR_COLOR_ALGO ((unsigned int)InteriorColoringAlgo::DISTANCE)
 unsigned int interior_color_adjust = 0;
@@ -603,9 +606,6 @@ inline void get_iteration_interior_color(const complex<double> &zstart,
                                          int *p_rcolor, int *p_gcolor,
                                          int *p_bcolor) {
   const double pi = 3.14159265358979323846;
-  //*p_rcolor = 255*(atan(zstart.imag() / zstart.real()) / pi + 0.5);
-  //*p_gcolor = 255 * (atan(zstart.imag() / zstart.real()) / pi + 0.5);
-  //*p_bcolor = 255 * (atan(zstart.imag() / zstart.real()) / pi + 0.5);
 
   if ((interior_color_adjust == 0) &&
       (RI.color_algo != InteriorColoringAlgo::SOLID))
@@ -685,23 +685,43 @@ inline void get_iteration_interior_color(const complex<double> &zstart,
       *p_bcolor = color.b;
       return;
     } break;
-    case InteriorColoringAlgo::ATAN: {
-      *p_rcolor = 255 * (atan(zfinal.imag() / zfinal.real()) / pi + 0.5) *
+    case InteriorColoringAlgo::TRIG: {
+      *p_rcolor = 255 * (cos(zfinal.imag() + zfinal.real())) * 0.1 *
                   ((interior_color_adjust / R.displayed_zoom) *
                    (distancer + distancei))  / (iters_max);
-      *p_gcolor = 255 * (atan(zfinal.imag() / zfinal.real()) / pi + 0.5) *
+      *p_gcolor = 255 * (sin(zfinal.real() + zfinal.real())) * 0.1 *
                   ((interior_color_adjust / R.displayed_zoom) *
                    (distancer + distancei))  / (iters_max);
-      *p_bcolor = 255 * (atan(zfinal.imag() / zfinal.real()) / pi + 0.5) *
+      *p_bcolor = 255 * (atan(zfinal.imag() + zfinal.real())) * 0.1 *
                   ((interior_color_adjust / R.displayed_zoom) *
                    (distancer + distancei)) / (iters_max);
       return;
     } break;
-    case InteriorColoringAlgo::DISTANCE: {
+    case InteriorColoringAlgo::TRIG2: {
+      return;
+    } break;
+    case InteriorColoringAlgo::DIST: {
       *p_rcolor = interior_color_adjust * 255 * (distancer) / (iters_max);
       *p_gcolor = interior_color_adjust * 255 * (distancei) / (iters_max);
-      *p_bcolor =
-          interior_color_adjust * 255 * (distancer + distancei) / (iters_max);
+      *p_bcolor = interior_color_adjust * 255 * (distancer + distancei) / (iters_max);
+      return;
+    } break;
+    case InteriorColoringAlgo::DIST2: {
+      *p_rcolor = 255.0 * (cos(distancer + distancei)) *
+                  ((1.0/interior_color_adjust) *
+                   (distancer + distancei)) /
+                  (iters_max);
+      *p_gcolor = 255.0 * (sin(distancer + distancei)) *
+                  ((1.0 / interior_color_adjust) *
+                   (distancer + distancei)) /
+                  (iters_max);
+      *p_bcolor = 255.0 * (atan(distancer + distancei)) *
+                  ((1.0 / interior_color_adjust) *
+                   (distancer + distancei)) /
+                  (iters_max);
+      return;
+    } break;
+    case InteriorColoringAlgo::TEMP: {
       return;
     } break;
   }
@@ -1975,9 +1995,15 @@ void signalIntCAlgoBox(const int selected) {
   else if ((selected == 2) && (true == R.image_loaded))
     RI.color_algo = InteriorColoringAlgo::USE_IMAGE;
   else if (selected == 3)
-    RI.color_algo = InteriorColoringAlgo::ATAN;
+    RI.color_algo = InteriorColoringAlgo::TRIG;
   else if (selected == 4)
-    RI.color_algo = InteriorColoringAlgo::DISTANCE;
+    RI.color_algo = InteriorColoringAlgo::TRIG2;
+  else if (selected == 5)
+    RI.color_algo = InteriorColoringAlgo::DIST;
+  else if (selected == 6)
+    RI.color_algo = InteriorColoringAlgo::DIST2;
+  else if (selected == 7)
+    RI.color_algo = InteriorColoringAlgo::TEMP;
 }
 
 void signalIntButton() {
@@ -2656,8 +2682,11 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   lbox->addItem("SOLID");
   lbox->addItem("MULTICYCLE");
   lbox->addItem("USE_IMAGE");
-  lbox->addItem("ATAN");
-  lbox->addItem("DISTANCE");
+  lbox->addItem("TRIG");
+  lbox->addItem("TRIG2");
+  lbox->addItem("DIST");
+  lbox->addItem("DIST2");
+  lbox->addItem("TEMP");
 
   pgui->add(lbox, "IntCAlgoBox");
   lbox->connect("ItemSelected", signalIntCAlgoBox);

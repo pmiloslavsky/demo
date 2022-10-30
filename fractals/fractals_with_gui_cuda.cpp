@@ -722,6 +722,16 @@ inline void get_iteration_interior_color(const complex<double> &zstart,
       return;
     } break;
     case InteriorColoringAlgo::TEMP: {
+      *p_rcolor = 255.0 * (cos(distancer) + sin(distancei)) *
+                  ((1.0/interior_color_adjust) * (distancer + distancei)) /
+                  (iters_max);
+      *p_gcolor = 255.0 * (sin(distancer) + cos(distancei)) *
+                  ((1.0/interior_color_adjust) * (distancer + distancei)) /
+                  (iters_max);
+      *p_bcolor = 255.0 * ((distancer + distancei)) *
+                  ((1.0/interior_color_adjust) * (distancer + distancei)) /
+                  (iters_max);
+      return;
       return;
     } break;
   }

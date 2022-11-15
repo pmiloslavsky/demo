@@ -25,13 +25,15 @@ Table of Contents:
 - [5. Debugging,Analysis and Performance Tuning](#5-debugginganalysis-and-performance-tuning)
 	- [5.1. Automated](#51-automated)
 	- [5.2. GDB (Linux or AIX)](#52-gdb-linux-or-aix)
+		- [5.2.1. Reverse debugging](#521-reverse-debugging)
 	- [5.3. dbx (AIX)](#53-dbx-aix)
-	- [5.4. Profiling](#54-profiling)
-		- [5.4.1. Sample session:](#541-sample-session)
-	- [5.5. What is the process doing?](#55-what-is-the-process-doing)
-	- [5.6. What is in the executable?](#56-what-is-in-the-executable)
-	- [5.7. Signals](#57-signals)
-	- [5.8. gcc target options -march vs -mnative](#58-gcc-target-options--march-vs--mnative)
+	- [5.4. GDB or DBX AIX binary?](#54-gdb-or-dbx-aix-binary)
+	- [5.5. Profiling](#55-profiling)
+		- [5.5.1. Sample session:](#551-sample-session)
+	- [5.6. What is the process doing?](#56-what-is-the-process-doing)
+	- [5.7. What is in the executable?](#57-what-is-in-the-executable)
+	- [5.8. Signals](#58-signals)
+	- [5.9. gcc target options -march vs -mnative](#59-gcc-target-options--march-vs--mnative)
 - [6. OS specific](#6-os-specific)
 	- [6.1. Linux](#61-linux)
 		- [6.1.1. how to install perf on ubuntu](#611-how-to-install-perf-on-ubuntu)
@@ -163,6 +165,10 @@ python -m cProfile -s time circuit.py
 * If CTRL-C crashes gdb -> kill -TRAP <pid> from another window
 * Sometimes you should do     (gdb)handle SIGUSR1 pass
 * b vec_op_varith<int64_t>
+### 5.2.1. Reverse debugging
+* There is a record and replay mode:  https://sourceware.org/gdb/onlinedocs/gdb/Process-Record-and-Replay.html
+* and there is also native reverse debugging https://www.sourceware.org/gdb/news/reversible.html
+* To do reverse debugging you have to do (gdb) record before you do (gdb)rs  (reverse-step) 
 ## 5.3. dbx (AIX)
 * multiproc child
 * stop on load "pythonint.so"
@@ -174,18 +180,18 @@ python -m cProfile -s time circuit.py
 * stepi listi stepi 4   p $r21
 * (dbx) listi 0x100919884,0x100919994
 * https://www.ibm.com/docs/en/aix/7.1?topic=d-dbx-command
-## GDB or DBX AIX binary?
+## 5.4. GDB or DBX AIX binary?
 * To see if binary was compiled with -ggdb do: sudo nm -X64 binary | grep "\.dwstr"
 -	For -ggdb, by default it will use non-inline strings, means it will use `.dwstr` section and strings in `.dwinfo` section will use offsets to the `dwstr` section.
 -	For -gdbx, by default it will use inline strings, means, it will not use `.dwstr` section, all strings in `.dwinfo` section will be inlined in the `.dwinfo` section.
-## 5.4. Profiling
+## 5.5. Profiling
 * with perf: https://www.brendangregg.com/FlameGraphs/cpuflamegraphs.html
 * with valgrind: https://developer.mantidproject.org/ProfilingWithValgrind.html
-### 5.4.1. Sample session:
+### 5.5.1. Sample session:
 * start your process doing a heavy loop of what you are interested in
 * sudo perf record -F 999 -g -p 2277501 --call-graph dwarf    (creates perf.data file)
 * sudo perf report
-## 5.5. What is the process doing?
+## 5.6. What is the process doing?
 * lsof
 * pmap
 * truss
@@ -193,15 +199,15 @@ python -m cProfile -s time circuit.py
 * rlimit files, semaphores, stack size
 * ulimit
 * pldd  (procldd -F on AIX)
-## 5.6. What is in the executable?
+## 5.7. What is in the executable?
 * ldd
 * file
 * objdump   AIX: dump -X64 -t
-## 5.7. Signals
+## 5.8. Signals
 * kill -l lists all signals
 * echo $? gives 128+signum that says what killed you
 * sudo kill -TRAP 10486072 to the process gdb is debugging causes gdb to break
-## 5.8. gcc target options -march vs -mnative
+## 5.9. gcc target options -march vs -mnative
 * gcc -v
 * gcc -dumpmachine
 * gcc -march=native -Q --help=target
@@ -216,6 +222,7 @@ python -m cProfile -s time circuit.py
 * sudo apt-get install --reinstall linux-tools-common linux-tools-generic linux-tools-`uname -r`
 * sudo perf top
 ### 6.1.2. system administration
+* apt list --installed
 * yum update yum install yum-utils  yum provides gtar  yum info tar-1.33-1.ppc repoquery -l tar-1.33-1.ppc
 * dnf is replacing yum
 * sudo rpm -ivh python3-3.7.11-1.rpm
@@ -243,6 +250,7 @@ sudo lssecattr -c /usr/pmapi/tools/pmcycles
 * dnf update
 * dnf install emacs-nox
 * dnf install dnf-utils
+* path for all users is in /etc/environment
 #### 6.2.1.1. processors and configuration
 * lscfg -lproc\*
 * lparstat -i | grep CPU
@@ -253,6 +261,7 @@ sudo lssecattr -c /usr/pmapi/tools/pmcycles
 * sudo smtctl
 #### 6.2.1.2. Compilers:
 * preprocessor defines: ibm-clang++_r -dM -E - < /dev/null
+* dissasembly /opt/IBM/xlc/16.1.0/exe/dis  produces a .s file silently
 ## 6.3. Windows
 * procmon (https://docs.microsoft.com/en-us/sysinternals/downloads/procmon) can show what ddls are being loaded (you need to filter on pid or name)
 * ListDlls  dlls in a process   /cygdrive/c/users/pmilosla/Downloads/ListDlls/Listdlls64.exe python.exe
@@ -303,25 +312,17 @@ podman info
 
 cap-add is to get gdb to work --cap-add=SYS_PTRACE in particular
 
-podman run -it \
--v /nethome/pmilosla:/nethome/pmilosla \
---cap-add=all \
-docker_image \
-bash
-
-podman run -it \
--v /nethome/pmilosla:/nethome/pmilosla \
---cap-add=all \
-docker_image \
-bash
+podman run -name NAME -it -v /nethome/pmilosla:/nethome/pmilosla --cap-add=all docker_image bash
 
 podman ps
-podman rename c54467946b78 instance_gdb
+podman rename c54467946b78 NAME
 
+podman exec -it NAME bash
+podman start -a -i NAME
 podman stop <>
-podman start instance_gdb
-podman inspect instance_gdb
-podman exec -it instance_gdb bash
+podman start NAME
+podman inspect NAME
+podman exec -it NAME bash
 podman ps -a
 podman rm <>
 

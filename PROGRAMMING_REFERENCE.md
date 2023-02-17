@@ -41,9 +41,9 @@ Table of Contents:
 	- [6.2. AIX](#62-aix)
 		- [6.2.1. system administration](#621-system-administration)
 			- [6.2.1.1. processors and configuration](#6211-processors-and-configuration)
-			- [Disk expansion](#disk-expansion)
-			- [6.2.1.2. Compilers:](#6212-compilers)
-		- [Cloud server preparation](#cloud-server-preparation)
+			- [6.2.1.2. Disk expansion](#6212-disk-expansion)
+			- [6.2.1.3. Compilers:](#6213-compilers)
+		- [6.2.2. Cloud server preparation](#622-cloud-server-preparation)
 	- [6.3. Windows](#63-windows)
 		- [6.3.1. CLI compilation and linking](#631-cli-compilation-and-linking)
 		- [6.3.2. Debugging python modules](#632-debugging-python-modules)
@@ -56,21 +56,21 @@ Table of Contents:
 	- [7.3. Save terminal session with tmux](#73-save-terminal-session-with-tmux)
 - [8. Editors](#8-editors)
 	- [8.1. Emacs](#81-emacs)
-		- [11.0.1. .emacs file:](#1101-emacs-file)
-		- [11.0.2. .dir-locals.el file:](#1102-dir-localsel-file)
-	- [11.1. visual studio code](#111-visual-studio-code)
-- [12. Books](#12-books)
-- [13. ICU/Unicode](#13-icuunicode)
-- [14. REST APIs/JSON](#14-rest-apisjson)
-- [15. SQL](#15-sql)
-	- [15.1. Cheat Sheet](#151-cheat-sheet)
-- [16. Statistical Analysis and Machine Learning](#16-statistical-analysis-and-machine-learning)
-	- [16.1. Fundamentals of ML](#161-fundamentals-of-ml)
-	- [16.2. Statistical measures in python:](#162-statistical-measures-in-python)
-		- [16.2.1. Plotting:](#1621-plotting)
-		- [16.2.2. Fitting:](#1622-fitting)
-		- [16.2.3. Sampling:](#1623-sampling)
-		- [16.2.4. Learning](#1624-learning)
+		- [8.1.1. .emacs file:](#811-emacs-file)
+		- [8.1.2. .dir-locals.el file:](#812-dir-localsel-file)
+	- [8.2. visual studio code](#82-visual-studio-code)
+- [9. Books](#9-books)
+- [10. ICU/Unicode](#10-icuunicode)
+- [11. REST APIs/JSON](#11-rest-apisjson)
+- [12. SQL](#12-sql)
+	- [12.1. Cheat Sheet](#121-cheat-sheet)
+- [13. Statistical Analysis and Machine Learning](#13-statistical-analysis-and-machine-learning)
+	- [13.1. Fundamentals of ML](#131-fundamentals-of-ml)
+	- [13.2. Statistical measures in python:](#132-statistical-measures-in-python)
+		- [13.2.1. Plotting:](#1321-plotting)
+		- [13.2.2. Fitting:](#1322-fitting)
+		- [13.2.3. Sampling:](#1323-sampling)
+		- [13.2.4. Learning](#1324-learning)
 
 
 # 1. C/C++
@@ -269,7 +269,7 @@ sudo lssecattr -c /usr/pmapi/tools/pmcycles
 * lsattr -El proc0
 * sudo pmcycles -m
 * sudo smtctl
-#### Disk expansion
+#### 6.2.1.2. Disk expansion
 * lsvg rootvg
 * df -g
 * lspv
@@ -299,10 +299,10 @@ sudo lssecattr -c /usr/pmapi/tools/pmcycles
 * exportvg datavg
 * rmdev -dl hdisk1
 * importvg hdiskN
-#### 6.2.1.2. Compilers:
+#### 6.2.1.3. Compilers:
 * preprocessor defines: ibm-clang++_r -dM -E - < /dev/null
 * dissasembly /opt/IBM/xlc/16.1.0/exe/dis  produces a .s file silently
-### Cloud server preparation
+### 6.2.2. Cloud server preparation
 setenv CLOUD xx.xx.xx.xx
 setenv IRIS IRIS-2023.2.0LDEV.133.0-ppc64.tar.gz
 ssh -i id_rsa root@$CLOUD
@@ -445,7 +445,7 @@ strace -p $$
 * M-x is execute
 * ESC is meta key in helm
 * emacs -nw starts emacs in non windowed mode (macs homebrew)
-### 11.0.1. .emacs file:
+### 8.1.1. .emacs file:
 ;; Added by Package.el.  This must come before configurations of
 ;; installed packages.  Don't delete this line.  If you don't want it,
 ;; just comment it out by adding a semicolon to the start of the line.
@@ -540,7 +540,7 @@ strace -p $$
   (add-hook hook (lambda () (flyspell-mode 1))))
 
 
-### 11.0.2. .dir-locals.el file:
+### 8.1.2. .dir-locals.el file:
 
 
 ((c-mode . ((c-file-style . "kernel")))
@@ -552,22 +552,22 @@ strace -p $$
 
 
 
-## 11.1. visual studio code
+## 8.2. visual studio code
 * view -> command     Markdown All in One Add/update section numbers  open preview to the side
-# 12. Books
+# 9. Books
 * (Stroustrop’s paper about C++ evolution) https://dl.acm.org/doi/abs/10.1145/3386320
 * Fedor G Pikus Hands on Design Patterns with C++
-# 13. ICU/Unicode
+# 10. ICU/Unicode
 * Example code: https://begriffs.com/posts/2019-05-23-unicode-icu.html#changing-case
-# 14. REST APIs/JSON
+# 11. REST APIs/JSON
 * CRUD up some nouns (create/read/update/delete) (post/get/put/delete) 
-# 15. SQL
-## 15.1. Cheat Sheet
+# 12. SQL
+## 12.1. Cheat Sheet
 * https://dataschool.com/learn-sql/sql-cheat-sheet/
-# 16. Statistical Analysis and Machine Learning
-## 16.1. Fundamentals of ML
+# 13. Statistical Analysis and Machine Learning
+## 13.1. Fundamentals of ML
 * https://github.com/ageron/handson-ml2
-## 16.2. Statistical measures in python:
+## 13.2. Statistical measures in python:
 ```
 popSD = numpy.std(population)
 
@@ -613,7 +613,7 @@ Area in standard deviation:
 
               'std =', round(area, 4))
 ```
-### 16.2.1. Plotting:
+### 13.2.1. Plotting:
 pylab.plot   pylab.hist   pylab.table
 ```
     pylab.errorbar(xVals, sizeMeans,
@@ -622,7 +622,7 @@ pylab.plot   pylab.hist   pylab.table
 
                    label = '95% Confidence Interval')
 ```
-### 16.2.2. Fitting:
+### 13.2.2. Fitting:
 ```
 def genFits(xVals, yVals, degrees):
 
@@ -636,7 +636,7 @@ def genFits(xVals, yVals, degrees):
 
 estYVals = pylab.polyval(model, xVals)
 ```
-### 16.2.3. Sampling:
+### 13.2.3. Sampling:
 ```
 random.sample(population, sampleSize)
 
@@ -648,7 +648,7 @@ If the samples are not random and independent don’t make conclusions……
 
 Survivor bias, non response bias, cherry picking
 ```
-### 16.2.4. Learning
+### 13.2.4. Learning
 Clustering (kNearestNeighbor) is Unsupervised Learning
 Classification (Logistic Regresion and k-means(greedy)) is Supervised Learning:
 Logistic Regression comes in 2 kinds:

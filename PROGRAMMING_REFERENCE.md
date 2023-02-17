@@ -41,7 +41,9 @@ Table of Contents:
 	- [6.2. AIX](#62-aix)
 		- [6.2.1. system administration](#621-system-administration)
 			- [6.2.1.1. processors and configuration](#6211-processors-and-configuration)
+			- [Disk expansion](#disk-expansion)
 			- [6.2.1.2. Compilers:](#6212-compilers)
+		- [Cloud server preparation](#cloud-server-preparation)
 	- [6.3. Windows](#63-windows)
 		- [6.3.1. CLI compilation and linking](#631-cli-compilation-and-linking)
 		- [6.3.2. Debugging python modules](#632-debugging-python-modules)
@@ -54,19 +56,21 @@ Table of Contents:
 	- [7.3. Save terminal session with tmux](#73-save-terminal-session-with-tmux)
 - [8. Editors](#8-editors)
 	- [8.1. Emacs](#81-emacs)
-	- [8.2. visual studio code](#82-visual-studio-code)
-- [9. Books](#9-books)
-- [10. ICU/Unicode](#10-icuunicode)
-- [11. REST APIs/JSON](#11-rest-apisjson)
-- [12. SQL](#12-sql)
-	- [12.1. Cheat Sheet](#121-cheat-sheet)
-- [13. Statistical Analysis and Machine Learning](#13-statistical-analysis-and-machine-learning)
-	- [13.1. Fundamentals of ML](#131-fundamentals-of-ml)
-	- [13.2. Statistical measures in python:](#132-statistical-measures-in-python)
-		- [13.2.1. Plotting:](#1321-plotting)
-		- [13.2.2. Fitting:](#1322-fitting)
-		- [13.2.3. Sampling:](#1323-sampling)
-		- [13.2.4. Learning](#1324-learning)
+		- [11.0.1. .emacs file:](#1101-emacs-file)
+		- [11.0.2. .dir-locals.el file:](#1102-dir-localsel-file)
+	- [11.1. visual studio code](#111-visual-studio-code)
+- [12. Books](#12-books)
+- [13. ICU/Unicode](#13-icuunicode)
+- [14. REST APIs/JSON](#14-rest-apisjson)
+- [15. SQL](#15-sql)
+	- [15.1. Cheat Sheet](#151-cheat-sheet)
+- [16. Statistical Analysis and Machine Learning](#16-statistical-analysis-and-machine-learning)
+	- [16.1. Fundamentals of ML](#161-fundamentals-of-ml)
+	- [16.2. Statistical measures in python:](#162-statistical-measures-in-python)
+		- [16.2.1. Plotting:](#1621-plotting)
+		- [16.2.2. Fitting:](#1622-fitting)
+		- [16.2.3. Sampling:](#1623-sampling)
+		- [16.2.4. Learning](#1624-learning)
 
 
 # 1. C/C++
@@ -228,6 +232,8 @@ python -m cProfile -s time circuit.py
 * sudo rpm -ivh python3-3.7.11-1.rpm
 * yum list installed | grep python
 * repoquery -l rh-python38-python-devel
+*  dpkg-query -L libssh2-1
+*  If you have fatal conflicts you may need to wget packages and do rpm -Uvh *.rpm
 ## 6.2. AIX
 ### 6.2.1. system administration
 * PTFs come from IBM's "Fix Central", while the GA images (with the embedded licenses) come from either Passport Advantage 
@@ -239,6 +245,7 @@ sudo lssecattr -c /usr/pmapi/tools/pmcycles
 /usr/pmapi/tools/pmcycles accessauths=aix.system.pmustat.global innateprivs=PV_PMU_CONFIG,PV_PMU_SYSTEM secflags=FSF_EPS
 ```
 * lslpp -Lqc 
+* remove web download pack python sudo installp -u python3.9.base python3.9.test
 * topas
 * nmon   n,t, 0,1,2,3,4
 * sudo   slibclean
@@ -251,6 +258,9 @@ sudo lssecattr -c /usr/pmapi/tools/pmcycles
 * dnf install emacs-nox
 * dnf install dnf-utils
 * path for all users is in /etc/environment
+* dump -h libcrypto.a | grep :       to see what versions it supports
+* errpnt -a
+* ar -X64 -tv /usr/lib/libssl.a How to see whats in an AIX archive bundle
 #### 6.2.1.1. processors and configuration
 * lscfg -lproc\*
 * lparstat -i | grep CPU
@@ -259,9 +269,87 @@ sudo lssecattr -c /usr/pmapi/tools/pmcycles
 * lsattr -El proc0
 * sudo pmcycles -m
 * sudo smtctl
+#### Disk expansion
+* lsvg rootvg
+* df -g
+* lspv
+* chfs -a size=1G /opt
+* chvg -g rootvg  (to detect growing disk)
+* cfgmgr detects new added disks
+* smitty jfs2
+* mount /scratch
+* umount /scratch
+* Adding a volume to rootvg:
+* chvg -t 16 rootvg
+* extendvg -f rootvg hdisk0    (alternative)
+* smitty mkusr      or
+* mkuser -a pmilosla
+* passwd pmilosla
+* Expanding /home:
+* lslv hd1
+* chlv -x 6000 hd1
+* chfs -a size=30G /home
+* Using datavg:
+* mkvg -y datavg -s 128 hdisk2   (the ones not in rootvg)
+* mklv -y datalv -t jfs2 datavg 80G
+* lslv datalv
+* crfs -v jfs2 -d datalv -m /data
+* mount /data
+* varyoffvg datavg
+* exportvg datavg
+* rmdev -dl hdisk1
+* importvg hdiskN
 #### 6.2.1.2. Compilers:
 * preprocessor defines: ibm-clang++_r -dM -E - < /dev/null
 * dissasembly /opt/IBM/xlc/16.1.0/exe/dis  produces a .s file silently
+### Cloud server preparation
+setenv CLOUD xx.xx.xx.xx
+setenv IRIS IRIS-2023.2.0LDEV.133.0-ppc64.tar.gz
+ssh -i id_rsa root@$CLOUD
+ 
+openssl version
+ 
+cfgmgr
+lsvg
+chvg -t 16 rootvg
+extendvg -f rootvg hdisk1
+chfs -a size=2G /opt
+lslv hd1
+chlv -x 6000 hd1
+chfs -a size=30G /home
+chfs -a size=1G /tmp
+chfs -a size=+1G /usr
+chfs -a size=+1G /var
+ 
+mkuser -a pmilosla
+passwd pmilosla
+ 
+from laptop:
+cd /home/pmilosla/projects/ibmcloud/ibm_downloads
+scp -r -i id_rsa ibm_downloads root@${CLOUD}:/home/pmilosla
+scp -r -i id_rsa $IRIS root@${CLOUD}:/home/pmilosla
+scp -r -i id_rsa iris.key root@${CLOUD}:/home/pmilosla
+ 
+on cloud machine:
+export PATH=$PATH:/opt/freeware/bin
+cd /home/pmilosla/ibm_downloads
+DONT NEED TO DO DNF ON THERE on AIX73 #  ./dnf_aixtoolbox.sh -y
+dnf update  (doesnt work because of openssl)
+ 
+install openssl from bundle you put on there:
+uncompress openssl-3.0.7.1000.tar.Z
+tar xvf openssl-3.0.7.1000.tar
+go to the dir and smitty install
+(check accept license)
+f10 to exit when done
+cat /usr/include/openssl/opensslv.h
+ 
+Install SSL3 ifix from bundle you put on there:
+emgr -e testifix2.230116.epkg.Z
+ 
+dnf update
+dnf install emacs-nox tar tcsh
+/opt/freeware/bin/tar  now exists
 ## 6.3. Windows
 * procmon (https://docs.microsoft.com/en-us/sysinternals/downloads/procmon) can show what ddls are being loaded (you need to filter on pid or name)
 * ListDlls  dlls in a process   /cygdrive/c/users/pmilosla/Downloads/ListDlls/Listdlls64.exe python.exe
@@ -353,22 +441,133 @@ strace -p $$
 * CTRL-B D  (detach)
 # 8. Editors
 ## 8.1. Emacs
-## 8.2. visual studio code
+* M-: is eval  you can then type what hook
+* M-x is execute
+* ESC is meta key in helm
+* emacs -nw starts emacs in non windowed mode (macs homebrew)
+### 11.0.1. .emacs file:
+;; Added by Package.el.  This must come before configurations of
+;; installed packages.  Don't delete this line.  If you don't want it,
+;; just comment it out by adding a semicolon to the start of the line.
+;; You may delete these explanatory comments.
+(require 'package)
+(add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
+(package-initialize)
+ 
+;;(add-hook 'after-init-hook 'global-company-mode)
+ 
+(setq package-selected-packages '(lsp-mode lsp-ui yasnippet treemacs lsp-treemacs helm-lsp
+ projectile hydra flycheck company avy which-key helm-xref dap-mode))
+ 
+(when (cl-find-if-not #'package-installed-p package-selected-packages)
+  (package-refresh-contents)
+  (mapc #'package-install package-selected-packages))
+ 
+;; sample `helm' configuration use https://github.com/emacs-helm/helm/ for details
+(helm-mode)
+(require 'helm-xref)
+(define-key global-map [remap find-file] #'helm-find-files)
+(define-key global-map [remap execute-extended-command] #'helm-M-x)
+(define-key global-map [remap switch-to-buffer] #'helm-mini)
+ 
+; I become scared of what my emacs is doing with these settings
+;(require 'eglot)
+;(add-to-list 'eglot-server-programs '((c++-mode c-mode) "clangd"))
+;(add-hook 'c-mode-hook 'eglot-ensure)
+;(add-hook 'c++-mode-hook 'eglot-ensure)
+ 
+;;ctl-c ctl-s shows syntactic element
+(c-add-style "kernel"
+         '(
+           (tab-width . 8)
+           (indent-tabs-mode . t)
+           (c-basic-offset . 3)
+           (c-offsets-alist . ((statement-block-intro . +)
+                   (knr-argdecl-intro . 8)
+                   (defun-open . -1000)
+                   (defun-close . -1000)
+                   (defun-block-intro . 8)
+                   (case-label . +)
+                   (label . -1000)
+                   (statement-cont . +)
+                   ))
+           (hide-ifdef-mode . nil)
+           (c-comment-only-line-offset . 0)
+           (comment-column . 64)
+           (fci-rule-column . 78)
+           ))
+ 
+(setq gc-cons-threshold (* 100 1024 1024)
+      read-process-output-max (* 1024 1024)
+      treemacs-space-between-root-nodes nil
+      company-idle-delay 0.1
+      company-minimum-prefix-length 1
+      lsp-idle-delay 0.1)  ;; clangd is fast
+ 
+(which-key-mode)
+(add-hook 'c-mode-hook 'lsp)
+(add-hook 'c++-mode-hook 'lsp)
+ 
+(with-eval-after-load 'lsp-mode
+  (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration)
+  (require 'dap-cpptools)
+  (yas-global-mode))
+ 
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(column-number-mode t)
+ '(global-display-line-numbers-mode t)
+ '(inhibit-startup-screen t)
+ ;'(lsp-ui-imenu-colors (quote ("sky blue" "green3")))
+ ;'(lsp-ui-peek-enable nil)
+ ;'(lsp-ui-sideline-show-hover nil)
+ )
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+ 
+(require 'whitespace)
+ (setq whitespace-style '(face empty tabs lines-tail trailing))
+(global-whitespace-mode t)
+ 
+(dolist (hook '(text-mode-hook))
+  (add-hook hook (lambda () (flyspell-mode 1))))
+
+
+### 11.0.2. .dir-locals.el file:
+
+
+((c-mode . ((c-file-style . "kernel")))
+ (c++-mode . ((c-file-style . "kernel")))
+ ;(c++-mode (eval . (message "Set C++ kernel style")))
+
+
+
+
+
+
+## 11.1. visual studio code
 * view -> command     Markdown All in One Add/update section numbers  open preview to the side
-# 9. Books
+# 12. Books
 * (Stroustrop’s paper about C++ evolution) https://dl.acm.org/doi/abs/10.1145/3386320
 * Fedor G Pikus Hands on Design Patterns with C++
-# 10. ICU/Unicode
+# 13. ICU/Unicode
 * Example code: https://begriffs.com/posts/2019-05-23-unicode-icu.html#changing-case
-# 11. REST APIs/JSON
+# 14. REST APIs/JSON
 * CRUD up some nouns (create/read/update/delete) (post/get/put/delete) 
-# 12. SQL
-## 12.1. Cheat Sheet
+# 15. SQL
+## 15.1. Cheat Sheet
 * https://dataschool.com/learn-sql/sql-cheat-sheet/
-# 13. Statistical Analysis and Machine Learning
-## 13.1. Fundamentals of ML
+# 16. Statistical Analysis and Machine Learning
+## 16.1. Fundamentals of ML
 * https://github.com/ageron/handson-ml2
-## 13.2. Statistical measures in python:
+## 16.2. Statistical measures in python:
 ```
 popSD = numpy.std(population)
 
@@ -414,7 +613,7 @@ Area in standard deviation:
 
               'std =', round(area, 4))
 ```
-### 13.2.1. Plotting:
+### 16.2.1. Plotting:
 pylab.plot   pylab.hist   pylab.table
 ```
     pylab.errorbar(xVals, sizeMeans,
@@ -423,7 +622,7 @@ pylab.plot   pylab.hist   pylab.table
 
                    label = '95% Confidence Interval')
 ```
-### 13.2.2. Fitting:
+### 16.2.2. Fitting:
 ```
 def genFits(xVals, yVals, degrees):
 
@@ -437,7 +636,7 @@ def genFits(xVals, yVals, degrees):
 
 estYVals = pylab.polyval(model, xVals)
 ```
-### 13.2.3. Sampling:
+### 16.2.3. Sampling:
 ```
 random.sample(population, sampleSize)
 
@@ -449,7 +648,7 @@ If the samples are not random and independent don’t make conclusions……
 
 Survivor bias, non response bias, cherry picking
 ```
-### 13.2.4. Learning
+### 16.2.4. Learning
 Clustering (kNearestNeighbor) is Unsupervised Learning
 Classification (Logistic Regresion and k-means(greedy)) is Supervised Learning:
 Logistic Regression comes in 2 kinds:

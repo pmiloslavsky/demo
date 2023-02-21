@@ -42,7 +42,8 @@ Table of Contents:
 		- [6.2.1. system administration](#621-system-administration)
 			- [6.2.1.1. processors and configuration](#6211-processors-and-configuration)
 			- [6.2.1.2. Disk expansion](#6212-disk-expansion)
-			- [6.2.1.3. Compilers:](#6213-compilers)
+			- [6.2.1.3. Upgrading to a new TL level:](#6213-upgrading-to-a-new-tl-level)
+			- [6.2.1.4. Compilers:](#6214-compilers)
 		- [6.2.2. Cloud server preparation](#622-cloud-server-preparation)
 	- [6.3. Windows](#63-windows)
 		- [6.3.1. CLI compilation and linking](#631-cli-compilation-and-linking)
@@ -299,7 +300,60 @@ sudo lssecattr -c /usr/pmapi/tools/pmcycles
 * exportvg datavg
 * rmdev -dl hdisk1
 * importvg hdiskN
-#### 6.2.1.3. Compilers:
+#### 6.2.1.3. Upgrading to a new TL level:
+Terminology:
+oslevel -s
+7300-00-01-2148
+00 is TL
+01 is SP
+21 is year
+48 is the week of the year
+ 
+remove interm fixes (like the openssl patch):
+emgr -l
+emgr -r -L <label>
+emgr -r -L testifix2
+ 
+ 
+https://www.ibm.com/docs/en/aix/7.2?topic=s-suma-command
+http://www.unixmantra.com/2013/09/aix-technology-level-tl-update-methods.html
+https://www.ibm.com/docs/en/power7?topic=upgrade-updating-aix-new-technology-level
+https://cloud.ibm.com/docs/power-iaas?topic=power-iaas-downloading-fixes-updates
+ 
+ 
+Before you start and OS upgrade make sure you expand these:
+Check in-house systems, they have it expanded even more
+ 
+chlv -x 6000 repo00
+chfs -a size=20G /usr/sys/inst.images
+chfs -a size=4G /var
+chfs -a size=4G /opt
+chfs -a size=4G /usr
+ 
+The manual way (dont do this, use smit below)
+This does the latest SP but not a new TL level:
+date
+suma -s "minutes hours * * *" -a RqType=Latest -a DisplayName="Latest fixes"
+make it 5 minutes into the future:
+suma -s "45 8 * * *" -a RqType=Latest -a DisplayName="Latest fixes"
+this will do it every day
+ 
+suma -l
+...  until it downloads
+ 
+After you install dont forget to remove the manual way:
+suma -d 1
+crontab -l root
+ 
+This upgrades to a new TL the easy way:
+smit suma
+type in     7300-01
+ 
+cd /usr/sys/inst.images/installp/ppc
+ls -lart   (make sure you have new files  that suma got)
+smitty update_all
+shutdown -Fr
+#### 6.2.1.4. Compilers:
 * preprocessor defines: ibm-clang++_r -dM -E - < /dev/null
 * dissasembly /opt/IBM/xlc/16.1.0/exe/dis  produces a .s file silently
 ### 6.2.2. Cloud server preparation

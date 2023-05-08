@@ -38,8 +38,11 @@ Table of Contents:
 	- [6.1. Linux](#61-linux)
 		- [6.1.1. how to install perf on ubuntu](#611-how-to-install-perf-on-ubuntu)
 		- [6.1.2. system administration](#612-system-administration)
+		- [6.1.3. Core files on ubuntu](#613-core-files-on-ubuntu)
 	- [6.2. AIX](#62-aix)
 		- [6.2.1. system administration](#621-system-administration)
+- [define OPENSSL\_CONFIGURED\_API 10002](#define-openssl_configured_api-10002)
+- [define OPENSSL\_CONFIGURED\_API 30000](#define-openssl_configured_api-30000)
 			- [6.2.1.1. processors and configuration](#6211-processors-and-configuration)
 			- [6.2.1.2. Disk expansion](#6212-disk-expansion)
 			- [6.2.1.3. Upgrading to a new TL level:](#6213-upgrading-to-a-new-tl-level)
@@ -136,6 +139,7 @@ Composition: black diamond
 ## 4.3. profiling
 python -m cProfile -s time circuit.py
 ## 4.4. Source Code:
+Tokens: https://github.com/python/cpython/blob/main/Python/generated_cases.c.h
 ## 4.5. Embedding:
     Py_Initialize(); 
     if ( !Py_IsInitialized() ) 
@@ -166,6 +170,10 @@ python -m cProfile -s time circuit.py
 * step into s  step over n   finish   dir  b   d 1(delete first breakpoint) 
 * p $r3 $eax  p/x $r3  x/8xw 0x110075770+27048 ([x]/(number)(format)(unit_size=bhwg) <address>)
 * gdb tui   layout split asm src regs   layout next     focus next
+* p    p/x 
+* ptype       ptype /o  (offsets)
+* p *(struct node *) 0x00000000004004fc
+* x addr   x/h addr    x/20h addr
 * gdb -batch -ex "disassemble/rs mainsub" mux.o | more
 * If CTRL-C crashes gdb -> kill -TRAP <pid> from another window
 * Sometimes you should do     (gdb)handle SIGUSR1 pass
@@ -204,10 +212,13 @@ python -m cProfile -s time circuit.py
 * rlimit files, semaphores, stack size
 * ulimit
 * pldd  (procldd -F on AIX)
+* genld -ld (AIX)
 ## 5.7. What is in the executable?
 * ldd
 * file
 * objdump   AIX: dump -X64 -t
+* strings -a
+* restore -qxvf libc++.rte.16.1.0.10.bff to see whats
 ## 5.8. Signals
 * kill -l lists all signals
 * echo $? gives 128+signum that says what killed you
@@ -235,6 +246,17 @@ python -m cProfile -s time circuit.py
 * repoquery -l rh-python38-python-devel
 *  dpkg-query -L libssh2-1
 *  If you have fatal conflicts you may need to wget packages and do rpm -Uvh *.rpm
+### 6.1.3. Core files on ubuntu
+* if you dont want to struggle with apport you can do this:
+	sudo emacs /etc/security/limits.conf to have:
+	*		 -	 core		 -1
+	sudo emacs /etc/sysctl.conf
+	#kernel.sysrq=438
+	# Core pattern (core.<executable>.<pid>.<time of core>)
+	kernel.core_pattern = /var/crash/core.%e.%p.%t
+	# Controls whether core dumps will append the PID to the core filename.
+	kernel.core_uses_pid = 1
+	sudo sysctl --system
 ## 6.2. AIX
 ### 6.2.1. system administration
 * PTFs come from IBM's "Fix Central", while the GA images (with the embedded licenses) come from either Passport Advantage 
@@ -247,6 +269,29 @@ sudo lssecattr -c /usr/pmapi/tools/pmcycles
 ```
 * lslpp -Lqc 
 * remove web download pack python sudo installp -u python3.9.base python3.9.test
+* remove an MRS package and replace with SP package:
+  ```
+  Hope you are using smitty installp command.  To downgrade using smitty installp, set below options. Select the “SOFTWARE to install” list by selecting these 3 from the list “openssl.base, openssl.license, openssl.man.en_US”. Bold ones are the ones changed from default values.
+  INPUT device / directory for software               .
+SOFTWARE to install                                [openssl.base                                                     ALL  @@I:openssl.base _all_filesets,openssl.license                  > +
+  PREVIEW only? (install operation will NOT occur)    no
+  COMMIT software updates?                            yes
+  SAVE replaced files?                                no
+  AUTOMATICALLY install requisite software?           no
+  EXTEND file systems if space needed?                yes
+  OVERWRITE same or newer versions?                   yes
+  VERIFY install and check file sizes?                no
+  DETAILED output?                                    no
+  Process multiple volumes?                           yes
+  ACCEPT new license agreements?                      yes
+  Preview new LICENSE agreements?                     yes
+  ``` 
+* OpenSSL version: You can grep for “grep OPENSSL_CONFIGURED_API config*“ which shows below output
+> grep OPENSSL_CONFIGURED_API config*
+# define OPENSSL_CONFIGURED_API 10002
+Whereas in TL1 SP1 you would see output as 
+> grep OPENSSL_CONFIGURED_API config*
+# define OPENSSL_CONFIGURED_API 30000
 * topas
 * nmon   n,t, 0,1,2,3,4
 * sudo   slibclean
@@ -270,6 +315,7 @@ sudo lssecattr -c /usr/pmapi/tools/pmcycles
 * lsattr -El proc0
 * sudo pmcycles -m
 * sudo smtctl
+* lsmcode -c
 #### 6.2.1.2. Disk expansion
 * lsvg rootvg
 * df -g

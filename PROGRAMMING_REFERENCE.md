@@ -273,7 +273,7 @@ sudo lssecattr -c /usr/pmapi/tools/pmcycles
   ```
   Hope you are using smitty installp command.  To downgrade using smitty installp, set below options. Select the “SOFTWARE to install” list by selecting these 3 from the list “openssl.base, openssl.license, openssl.man.en_US”. Bold ones are the ones changed from default values.
   INPUT device / directory for software               .
-SOFTWARE to install                                [openssl.base                                                     ALL  @@I:openssl.base _all_filesets,openssl.license                  > +
+  SOFTWARE to install                              [openssl.base   ALL  @@I:openssl.base _all_filesets,openssl.license]
   PREVIEW only? (install operation will NOT occur)    no
   COMMIT software updates?                            yes
   SAVE replaced files?                                no

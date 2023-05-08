@@ -41,8 +41,6 @@ Table of Contents:
 		- [6.1.3. Core files on ubuntu](#613-core-files-on-ubuntu)
 	- [6.2. AIX](#62-aix)
 		- [6.2.1. system administration](#621-system-administration)
-- [define OPENSSL\_CONFIGURED\_API 10002](#define-openssl_configured_api-10002)
-- [define OPENSSL\_CONFIGURED\_API 30000](#define-openssl_configured_api-30000)
 			- [6.2.1.1. processors and configuration](#6211-processors-and-configuration)
 			- [6.2.1.2. Disk expansion](#6212-disk-expansion)
 			- [6.2.1.3. Upgrading to a new TL level:](#6213-upgrading-to-a-new-tl-level)
@@ -287,11 +285,11 @@ sudo lssecattr -c /usr/pmapi/tools/pmcycles
   Preview new LICENSE agreements?                     yes
   ``` 
 * OpenSSL version: You can grep for “grep OPENSSL_CONFIGURED_API config*“ which shows below output
-> grep OPENSSL_CONFIGURED_API config*
-# define OPENSSL_CONFIGURED_API 10002
+  grep OPENSSL_CONFIGURED_API config*
+  define OPENSSL_CONFIGURED_API 10002
 Whereas in TL1 SP1 you would see output as 
-> grep OPENSSL_CONFIGURED_API config*
-# define OPENSSL_CONFIGURED_API 30000
+  grep OPENSSL_CONFIGURED_API config*
+  define OPENSSL_CONFIGURED_API 30000
 * topas
 * nmon   n,t, 0,1,2,3,4
 * sudo   slibclean

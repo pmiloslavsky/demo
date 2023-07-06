@@ -216,7 +216,7 @@ Tokens: https://github.com/python/cpython/blob/main/Python/generated_cases.c.h
 * file
 * objdump   AIX: dump -X64 -t
 * strings -a
-* restore -qxvf libc++.rte.16.1.0.10.bff to see whats
+* restore -qxvf libc++.rte.16.1.0.10.bff to see whats in it
 ## 5.8. Signals
 * kill -l lists all signals
 * echo $? gives 128+signum that says what killed you
@@ -459,6 +459,8 @@ dnf install emacs-nox tar tcsh
 * cl -c /Zi /W3 test.cpp
 * link /debug /MACHINE:X64 test.obj C:\libfavoritedll.lib
 * & 'C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\MSBuild\Current\Bin\MSBuild' .\XXXtest.vcxproj -p:Configuration="Debug" -p:Platform="x64" -maxcpucount
+* /P to keep preprocessor
+* /showIncludes or <ShowIncludes>true</ShowIncludes> to see whats being included
 ### 6.3.2. Debugging python modules
 * Recompile your windows .pyd extension with debug See here: https://docs.microsoft.com/en-us/visualstudio/python/working-with-c-cpp-python-in-visual-studio?view=vs-2022    and here: https://stackoverflow.com/questions/28805401/debugging-my-python-c-extension-lead-to-pythreadstate-get-no-current-thread and here:
 https://stackoverflow.com/questions/66162568/lnk1104cannot-open-file-python39-d-lib

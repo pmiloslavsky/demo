@@ -34,11 +34,13 @@ Table of Contents:
 	- [5.7. What is in the executable?](#57-what-is-in-the-executable)
 	- [5.8. Signals](#58-signals)
 	- [5.9. gcc target options -march vs -mnative](#59-gcc-target-options--march-vs--mnative)
+	- [5.10. Huge Pages:](#510-huge-pages)
 - [6. OS specific](#6-os-specific)
 	- [6.1. Linux](#61-linux)
 		- [6.1.1. how to install perf on ubuntu](#611-how-to-install-perf-on-ubuntu)
 		- [6.1.2. system administration](#612-system-administration)
 		- [6.1.3. Core files on ubuntu](#613-core-files-on-ubuntu)
+		- [6.1.4. Linux Kernel crashes](#614-linux-kernel-crashes)
 	- [6.2. AIX](#62-aix)
 		- [6.2.1. system administration](#621-system-administration)
 			- [6.2.1.1. processors and configuration](#6211-processors-and-configuration)
@@ -49,9 +51,11 @@ Table of Contents:
 	- [6.3. Windows](#63-windows)
 		- [6.3.1. CLI compilation and linking](#631-cli-compilation-and-linking)
 		- [6.3.2. Debugging python modules](#632-debugging-python-modules)
-	- [6.4. Containers](#64-containers)
-		- [6.4.1. Docker Basic Commands](#641-docker-basic-commands)
-		- [6.4.2. podman](#642-podman)
+	- [6.4. Mac OS](#64-mac-os)
+		- [6.4.1. system administration](#641-system-administration)
+	- [6.5. Containers](#65-containers)
+		- [6.5.1. Docker Basic Commands](#651-docker-basic-commands)
+		- [6.5.2. podman](#652-podman)
 - [7. Unix tips](#7-unix-tips)
 	- [7.1. Common Unix Commands in different UNIX OS:](#71-common-unix-commands-in-different-unix-os)
 	- [7.2. Why is computer slow?](#72-why-is-computer-slow)
@@ -204,13 +208,14 @@ Tokens: https://github.com/python/cpython/blob/main/Python/generated_cases.c.h
 * sudo perf report
 ## 5.6. What is the process doing?
 * lsof
-* pmap
+* pmap   procmap on AIX
 * truss
 * strace
 * rlimit files, semaphores, stack size
 * ulimit
 * pldd  (procldd -F on AIX)
 * genld -ld (AIX)
+* proctree on AIX
 ## 5.7. What is in the executable?
 * ldd
 * file
@@ -226,6 +231,9 @@ Tokens: https://github.com/python/cpython/blob/main/Python/generated_cases.c.h
 * gcc -dumpmachine
 * gcc -march=native -Q --help=target
 * gcc -march=aarch64-redhat-linux -Q --help=target
+## 5.10. Huge Pages:
+https://docs.intersystems.com/irislatest/csp/docbook/DocBook.UI.Page.cls?KEY=ARES
+AIX: sudo vmstat -Pall
 # 6. OS specific
 ## 6.1. Linux
 * Search kernel source: https://elixir.bootlin.com/linux/v5.14.10/source
@@ -244,6 +252,8 @@ Tokens: https://github.com/python/cpython/blob/main/Python/generated_cases.c.h
 * repoquery -l rh-python38-python-devel
 *  dpkg-query -L libssh2-1
 *  If you have fatal conflicts you may need to wget packages and do rpm -Uvh *.rpm
+*  If you have conflicting packages and what to wipe dnf and start fresh do this:
+*  https://community.ibm.com/community/user/power/blogs/jan-harris1/2022/05/25/destroyrpms
 ### 6.1.3. Core files on ubuntu
 * if you dont want to struggle with apport you can do this:
 	sudo emacs /etc/security/limits.conf to have:
@@ -255,6 +265,11 @@ Tokens: https://github.com/python/cpython/blob/main/Python/generated_cases.c.h
 	# Controls whether core dumps will append the PID to the core filename.
 	kernel.core_uses_pid = 1
 	sudo sysctl --system
+### 6.1.4. Linux Kernel crashes
+for example wayland:
+dmesg
+journalctl -b -1 -e
+journalctl --list-boots
 ## 6.2. AIX
 ### 6.2.1. system administration
 * PTFs come from IBM's "Fix Central", while the GA images (with the embedded licenses) come from either Passport Advantage 
@@ -305,6 +320,10 @@ Whereas in TL1 SP1 you would see output as
 * dump -h libcrypto.a | grep :       to see what versions it supports
 * errpnt -a
 * ar -X64 -tv /usr/lib/libssl.a How to see whats in an AIX archive bundle
+* objdump -dS (from binutils in toolbox)
+* If you have an AIX problem you can type script /tmp/problem.log and do the commands and when finished type exit to generate a log file
+* smit failures leave /smit.log around
+
 #### 6.2.1.1. processors and configuration
 * lscfg -lproc\*
 * lparstat -i | grep CPU
@@ -400,6 +419,8 @@ shutdown -Fr
 #### 6.2.1.4. Compilers:
 * preprocessor defines: ibm-clang++_r -dM -E - < /dev/null
 * dissasembly /opt/IBM/xlc/16.1.0/exe/dis  produces a .s file silently
+* -blibpath
+* -blibsuff:so
 ### 6.2.2. Cloud server preparation
 setenv CLOUD xx.xx.xx.xx
 setenv IRIS IRIS-2023.2.0LDEV.133.0-ppc64.tar.gz
@@ -467,8 +488,13 @@ https://stackoverflow.com/questions/66162568/lnk1104cannot-open-file-python39-d-
 * Click on your 3.9.5 python installer and install the debug libraries symbols. Copy python39_d.dll and python39_d.pdb to where your application is. (instance/bin)
 * Get the 3.9.5 source code from here for later: https://www.python.org/downloads/source/
 * start python3 do os.getpid(), Use procmon to start debugging it since task manager doesnt work https://docs.microsoft.com/en-us/sysinternals/downloads/procmon
-## 6.4. Containers
-### 6.4.1. Docker Basic Commands
+
+## 6.4. Mac OS
+### 6.4.1. system administration
+xcodebuild -version
+sw_vers
+## 6.5. Containers
+### 6.5.1. Docker Basic Commands
 Install docker:
 https://docs.docker.com/engine/install/ubuntu/#installation-methods
 Hello world doesn’t work at first – eventually it started working for me
@@ -490,7 +516,7 @@ sudo docker network inspect bridge
 sudo docker network inspect host
 sudo docker exec -it iris ls -la /usr/irissys/bin/libirisHLL.so
 ```
-### 6.4.2. podman
+### 6.5.2. podman
 bash
 ps -p $$
 . /xxx/.podman_setup
@@ -526,6 +552,8 @@ strace -p $$
 # 7. Unix tips
 ## 7.1. Common Unix Commands in different UNIX OS:
 * A Sysadmin's Unixersal Translator (ROSETTA STONE) : http://bhami.com/rosetta.html
+* !-1 last command
+* bindkey "^R" i-search-back            to make CTRL-R reverse search work in tcsh
 ## 7.2. Why is computer slow?
 * top
 * free
@@ -539,6 +567,7 @@ strace -p $$
 * tmux ls
 * tmux attach-session -t 0
 * CTRL-B D  (detach)
+
 # 8. Editors
 ## 8.1. Emacs
 * M-: is eval  you can then type what hook

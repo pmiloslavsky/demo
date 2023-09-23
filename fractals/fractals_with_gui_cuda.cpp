@@ -2,6 +2,7 @@
 #include <signal.h>
 #include <SFML/Graphics.hpp>
 #include <TGUI/TGUI.hpp>
+#include <TGUI/Backend/SFML-Graphics.hpp>
 #include <chrono>
 #include <cmath>
 #include <complex>
@@ -1539,7 +1540,7 @@ void updateGuiElements(shared_ptr<tgui::Gui> &pgui,
                        shared_ptr<FractalModel> &p_model);
 
 void signalFractalMenu(shared_ptr<FractalModel> p_model,
-                       shared_ptr<tgui::Gui> pgui, const sf::String &selected) {
+                       shared_ptr<tgui::Gui> pgui, const tgui::String &selected) {
   for (size_t i = 0; i < FRAC.size(); ++i) {
     if (selected == FRAC[i].name) {
       p_model->current_fractal = i;
@@ -1552,12 +1553,13 @@ void signalFractalMenu(shared_ptr<FractalModel> p_model,
 }
 
 void signalPower(shared_ptr<FractalModel> p_model,
-                 shared_ptr<tgui::Gui> pgui, const sf::String &value) {
+                 shared_ptr<tgui::Gui> pgui, const tgui::String &value
+                 ) {
   updateGuiElements(pgui, p_model);
 
   double input = 2.0;
   try {
-    input = std::stod(value.toAnsiString());
+    input = std::stod(value.toStdString());  //.toAnsiString()
   }
   catch (const std::invalid_argument &ia) {
     cout << "Invalid " << ia.what() <<endl;
@@ -1569,10 +1571,10 @@ void signalPower(shared_ptr<FractalModel> p_model,
 }
 
 void signalMIters(shared_ptr<FractalModel> p_model,
-		  shared_ptr<tgui::Gui> pgui, int iter_ix, const sf::String &value) {
+		  shared_ptr<tgui::Gui> pgui, int iter_ix, const tgui::String &value) {
   unsigned int input = 2.0;
   try {
-    input = std::stoi(value.toAnsiString());
+    input = std::stoi(value.toStdString());
   }
   catch (const std::invalid_argument &ia) {
     cout << "Invalid " << ia.what() <<endl;
@@ -1582,12 +1584,12 @@ void signalMIters(shared_ptr<FractalModel> p_model,
 }
 
 void signalZconstr(shared_ptr<FractalModel> p_model,
-                   shared_ptr<tgui::Gui> pgui, const sf::String &value) {
+                   shared_ptr<tgui::Gui> pgui, const tgui::String &value) {
   updateGuiElements(pgui, p_model);
 
   double input = 0.0;
   try {
-    input = std::stod(value.toAnsiString());
+    input = std::stod(value.toStdString());
   }
   catch (const std::invalid_argument &ia) {
     cout << "Invalid " << ia.what() <<endl;
@@ -1599,12 +1601,12 @@ void signalZconstr(shared_ptr<FractalModel> p_model,
 }
 
 void signalZconsti(shared_ptr<FractalModel> p_model,
-                   shared_ptr<tgui::Gui> pgui, const sf::String &value) {
+                   shared_ptr<tgui::Gui> pgui, const tgui::String &value) {
   updateGuiElements(pgui, p_model);
 
   double input = 0.0;
   try {
-    input = std::stod(value.toAnsiString());
+    input = std::stod(value.toStdString());
   }
   catch (const std::invalid_argument &ia) {
     cout << "Invalid " << ia.what() <<endl;
@@ -1949,14 +1951,17 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   menu->addMenuItem("Use mouse wheel to zoom (some fractals)");
   menu->addMenuItem("Use right mouse button to recenter (some fractals)");
   menu->addMenuItem("Hold and drag left mouse button to zoom to cropped area (some fractals)");
-  menu->addMenuItem("Type h to hide/show gui");
+  menu->addMenuItem("Type h to hide/show fractal");
+  menu->addMenuItem("Type g to hide/show gui");
   menu->addMenuItem("Type s to take a screenshot");
   menu->addMenuItem("Type c to turn cuda on and off");
   menu->addMenuItem("Type f for fullscreen toggle (buggy)");
   menu->addMenuItem("Type e to exit");
 
   //pgui->add(menu); //added at end so its always on top
-  menu->connect("MenuItemClicked", signalFractalMenu, p_model, pgui);
+  for (auto frac : FRAC) {
+    menu->connectMenuItem("Fractal", frac.name, signalFractalMenu, p_model, pgui, frac.name);
+  }
 
   //Params Group  
   current = tgui::Label::create();
@@ -1970,7 +1975,7 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   editBox->setPosition("parent.left + 50", "parent.bottom - 150");
   editBox->setDefaultText("2");
   pgui->add(editBox, "power_box");
-  editBox->connect("TextChanged", signalPower, p_model, pgui);
+  editBox->onTextChange(signalPower, p_model, pgui);
 
   current = tgui::Label::create();
   current->setPosition("parent.left + 50", "parent.bottom - 210");
@@ -1983,7 +1988,7 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   editBox->setPosition("parent.left + 50 + 120", "parent.bottom - 150");
   editBox->setDefaultText("");
   pgui->add(editBox, "max_iters_box2");
-  editBox->connect("TextChanged", signalMIters, p_model, pgui,2);
+  editBox->onTextChange(signalMIters, p_model, pgui,2);
 
   editBox = tgui::EditBox::create();
   editBox->setSize(100, 20);
@@ -1991,7 +1996,7 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   editBox->setPosition("parent.left + 50 + 120", "parent.bottom - 180");
   editBox->setDefaultText("");
   pgui->add(editBox, "max_iters_box1");
-  editBox->connect("TextChanged", signalMIters, p_model, pgui,1);
+  editBox->onTextChange(signalMIters, p_model, pgui, 1);
 
   editBox = tgui::EditBox::create();
   editBox->setSize(100, 20);
@@ -1999,15 +2004,14 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   editBox->setPosition("parent.left + 50 + 120", "parent.bottom - 210");
   editBox->setDefaultText("");
   pgui->add(editBox, "max_iters_box0");
-  editBox->connect("TextChanged", signalMIters, p_model, pgui,0);
+  editBox->onTextChange(signalMIters, p_model, pgui, 0);
 
   auto cbox = tgui::CheckBox::create();
   cbox->setPosition("parent.left + 50 + 250", "parent.bottom - -210");
   cbox->setText("Random\nSample");
   cbox->setSize(30, 30);
   pgui->add(cbox, "RandomSample");
-  cbox->connect("Checked", signalSamplingButton, p_model);
-  cbox->connect("Unchecked", signalSamplingButton, p_model);
+  cbox->onChange(signalSamplingButton, p_model);
   cbox->setChecked(true);
 
 
@@ -2022,7 +2026,7 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   editBox->setPosition("parent.left + 50", "parent.bottom - 100");
   editBox->setDefaultText("0");
   pgui->add(editBox, "zconst_real_box");
-  editBox->connect("TextChanged", signalZconstr, p_model, pgui);
+  editBox->onTextChange(signalZconstr, p_model, pgui);
 
   editBox = tgui::EditBox::create();
   editBox->setSize(100, 20);
@@ -2030,7 +2034,7 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   editBox->setPosition("parent.left + 50 + 120", "parent.bottom - 100");
   editBox->setDefaultText("0");
   pgui->add(editBox, "zconst_imag_box");
-  editBox->connect("TextChanged", signalZconsti, p_model, pgui);
+  editBox->onTextChange(signalZconsti, p_model, pgui);
 
   //Save Fractal Group
 
@@ -2039,14 +2043,14 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   button->setText("Save Fractal");
   button->setSize(120, 30);
   pgui->add(button, "SaveFractal");
-  button->connect("Pressed", signalSaveFractal, p_model, pgui);
+  button->onPress(signalSaveFractal, p_model, pgui);
 
   button = tgui::Button::create();
   button->setPosition("parent.left + 400", "parent.bottom - 100");
   button->setText("Load Next Saved");
   button->setSize(120, 30);
   pgui->add(button, "LoadNextSaved");
-  button->connect("Pressed", signalLoadNextSaved, p_model, pgui);
+  button->onPress(signalLoadNextSaved, p_model, pgui);
 
   current = tgui::Label::create();
   current->setPosition("parent.left + 400", "parent.bottom - 50");
@@ -2058,21 +2062,21 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   button->setText("Import Keys");
   button->setSize(120, 30);
   pgui->add(button, "ImportKeys");
-  button->connect("Pressed", signalImportKeys, p_model, pgui);
+  button->onPress(signalImportKeys, p_model, pgui);
   
   button = tgui::Button::create();
   button->setPosition("parent.left + 600", "parent.bottom - 150");
   button->setText("Save Key");
   button->setSize(120, 30);
   pgui->add(button, "SaveKey");
-  button->connect("Pressed", signalSaveKey, p_model, pgui);
+  button->onPress(signalSaveKey, p_model, pgui);
 
   button = tgui::Button::create();
   button->setPosition("parent.left + 600", "parent.bottom - 100");
   button->setText("Load Next Key");
   button->setSize(120, 30);
   pgui->add(button, "LoadNextKey");
-  button->connect("Pressed", signalLoadNextKey, p_model, pgui);
+  button->onPress(signalLoadNextKey, p_model, pgui);
 
   current = tgui::Label::create();
   current->setPosition("parent.left + 600", "parent.bottom - 50");
@@ -2089,7 +2093,7 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   }
 
   pgui->add(lbox, "ColorBox");
-  lbox->connect("ItemSelected", signalColorBox);
+  lbox->onItemSelect(signalColorBox);
 
   lbox = tgui::ListBox::create();
   lbox->setPosition("parent.left + 900", "parent.bottom - 300");
@@ -2099,7 +2103,7 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   }
 
   pgui->add(lbox, "CycleBox");
-  lbox->connect("ItemSelected", signalColorCycleBox);
+  lbox->onItemSelect(signalColorCycleBox);
 
   // auto button = tgui::Button::create();
   // button->setPosition("parent.left + 900", "parent.bottom - 150");
@@ -2113,8 +2117,7 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   cbox->setText("Reflect");
   cbox->setSize(30, 30);
   pgui->add(cbox, "Reflect");
-  cbox->connect("Checked", signalButton);
-  cbox->connect("Unchecked", signalButton);
+  cbox->onChange(signalButton);
 
   lbox = tgui::ListBox::create();
   lbox->setPosition("parent.left + 900", "parent.bottom - 100");
@@ -2124,7 +2127,7 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   lbox->addItem("USE_IMAGE");
 
   pgui->add(lbox, "CAlgoBox");
-  lbox->connect("ItemSelected", signalCAlgoBox);
+  lbox->onItemSelect(signalCAlgoBox);
 
 
 
@@ -2410,9 +2413,9 @@ int main(int argc, char **argv) {
 
   // Create the gui and attach it to the window
   bool display_gui = true;
+  bool display_fractal = true;
   auto pgui = make_shared<tgui::Gui>(window);
-  tgui::Theme theme{"themes/BabyBlue.txt"};
-  tgui::Theme::setDefault(&theme);
+  tgui::Theme::setDefault("themes/BabyBlue.txt");
   createGuiElements(pgui, p_model);
   updateGuiElements(pgui, p_model);
 
@@ -2439,13 +2442,23 @@ int main(int argc, char **argv) {
       // Handle keyboard control commands
 
       if (event.type == sf::Event::KeyPressed) {
-        if (event.key.code == sf::Keyboard::H) {
+        if (event.key.code == sf::Keyboard::G) {
           if (display_gui == false) {
             display_gui = true;
             display_all_widgets(pgui, true);
           } else {
             display_gui = false;
             display_all_widgets(pgui, false);
+          }
+        }
+      }
+
+     if (event.type == sf::Event::KeyPressed) {
+        if (event.key.code == sf::Keyboard::H) {
+          if (display_fractal == false) {
+            display_fractal = true;
+          } else {
+            display_fractal = false;
           }
         }
       }
@@ -2571,7 +2584,7 @@ int main(int argc, char **argv) {
 
     window.clear();
     window.setView(modelview);
-    if (display_gui == false) window.draw(*p_model);  // draw fractals in gui off mode to save cpu
+    if (display_fractal == true) window.draw(*p_model);  // to save cpu
     if (R.show_selection)
       window.draw(selection);  //draw selection
     pgui->draw();           // Draw all GUI widgets

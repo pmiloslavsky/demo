@@ -15,7 +15,7 @@ To get buttons and sliders you need tgui library based on sfml
 Download TGUI-1.0 from
 https://github.com/texus/TGUI
 or 
-sudo add-apt-repository ppa:texus/tgui-1.0
+sudo add-apt-repository ppa:texus/tgui
 sudo apt-get update
-sudo apt-get install libtgui-dev
+sudo apt-get install libtgui-1.0-dev
 

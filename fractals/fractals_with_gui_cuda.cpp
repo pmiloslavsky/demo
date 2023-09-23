@@ -1923,12 +1923,12 @@ void signalZconsti(shared_ptr<FractalModel> p_model,
 }
 
 void signal_escape_r(shared_ptr<FractalModel> p_model,
-                     shared_ptr<tgui::Gui> pgui, const sf::String &value) {
+                     shared_ptr<tgui::Gui> pgui, const tgui::String &value) {
   updateGuiElements(pgui, p_model);
 
   double input = 0.0;
   try {
-    input = std::stod(value.toAnsiString());
+    input = std::stod(value.toStdString());
   } catch (const std::invalid_argument &ia) {
     cout << "Invalid " << ia.what() << endl;
     input = 0.0;
@@ -1983,10 +1983,10 @@ void signalButton() {
 
 // Interior Color
 void signalIntColorAdj(shared_ptr<FractalModel> p_model,
-                       shared_ptr<tgui::Gui> pgui, const sf::String &value) {
+                       shared_ptr<tgui::Gui> pgui, const tgui::String &value) {
   unsigned int input = 0;
   try {
-    input = (unsigned int)stoul(value.toAnsiString(),nullptr,0);
+    input = (unsigned int)stoul(value.toStdString(),nullptr,0);
     interior_color_adjust = input;
   } catch (const std::invalid_argument &ia) {
     cout << "Invalid " << ia.what() << endl;
@@ -2573,7 +2573,7 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   editBox->setPosition("parent.left + 50 + 120", "parent.bottom - 60");
   editBox->setDefaultText("0");
   pgui->add(editBox, "escape_r_box");
-  editBox->connect("TextChanged", signal_escape_r, p_model, pgui);
+  editBox->onTextChange(signal_escape_r, p_model, pgui);
 
   // Save Fractal Group
 
@@ -2608,7 +2608,7 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   button->setText("Save Key");
   button->setSize(120, 30);
   pgui->add(button, "SaveKey");
-  button->onPress(signalSaveKey, p_model, pgui);
+  button->onPress(signalSaveKey, p_model, pgui, "");
 
   button = tgui::Button::create();
   button->setPosition("parent.left + 600", "parent.bottom - 100");
@@ -2670,7 +2670,7 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   }
 
   pgui->add(lbox, "IntColorBox");
-  lbox->connect("ItemSelected", signalIntColorBox);
+  lbox->onItemSelect(signalIntColorBox);
 
   lbox = tgui::ListBox::create();
   lbox->setPosition("parent.left + 1100", "parent.bottom - 300");
@@ -2680,15 +2680,14 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   }
 
   pgui->add(lbox, "IntCycleBox");
-  lbox->connect("ItemSelected", signalIntColorCycleBox);
+  lbox->onItemSelect(signalIntColorCycleBox);
 
   cbox = tgui::CheckBox::create();
   cbox->setPosition("parent.left + 1100", "parent.bottom - 150");
   cbox->setText("Reflect");
   cbox->setSize(30, 30);
   pgui->add(cbox, "IntReflect");
-  cbox->connect("Checked", signalIntButton);
-  cbox->connect("Unchecked", signalIntButton);
+  cbox->onChange(signalIntButton);
 
   lbox = tgui::ListBox::create();
   lbox->setPosition("parent.left + 1100", "parent.bottom - 100");
@@ -2703,7 +2702,7 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   lbox->addItem("TEMP");
 
   pgui->add(lbox, "IntCAlgoBox");
-  lbox->connect("ItemSelected", signalIntCAlgoBox);
+  lbox->onItemSelect(signalIntCAlgoBox);
 
 
   editBox = tgui::EditBox::create();
@@ -2712,7 +2711,7 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   editBox->setPosition("parent.left + 1200", "parent.bottom - 300");
   editBox->setDefaultText("dec triple");
   pgui->add(editBox, "interior_color_adjust");
-  editBox->connect("TextChanged", signalIntColorAdj, p_model, pgui);
+  editBox->onTextChange(signalIntColorAdj, p_model, pgui);
 
   pgui->add(menu);  // to be on top
 }
@@ -2990,9 +2989,8 @@ int main(int argc, char **argv) {
     sf::Vector2u escape_image_dims = NSR.escape_image.getSize();
     R.escape_image_w = escape_image_dims.x;
     R.escape_image_h = escape_image_dims.y;
-    cout << "Loaded escape_image "
-         << escape_file1.c_str() << " Dims: " << R.escape_image_w << " "
-         << R.escape_image_h << endl;
+    cout << "Loaded escape_image " << escape_file1.c_str()
+         << " Dims: " << R.escape_image_w << " " << R.escape_image_h << endl;
     R.image_loaded = true;
   } else {
     cout << "missing escape_image.jpg[png] for fractal escape coloring" << endl;
@@ -3112,7 +3110,7 @@ int main(int argc, char **argv) {
         }
       }
 
-     if (event.type == sf::Event::KeyPressed) {
+      if (event.type == sf::Event::KeyPressed) {
         if (event.key.code == sf::Keyboard::H) {
           if (display_fractal == false) {
             display_fractal = true;
@@ -3122,19 +3120,14 @@ int main(int argc, char **argv) {
         }
       }
 
-      if (event.type == sf::Event::KeyPressed) {
-        if (event.key.code == sf::Keyboard::S) {
-          save_screenshot(window, FRAC[p_model->current_fractal].name, modelview, p_model, pgui, display_gui);
-        }
-      }
-
       if (event.key.code == sf::Keyboard::Z) {
-          update_and_draw = false;
-          for (unsigned int tix = 0; tix < num_threads; ++tix) {
-            thread_asked_to_reset[tix] = true;
-          }
-          LoadLast(p_model, pgui);
-          update_and_draw = true;
+        update_and_draw = false;
+        for (unsigned int tix = 0; tix < num_threads; ++tix) {
+          thread_asked_to_reset[tix] = true;
+        }
+        LoadLast(p_model, pgui);
+        update_and_draw = true;
+      }
 
       if (event.key.code == sf::Keyboard::P) {
           if (update_and_draw == false) {
@@ -3142,183 +3135,185 @@ int main(int argc, char **argv) {
           } else {
             update_and_draw = false;
           }
-      }
+       }
 
-      if (event.key.code == sf::Keyboard::S) {
+        if (event.key.code == sf::Keyboard::S) {
           save_screenshot(window, FRAC[p_model->current_fractal].name,
                           modelview, p_model, pgui, display_gui, "none");
-      }
-
-      if (event.type == sf::Event::KeyPressed) {
-        if (event.key.code == sf::Keyboard::E) {
-          window.close();
-          break;
-        } else if (event.key.code == sf::Keyboard::N) {
-          update_and_draw = false;
-          for (unsigned int tix = 0; tix < num_threads; ++tix) {
-            thread_asked_to_reset[tix] = true;
-          }
-          signalLoadNextEscape(p_model, pgui);
-          update_and_draw = true;
-        } else if (event.key.code == sf::Keyboard::C) {
-          if (FRAC[p_model->current_fractal].cuda_mode == true)
-            FRAC[p_model->current_fractal].cuda_mode = false;
-          else
-            FRAC[p_model->current_fractal].cuda_mode = true;
-        } else if (event.key.code == sf::Keyboard::F) {
-          // sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
-          // window.setSize(sf::Vector2u{screenDimensions.x,
-          // screenDimensions.y});
-          window.create(sf::VideoMode(screenDimensions.x, screenDimensions.y),
-                        "Fractals!", sf::Style::Fullscreen);
-          window.setSize(sf::Vector2u{screenDimensions.x, screenDimensions.y});
         }
-      }
 
-      // Handle Mouse
-      // Zoom the whole sim if mouse wheel moved
-      if (event.type == sf::Event::MouseWheelScrolled) {
-        if (event.mouseWheelScroll.wheel == sf::Mouse::VerticalWheel) {
-          SaveLast(p_model);
-          double newzoom =
-              get_new_zoom(modelview, event.mouseWheelScroll.delta);
-          cout << "New zoom: " << newzoom << endl;
-          p_model->zoomFractal(newzoom);
-          for (unsigned int tix = 0; tix < num_threads; ++tix) {
-            thread_asked_to_reset[tix] = true;
-          }
-        }
-      }
-
-      // record center for right mouse button and crop for left
-      if (event.type == sf::Event::MouseButtonPressed) {
-        if (event.mouseButton.button == sf::Mouse::Right) {
-          // Pan
-          SaveLast(p_model);
-          cout << "New center: ";
-          cout << "x: " << event.mouseButton.x;
-          cout << " y: " << event.mouseButton.y << endl;
-          p_model->panFractal(event.mouseButton.x, event.mouseButton.y);
-          for (unsigned int tix = 0; tix < num_threads; ++tix) {
-            thread_asked_to_reset[tix] = true;
+        if (event.type == sf::Event::KeyPressed) {
+          if (event.key.code == sf::Keyboard::E) {
+            window.close();
+            break;
+          } else if (event.key.code == sf::Keyboard::N) {
+            update_and_draw = false;
+            for (unsigned int tix = 0; tix < num_threads; ++tix) {
+              thread_asked_to_reset[tix] = true;
+            }
+            signalLoadNextEscape(p_model, pgui);
+            update_and_draw = true;
+          } else if (event.key.code == sf::Keyboard::C) {
+            if (FRAC[p_model->current_fractal].cuda_mode == true)
+              FRAC[p_model->current_fractal].cuda_mode = false;
+            else
+              FRAC[p_model->current_fractal].cuda_mode = true;
+          } else if (event.key.code == sf::Keyboard::F) {
+            // sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
+            // window.setSize(sf::Vector2u{screenDimensions.x,
+            // screenDimensions.y});
+            window.create(sf::VideoMode(screenDimensions.x, screenDimensions.y),
+                          "Fractals!", sf::Style::Fullscreen);
+            window.setSize(
+                sf::Vector2u{screenDimensions.x, screenDimensions.y});
           }
         }
 
-        if (event.mouseButton.button == sf::Mouse::Left) {
-          // Crop start
-          SaveLast(p_model);
-          crop_start_x = event.mouseButton.x;
-          crop_start_y = event.mouseButton.y;
-        }
-      }
-
-      // Crop finish
-      if (event.type == sf::Event::MouseButtonReleased) {
-        if (event.mouseButton.button == sf::Mouse::Left) {
-          crop_end_x = event.mouseButton.x;
-          crop_end_y = event.mouseButton.y;
-
-          // Hopefully this filters out menu clicks
-          if (abs(crop_end_x - crop_start_x) > 10) {
-            cout << "maintaining aspect ratio" << endl;
-            // We cant do this directly - we have to combine pan and zoom since
-            // they preserve aspect ratio
-            p_model->panFractal((crop_start_x + crop_end_x) / 2,
-                                (crop_start_y + crop_end_y) / 2);
-            // Now fake a new zoom -> update R.requested_zoom
-            R.requested_zoom =
-                R.requested_zoom *
-                (abs(crop_end_x - crop_start_x) / R.original_width);
-            p_model->zoomFractal(R.requested_zoom);
-            R.show_selection = false;
-            // tell threads to start drawing new stuff
+        // Handle Mouse
+        // Zoom the whole sim if mouse wheel moved
+        if (event.type == sf::Event::MouseWheelScrolled) {
+          if (event.mouseWheelScroll.wheel == sf::Mouse::VerticalWheel) {
+            SaveLast(p_model);
+            double newzoom =
+                get_new_zoom(modelview, event.mouseWheelScroll.delta);
+            cout << "New zoom: " << newzoom << endl;
+            p_model->zoomFractal(newzoom);
             for (unsigned int tix = 0; tix < num_threads; ++tix) {
               thread_asked_to_reset[tix] = true;
             }
           }
-          R.show_selection = false;
+        }
+
+        // record center for right mouse button and crop for left
+        if (event.type == sf::Event::MouseButtonPressed) {
+          if (event.mouseButton.button == sf::Mouse::Right) {
+            // Pan
+            SaveLast(p_model);
+            cout << "New center: ";
+            cout << "x: " << event.mouseButton.x;
+            cout << " y: " << event.mouseButton.y << endl;
+            p_model->panFractal(event.mouseButton.x, event.mouseButton.y);
+            for (unsigned int tix = 0; tix < num_threads; ++tix) {
+              thread_asked_to_reset[tix] = true;
+            }
+          }
+
+          if (event.mouseButton.button == sf::Mouse::Left) {
+            // Crop start
+            SaveLast(p_model);
+            crop_start_x = event.mouseButton.x;
+            crop_start_y = event.mouseButton.y;
+          }
+        }
+
+        // Crop finish
+        if (event.type == sf::Event::MouseButtonReleased) {
+          if (event.mouseButton.button == sf::Mouse::Left) {
+            crop_end_x = event.mouseButton.x;
+            crop_end_y = event.mouseButton.y;
+
+            // Hopefully this filters out menu clicks
+            if (abs(crop_end_x - crop_start_x) > 10) {
+              cout << "maintaining aspect ratio" << endl;
+              // We cant do this directly - we have to combine pan and zoom
+              // since they preserve aspect ratio
+              p_model->panFractal((crop_start_x + crop_end_x) / 2,
+                                  (crop_start_y + crop_end_y) / 2);
+              // Now fake a new zoom -> update R.requested_zoom
+              R.requested_zoom =
+                  R.requested_zoom *
+                  (abs(crop_end_x - crop_start_x) / R.original_width);
+              p_model->zoomFractal(R.requested_zoom);
+              R.show_selection = false;
+              // tell threads to start drawing new stuff
+              for (unsigned int tix = 0; tix < num_threads; ++tix) {
+                thread_asked_to_reset[tix] = true;
+              }
+            }
+            R.show_selection = false;
+          }
+        }
+
+        // Draw selection while button not released
+        if ((event.type == sf::Event::MouseMoved) &&
+            true == sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+          // Hopefully this filters out menu clicks
+          if (abs(crop_end_x - crop_start_x) > 10) {
+            selection.setSize(
+                sf::Vector2f(abs(crop_start_x - event.mouseMove.x),
+                             abs(crop_start_y - event.mouseMove.y)));
+            selection.setFillColor(sf::Color::Transparent);
+            selection.setPosition(crop_start_x, crop_start_y);
+
+            // set a 5-pixel wide orange outline
+            selection.setOutlineThickness(5);
+            selection.setOutlineColor(sf::Color(250, 150, 100));
+            R.show_selection = true;
+          }
+        }
+
+        // Handle the control coming from the gui
+        pgui->handleEvent(event);
+      }
+      ++frames;
+
+      if (update_and_draw) {
+        // Evolve the model independantly
+        sf::Time elapsed = clock_e.restart();
+        p_model->update(
+            elapsed);  // rebuild the pixels from what threads did in background
+
+        // Draw the GUI and the MODEL both of which are controlled by
+        // Keyboard, mouse, and gui elements
+        updateCurrentGuiElements(pgui, p_model, start.asSeconds(),
+                                 frames / start.asSeconds());
+
+        start = clock_s.getElapsedTime();
+
+        window.clear();
+        window.setView(modelview);
+        if (display_fractal == true)
+          window.draw(*p_model);  // draw fractals in gui off mode to save cpu
+        if (R.show_selection) window.draw(selection);  // draw mouse selection
+        pgui->draw();                                  // Draw all GUI widgets
+        window.display();  // if you always do this it will cause screen jitter,
+                           // but if you alt-tabe you will get white screen
+      }
+
+      bool done = true;
+      for (unsigned int tix = 0; tix < num_threads; ++tix) {
+        if (thread_iteration[tix] < 2) {
+          done = false;
+          break;
         }
       }
 
-      // Draw selection while button not released
-      if ((event.type == sf::Event::MouseMoved) &&
-          true == sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-        // Hopefully this filters out menu clicks
-        if (abs(crop_end_x - crop_start_x) > 10) {
-          selection.setSize(
-              sf::Vector2f(abs(crop_start_x - event.mouseMove.x),
-                           abs(crop_start_y - event.mouseMove.y)));
-          selection.setFillColor(sf::Color::Transparent);
-          selection.setPosition(crop_start_x, crop_start_y);
+      if ((save_and_exit) && (done)) {
+        // Evolve the model independantly
+        sf::Time elapsed = clock_e.restart();
+        p_model->update(
+            elapsed);  // rebuild the pixels from what threads did in background
 
-          // set a 5-pixel wide orange outline
-          selection.setOutlineThickness(5);
-          selection.setOutlineColor(sf::Color(250, 150, 100));
-          R.show_selection = true;
-        }
-      }
-
-      // Handle the control coming from the gui
-      pgui->handleEvent(event);
-    }
-    ++frames;
-
-    if (update_and_draw) {
-      // Evolve the model independantly
-      sf::Time elapsed = clock_e.restart();
-      p_model->update(
-          elapsed);  // rebuild the pixels from what threads did in background
-
-      // Draw the GUI and the MODEL both of which are controlled by
-      // Keyboard, mouse, and gui elements
-      updateCurrentGuiElements(pgui, p_model, start.asSeconds(),
-                               frames / start.asSeconds());
-
-      start = clock_s.getElapsedTime();
-
-      window.clear();
-      window.setView(modelview);
-      if (display_fractal == true) window.draw(*p_model);  // draw fractals in gui off mode to save cpu
-      if (R.show_selection) window.draw(selection);  // draw mouse selection
-      pgui->draw();                                  // Draw all GUI widgets
-      window.display();  // if you always do this it will cause screen jitter,
-                         // but if you alt-tabe you will get white screen
-    }
-
-    bool done = true;
-    for (unsigned int tix = 0; tix < num_threads; ++tix) {
-      if (thread_iteration[tix] < 2) {
-        done = false;
+        cout << "saving " << savename << endl;
+        // save screenshot
+        save_screenshot(window, FRAC[p_model->current_fractal].name, modelview,
+                        p_model, pgui, false, savename);
+        signalSaveKey(p_model, pgui, "changed_key");
+        window.close();
         break;
       }
     }
 
-    if ((save_and_exit) && (done)) {
-      // Evolve the model independantly
-      sf::Time elapsed = clock_e.restart();
-      p_model->update(
-          elapsed);  // rebuild the pixels from what threads did in background
-
-      cout << "saving " << savename << endl;
-      // save screenshot
-      save_screenshot(window, FRAC[p_model->current_fractal].name, modelview,
-                      p_model, pgui, false, savename);
-      signalSaveKey(p_model, pgui, "changed_key");
-      window.close();
-      break;
-    }
-  }
-
-  // terminate threads in thread pool
-  for (unsigned int tix = 0; tix < num_threads; ++tix) {
-    terminateThreadSignal[tix].set_value();
-    // to make it check for terminate
+    // terminate threads in thread pool
     for (unsigned int tix = 0; tix < num_threads; ++tix) {
-      thread_asked_to_reset[tix] = true;
+      terminateThreadSignal[tix].set_value();
+      // to make it check for terminate
+      for (unsigned int tix = 0; tix < num_threads; ++tix) {
+        thread_asked_to_reset[tix] = true;
+      }
+      threads[tix].join();
     }
-    threads[tix].join();
-  }
-  // cout << "joined threads" << endl;
+    // cout << "joined threads" << endl;
 
-  return 0;
+    return 0;
 }

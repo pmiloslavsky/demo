@@ -17,6 +17,8 @@ struct SupportedFractal {
   double default_power;
   std::complex<double> current_zconst;
   std::complex<double> default_zconst;
+  double current_escape_r;
+  double default_escape_r;
 };
 
 struct SampleStats {

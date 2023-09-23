@@ -12,10 +12,10 @@ or
 /usr/share/fonts on ubuntu
 
 To get buttons and sliders you need tgui library based on sfml
-Download TGUI-0.9-dev from
+Download TGUI-1.0 from
 https://github.com/texus/TGUI
 or 
-sudo add-apt-repository ppa:texus/tgui-0.8
+sudo add-apt-repository ppa:texus/tgui-1.0
 sudo apt-get update
 sudo apt-get install libtgui-dev
 

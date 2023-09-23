@@ -1,0 +1,382 @@
+Using /usr/local/ssl/ssl/openssl.cnf
+Disabling ENCRYPT_THEN_MAC for QAT
+Default:
+ TLS_AES_256_GCM_SHA384Available:
+* Cipher: PSK-AES128-CBC-SHA
+  Bits: 128
+  Used bits: 128
+  Version: SSLv3
+  Description: PSK-AES128-CBC-SHA      SSLv3 Kx=PSK      Au=PSK  Enc=AES(128)  Mac=SHA1
+
+* Cipher: PSK-AES128-CBC-SHA256
+  Bits: 128
+  Used bits: 128
+  Version: TLSv1.0
+  Description: PSK-AES128-CBC-SHA256   TLSv1 Kx=PSK      Au=PSK  Enc=AES(128)  Mac=SHA256
+
+* Cipher: AES128-SHA
+  Bits: 128
+  Used bits: 128
+  Version: SSLv3
+  Description: AES128-SHA              SSLv3 Kx=RSA      Au=RSA  Enc=AES(128)  Mac=SHA1
+
+* Cipher: DHE-PSK-AES128-CBC-SHA
+  Bits: 128
+  Used bits: 128
+  Version: SSLv3
+  Description: DHE-PSK-AES128-CBC-SHA  SSLv3 Kx=DHEPSK   Au=PSK  Enc=AES(128)  Mac=SHA1
+
+* Cipher: RSA-PSK-AES128-CBC-SHA
+  Bits: 128
+  Used bits: 128
+  Version: SSLv3
+  Description: RSA-PSK-AES128-CBC-SHA  SSLv3 Kx=RSAPSK   Au=RSA  Enc=AES(128)  Mac=SHA1
+
+* Cipher: DHE-PSK-AES128-CBC-SHA256
+  Bits: 128
+  Used bits: 128
+  Version: TLSv1.0
+  Description: DHE-PSK-AES128-CBC-SHA256 TLSv1 Kx=DHEPSK   Au=PSK  Enc=AES(128)  Mac=SHA256
+
+* Cipher: RSA-PSK-AES128-CBC-SHA256
+  Bits: 128
+  Used bits: 128
+  Version: TLSv1.0
+  Description: RSA-PSK-AES128-CBC-SHA256 TLSv1 Kx=RSAPSK   Au=RSA  Enc=AES(128)  Mac=SHA256
+
+* Cipher: SRP-AES-128-CBC-SHA
+  Bits: 128
+  Used bits: 128
+  Version: SSLv3
+  Description: SRP-AES-128-CBC-SHA     SSLv3 Kx=SRP      Au=SRP  Enc=AES(128)  Mac=SHA1
+
+* Cipher: SRP-RSA-AES-128-CBC-SHA
+  Bits: 128
+  Used bits: 128
+  Version: SSLv3
+  Description: SRP-RSA-AES-128-CBC-SHA SSLv3 Kx=SRP      Au=RSA  Enc=AES(128)  Mac=SHA1
+
+* Cipher: ECDHE-PSK-AES128-CBC-SHA
+  Bits: 128
+  Used bits: 128
+  Version: TLSv1.0
+  Description: ECDHE-PSK-AES128-CBC-SHA TLSv1 Kx=ECDHEPSK Au=PSK  Enc=AES(128)  Mac=SHA1
+
+* Cipher: ECDHE-PSK-AES128-CBC-SHA256
+  Bits: 128
+  Used bits: 128
+  Version: TLSv1.0
+  Description: ECDHE-PSK-AES128-CBC-SHA256 TLSv1 Kx=ECDHEPSK Au=PSK  Enc=AES(128)  Mac=SHA256
+
+* Cipher: PSK-AES256-CBC-SHA
+  Bits: 256
+  Used bits: 256
+  Version: SSLv3
+  Description: PSK-AES256-CBC-SHA      SSLv3 Kx=PSK      Au=PSK  Enc=AES(256)  Mac=SHA1
+
+* Cipher: PSK-AES256-CBC-SHA384
+  Bits: 256
+  Used bits: 256
+  Version: TLSv1.0
+  Description: PSK-AES256-CBC-SHA384   TLSv1 Kx=PSK      Au=PSK  Enc=AES(256)  Mac=SHA384
+
+* Cipher: AES256-SHA
+  Bits: 256
+  Used bits: 256
+  Version: SSLv3
+  Description: AES256-SHA              SSLv3 Kx=RSA      Au=RSA  Enc=AES(256)  Mac=SHA1
+
+* Cipher: DHE-PSK-AES256-CBC-SHA
+  Bits: 256
+  Used bits: 256
+  Version: SSLv3
+  Description: DHE-PSK-AES256-CBC-SHA  SSLv3 Kx=DHEPSK   Au=PSK  Enc=AES(256)  Mac=SHA1
+
+* Cipher: RSA-PSK-AES256-CBC-SHA
+  Bits: 256
+  Used bits: 256
+  Version: SSLv3
+  Description: RSA-PSK-AES256-CBC-SHA  SSLv3 Kx=RSAPSK   Au=RSA  Enc=AES(256)  Mac=SHA1
+
+* Cipher: DHE-PSK-AES256-CBC-SHA384
+  Bits: 256
+  Used bits: 256
+  Version: TLSv1.0
+  Description: DHE-PSK-AES256-CBC-SHA384 TLSv1 Kx=DHEPSK   Au=PSK  Enc=AES(256)  Mac=SHA384
+
+* Cipher: RSA-PSK-AES256-CBC-SHA384
+  Bits: 256
+  Used bits: 256
+  Version: TLSv1.0
+  Description: RSA-PSK-AES256-CBC-SHA384 TLSv1 Kx=RSAPSK   Au=RSA  Enc=AES(256)  Mac=SHA384
+
+* Cipher: SRP-AES-256-CBC-SHA
+  Bits: 256
+  Used bits: 256
+  Version: SSLv3
+  Description: SRP-AES-256-CBC-SHA     SSLv3 Kx=SRP      Au=SRP  Enc=AES(256)  Mac=SHA1
+
+* Cipher: SRP-RSA-AES-256-CBC-SHA
+  Bits: 256
+  Used bits: 256
+  Version: SSLv3
+  Description: SRP-RSA-AES-256-CBC-SHA SSLv3 Kx=SRP      Au=RSA  Enc=AES(256)  Mac=SHA1
+
+* Cipher: ECDHE-PSK-AES256-CBC-SHA
+  Bits: 256
+  Used bits: 256
+  Version: TLSv1.0
+  Description: ECDHE-PSK-AES256-CBC-SHA TLSv1 Kx=ECDHEPSK Au=PSK  Enc=AES(256)  Mac=SHA1
+
+* Cipher: ECDHE-PSK-AES256-CBC-SHA384
+  Bits: 256
+  Used bits: 256
+  Version: TLSv1.0
+  Description: ECDHE-PSK-AES256-CBC-SHA384 TLSv1 Kx=ECDHEPSK Au=PSK  Enc=AES(256)  Mac=SHA384
+
+* Cipher: AES128-SHA256
+  Bits: 128
+  Used bits: 128
+  Version: TLSv1.2
+  Description: AES128-SHA256           TLSv1.2 Kx=RSA      Au=RSA  Enc=AES(128)  Mac=SHA256
+
+* Cipher: AES256-SHA256
+  Bits: 256
+  Used bits: 256
+  Version: TLSv1.2
+  Description: AES256-SHA256           TLSv1.2 Kx=RSA      Au=RSA  Enc=AES(256)  Mac=SHA256
+
+* Cipher: PSK-AES128-GCM-SHA256
+  Bits: 128
+  Used bits: 128
+  Version: TLSv1.2
+  Description: PSK-AES128-GCM-SHA256   TLSv1.2 Kx=PSK      Au=PSK  Enc=AESGCM(128) Mac=AEAD
+
+* Cipher: AES128-GCM-SHA256
+  Bits: 128
+  Used bits: 128
+  Version: TLSv1.2
+  Description: AES128-GCM-SHA256       TLSv1.2 Kx=RSA      Au=RSA  Enc=AESGCM(128) Mac=AEAD
+
+* Cipher: DHE-PSK-AES128-GCM-SHA256
+  Bits: 128
+  Used bits: 128
+  Version: TLSv1.2
+  Description: DHE-PSK-AES128-GCM-SHA256 TLSv1.2 Kx=DHEPSK   Au=PSK  Enc=AESGCM(128) Mac=AEAD
+
+* Cipher: RSA-PSK-AES128-GCM-SHA256
+  Bits: 128
+  Used bits: 128
+  Version: TLSv1.2
+  Description: RSA-PSK-AES128-GCM-SHA256 TLSv1.2 Kx=RSAPSK   Au=RSA  Enc=AESGCM(128) Mac=AEAD
+
+* Cipher: PSK-CHACHA20-POLY1305
+  Bits: 256
+  Used bits: 256
+  Version: TLSv1.2
+  Description: PSK-CHACHA20-POLY1305   TLSv1.2 Kx=PSK      Au=PSK  Enc=CHACHA20/POLY1305(256) Mac=AEAD
+
+* Cipher: PSK-AES256-GCM-SHA384
+  Bits: 256
+  Used bits: 256
+  Version: TLSv1.2
+  Description: PSK-AES256-GCM-SHA384   TLSv1.2 Kx=PSK      Au=PSK  Enc=AESGCM(256) Mac=AEAD
+
+* Cipher: AES256-GCM-SHA384
+  Bits: 256
+  Used bits: 256
+  Version: TLSv1.2
+  Description: AES256-GCM-SHA384       TLSv1.2 Kx=RSA      Au=RSA  Enc=AESGCM(256) Mac=AEAD
+
+* Cipher: ECDHE-PSK-CHACHA20-POLY1305
+  Bits: 256
+  Used bits: 256
+  Version: TLSv1.2
+  Description: ECDHE-PSK-CHACHA20-POLY1305 TLSv1.2 Kx=ECDHEPSK Au=PSK  Enc=CHACHA20/POLY1305(256) Mac=AEAD
+
+* Cipher: DHE-PSK-CHACHA20-POLY1305
+  Bits: 256
+  Used bits: 256
+  Version: TLSv1.2
+  Description: DHE-PSK-CHACHA20-POLY1305 TLSv1.2 Kx=DHEPSK   Au=PSK  Enc=CHACHA20/POLY1305(256) Mac=AEAD
+
+* Cipher: RSA-PSK-CHACHA20-POLY1305
+  Bits: 256
+  Used bits: 256
+  Version: TLSv1.2
+  Description: RSA-PSK-CHACHA20-POLY1305 TLSv1.2 Kx=RSAPSK   Au=RSA  Enc=CHACHA20/POLY1305(256) Mac=AEAD
+
+* Cipher: DHE-PSK-AES256-GCM-SHA384
+  Bits: 256
+  Used bits: 256
+  Version: TLSv1.2
+  Description: DHE-PSK-AES256-GCM-SHA384 TLSv1.2 Kx=DHEPSK   Au=PSK  Enc=AESGCM(256) Mac=AEAD
+
+* Cipher: RSA-PSK-AES256-GCM-SHA384
+  Bits: 256
+  Used bits: 256
+  Version: TLSv1.2
+  Description: RSA-PSK-AES256-GCM-SHA384 TLSv1.2 Kx=RSAPSK   Au=RSA  Enc=AESGCM(256) Mac=AEAD
+
+* Cipher: DHE-RSA-AES128-SHA
+  Bits: 128
+  Used bits: 128
+  Version: SSLv3
+  Description: DHE-RSA-AES128-SHA      SSLv3 Kx=DH       Au=RSA  Enc=AES(128)  Mac=SHA1
+
+* Cipher: ECDHE-RSA-AES128-SHA
+  Bits: 128
+  Used bits: 128
+  Version: TLSv1.0
+  Description: ECDHE-RSA-AES128-SHA    TLSv1 Kx=ECDH     Au=RSA  Enc=AES(128)  Mac=SHA1
+
+* Cipher: ECDHE-ECDSA-AES128-SHA
+  Bits: 128
+  Used bits: 128
+  Version: TLSv1.0
+  Description: ECDHE-ECDSA-AES128-SHA  TLSv1 Kx=ECDH     Au=ECDSA Enc=AES(128)  Mac=SHA1
+
+* Cipher: DHE-RSA-AES256-SHA
+  Bits: 256
+  Used bits: 256
+  Version: SSLv3
+  Description: DHE-RSA-AES256-SHA      SSLv3 Kx=DH       Au=RSA  Enc=AES(256)  Mac=SHA1
+
+* Cipher: ECDHE-RSA-AES256-SHA
+  Bits: 256
+  Used bits: 256
+  Version: TLSv1.0
+  Description: ECDHE-RSA-AES256-SHA    TLSv1 Kx=ECDH     Au=RSA  Enc=AES(256)  Mac=SHA1
+
+* Cipher: ECDHE-ECDSA-AES256-SHA
+  Bits: 256
+  Used bits: 256
+  Version: TLSv1.0
+  Description: ECDHE-ECDSA-AES256-SHA  TLSv1 Kx=ECDH     Au=ECDSA Enc=AES(256)  Mac=SHA1
+
+* Cipher: DHE-RSA-AES128-SHA256
+  Bits: 128
+  Used bits: 128
+  Version: TLSv1.2
+  Description: DHE-RSA-AES128-SHA256   TLSv1.2 Kx=DH       Au=RSA  Enc=AES(128)  Mac=SHA256
+
+* Cipher: ECDHE-RSA-AES128-SHA256
+  Bits: 128
+  Used bits: 128
+  Version: TLSv1.2
+  Description: ECDHE-RSA-AES128-SHA256 TLSv1.2 Kx=ECDH     Au=RSA  Enc=AES(128)  Mac=SHA256
+
+* Cipher: ECDHE-ECDSA-AES128-SHA256
+  Bits: 128
+  Used bits: 128
+  Version: TLSv1.2
+  Description: ECDHE-ECDSA-AES128-SHA256 TLSv1.2 Kx=ECDH     Au=ECDSA Enc=AES(128)  Mac=SHA256
+
+* Cipher: DHE-RSA-AES256-SHA256
+  Bits: 256
+  Used bits: 256
+  Version: TLSv1.2
+  Description: DHE-RSA-AES256-SHA256   TLSv1.2 Kx=DH       Au=RSA  Enc=AES(256)  Mac=SHA256
+
+* Cipher: ECDHE-RSA-AES256-SHA384
+  Bits: 256
+  Used bits: 256
+  Version: TLSv1.2
+  Description: ECDHE-RSA-AES256-SHA384 TLSv1.2 Kx=ECDH     Au=RSA  Enc=AES(256)  Mac=SHA384
+
+* Cipher: ECDHE-ECDSA-AES256-SHA384
+  Bits: 256
+  Used bits: 256
+  Version: TLSv1.2
+  Description: ECDHE-ECDSA-AES256-SHA384 TLSv1.2 Kx=ECDH     Au=ECDSA Enc=AES(256)  Mac=SHA384
+
+* Cipher: DHE-RSA-AES128-GCM-SHA256
+  Bits: 128
+  Used bits: 128
+  Version: TLSv1.2
+  Description: DHE-RSA-AES128-GCM-SHA256 TLSv1.2 Kx=DH       Au=RSA  Enc=AESGCM(128) Mac=AEAD
+
+* Cipher: ECDHE-RSA-AES128-GCM-SHA256
+  Bits: 128
+  Used bits: 128
+  Version: TLSv1.2
+  Description: ECDHE-RSA-AES128-GCM-SHA256 TLSv1.2 Kx=ECDH     Au=RSA  Enc=AESGCM(128) Mac=AEAD
+
+* Cipher: ECDHE-ECDSA-AES128-GCM-SHA256
+  Bits: 128
+  Used bits: 128
+  Version: TLSv1.2
+  Description: ECDHE-ECDSA-AES128-GCM-SHA256 TLSv1.2 Kx=ECDH     Au=ECDSA Enc=AESGCM(128) Mac=AEAD
+
+* Cipher: DHE-RSA-CHACHA20-POLY1305
+  Bits: 256
+  Used bits: 256
+  Version: TLSv1.2
+  Description: DHE-RSA-CHACHA20-POLY1305 TLSv1.2 Kx=DH       Au=RSA  Enc=CHACHA20/POLY1305(256) Mac=AEAD
+
+* Cipher: ECDHE-RSA-CHACHA20-POLY1305
+  Bits: 256
+  Used bits: 256
+  Version: TLSv1.2
+  Description: ECDHE-RSA-CHACHA20-POLY1305 TLSv1.2 Kx=ECDH     Au=RSA  Enc=CHACHA20/POLY1305(256) Mac=AEAD
+
+* Cipher: ECDHE-ECDSA-CHACHA20-POLY1305
+  Bits: 256
+  Used bits: 256
+  Version: TLSv1.2
+  Description: ECDHE-ECDSA-CHACHA20-POLY1305 TLSv1.2 Kx=ECDH     Au=ECDSA Enc=CHACHA20/POLY1305(256) Mac=AEAD
+
+* Cipher: DHE-RSA-AES256-GCM-SHA384
+  Bits: 256
+  Used bits: 256
+  Version: TLSv1.2
+  Description: DHE-RSA-AES256-GCM-SHA384 TLSv1.2 Kx=DH       Au=RSA  Enc=AESGCM(256) Mac=AEAD
+
+* Cipher: ECDHE-RSA-AES256-GCM-SHA384
+  Bits: 256
+  Used bits: 256
+  Version: TLSv1.2
+  Description: ECDHE-RSA-AES256-GCM-SHA384 TLSv1.2 Kx=ECDH     Au=RSA  Enc=AESGCM(256) Mac=AEAD
+
+* Cipher: ECDHE-ECDSA-AES256-GCM-SHA384
+  Bits: 256
+  Used bits: 256
+  Version: TLSv1.2
+  Description: ECDHE-ECDSA-AES256-GCM-SHA384 TLSv1.2 Kx=ECDH     Au=ECDSA Enc=AESGCM(256) Mac=AEAD
+
+* Cipher: TLS_AES_128_GCM_SHA256
+  Bits: 128
+  Used bits: 128
+  Version: TLSv1.3
+  Description: TLS_AES_128_GCM_SHA256  TLSv1.3 Kx=any      Au=any  Enc=AESGCM(128) Mac=AEAD
+
+* Cipher: TLS_CHACHA20_POLY1305_SHA256
+  Bits: 256
+  Used bits: 256
+  Version: TLSv1.3
+  Description: TLS_CHACHA20_POLY1305_SHA256 TLSv1.3 Kx=any      Au=any  Enc=CHACHA20/POLY1305(256) Mac=AEAD
+
+* Cipher: TLS_AES_256_GCM_SHA384
+  Bits: 256
+  Used bits: 256
+  Version: TLSv1.3
+  Description: TLS_AES_256_GCM_SHA384  TLSv1.3 Kx=any      Au=any  Enc=AESGCM(256) Mac=AEAD
+
+
+Connected with ECDHE-RSA-AES256-GCM-SHA384 encryption TLSv1.2
+ECDHE-RSA-AES256-GCM-SHA384 TLSv1.2 Kx=ECDH     Au=RSA  Enc=AESGCM(256) Mac=AEAD
+
+Server certificates:
+Subject: /C=US/ST=MA/L=Boston/O=Intersystems/OU=Kernel/CN=QAT_TEST_PROGRAM/emailAddress=philip.miloslavsky@intersystems.com
+Issuer: /C=US/ST=MA/L=Boston/O=Intersystems/OU=Kernel/CN=QAT_TEST_PROGRAM/emailAddress=philip.miloslavsky@intersystems.com
+Starting send/receive cycles of 1000 messages
+Time taken: 3121.000000 micros for 1000 writes of 128 bytes,  bytes per second: 41.012496
+Time taken: 3198.000000 micros for 1000 writes of 256 bytes,  bytes per second: 80.050031
+Time taken: 3441.000000 micros for 1000 writes of 512 bytes,  bytes per second: 148.793955
+Time taken: 4019.000000 micros for 1000 writes of 1024 bytes,  bytes per second: 254.789749
+Time taken: 4984.000000 micros for 1000 writes of 2048 bytes,  bytes per second: 410.914928
+Time taken: 6432.000000 micros for 1000 writes of 4096 bytes,  bytes per second: 636.815920
+Time taken: 16280.000000 micros for 1000 writes of 8192 bytes,  bytes per second: 503.194103
+Time taken: 17977.000000 micros for 1000 writes of 16384 bytes,  bytes per second: 911.386772
+Time taken: 31865.000000 micros for 1000 writes of 32768 bytes,  bytes per second: 1028.338302
+Time taken: 61869.000000 micros for 1000 writes of 65536 bytes,  bytes per second: 1059.270394

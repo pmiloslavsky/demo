@@ -21,7 +21,7 @@ ax1.axis('off')
 plt.show()
 
 
-image = skimage.io.imread("Mandelbrot 30001-07-2021_19_50_01.png")
+image = skimage.io.imread("fractal7.png")
 
 swirled = swirl(image, rotation=0, strength=10, radius=1020)
 

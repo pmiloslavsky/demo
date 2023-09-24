@@ -408,11 +408,7 @@ vector<SupportedFractal> FRAC = {
      2},
 };
 
-bool update_and_draw = true;  // stop using cpu for a bit
 
-bool save_and_exit = true;
-
-bool hide = false;
 
 const int FRACTAL_VERSION{1};
 
@@ -1038,6 +1034,9 @@ void generate_buddhabrot_trail(const complex<double> &c, unsigned int iters_max,
 #define MAX_THREADS 32
 bool thread_asked_to_reset[MAX_THREADS];
 unsigned int thread_iteration[MAX_THREADS];
+bool update_and_draw;  // stop using cpu for a bit
+bool save_and_exit;
+bool hide = false;
 
 // need buddhabrot threads not to mess up model
 std::mutex thread_result_report_mutex;
@@ -1147,7 +1146,7 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
 
   // thread pool is currently started outside the model
   void fractal_thread(int tix, std::future<void> terminate, bool *p_reset,
-                      unsigned int *p_iteration) {
+                      unsigned int *p_iteration, bool * p_update_and_draw) {
     // cout << "fractal thread " << tix << " running with oversampling: " << 4.0
     // << endl;
 
@@ -1185,8 +1184,9 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
       }
 
       // Don't update if we want to pause cpu usage
-      if (update_and_draw == false) {
+      if (*p_update_and_draw == false) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        //std::cout << "sleep thread requested: " << tix << std::endl;
         continue;
       }
 
@@ -1197,7 +1197,7 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
       // Non Probabalistic fractals
       if (FRAC[current_fractal].probabalistic != true) {
         reset_detected = getImagePixels(R.xstart, R.ystart, R.xdelta, R.ydelta,
-                                        tix, p_reset);
+                                        tix, p_reset, p_update_and_draw);
         if (reset_detected == true) {
           reset_detected = false;
           // Clear any data generated so far
@@ -1582,7 +1582,8 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
   }
 
   bool getImagePixels(double xstart, double ystart, double xdelta,
-                      double ydelta, unsigned int tix, bool *p_reset) {
+                      double ydelta, unsigned int tix, bool *p_reset,
+                      bool *p_update_and_draw) {
     bool reset_detected = false;
 
     // Subdivide x range by tix and num_threads
@@ -1646,6 +1647,9 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
       }
 
       if (reset_detected == true) break;
+      if (*p_update_and_draw == true) {
+        //break;
+      }
     }
     hitsums = (unsigned long long)(R.original_width * R.original_height);
 
@@ -2716,7 +2720,6 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   editBox->setDefaultText("dec triple");
   pgui->add(editBox, "interior_color_adjust");
   editBox->onTextChange(signalIntColorAdj, p_model, pgui);
-  editBox->setDefaultText("dec triple");
 
   pgui->add(menu);  // to be on top
 
@@ -3020,6 +3023,8 @@ int main(int argc, char **argv) {
   // p_model->cudaTest();
   if (!save_and_exit) p_model->cudaPresent();
 
+  if (!save_and_exit) update_and_draw = true;
+
   // Create the worker threads:
   cout << "Machine supports " << thread::hardware_concurrency()
        << " simultaneous threads" << endl;
@@ -3048,19 +3053,21 @@ int main(int argc, char **argv) {
   // thread termination output: merges hits into model under a mutex
   for (unsigned int tix = 0; tix < num_threads; ++tix) {
     std::future<void> futureObj = terminateThreadSignal[tix].get_future();
-
+    
     threads[tix] = thread(&FractalModel::fractal_thread, p_model, tix,
                           std::move(futureObj), &thread_asked_to_reset[0],
-                          &thread_iteration[0]);
+                          &thread_iteration[0], &update_and_draw);
   }
 
   bool display_gui = true;
   bool display_fractal = true;
   auto pgui = make_shared<tgui::Gui>(window);
 #ifdef _WINDOWS
-  tgui::Theme::setDefault("../../../themes/BabyBlue.txt");
+  tgui::Theme theme;
+  theme.load("..\\..\\..\\themes\\Black.txt");
+  tgui::Theme::setDefault(make_shared<tgui::Theme>(theme));
 #else
-  tgui::Theme::setDefault("themes/BabyBlue.txt");
+  tgui::Theme::setDefault("themes/Black.txt");
 #endif
   createGuiElements(pgui, p_model);
   updateGuiElements(pgui, p_model);
@@ -3114,9 +3121,7 @@ int main(int argc, char **argv) {
             display_all_widgets(pgui, false);
           }
         }
-      }
 
-      if (event.type == sf::Event::KeyPressed) {
         if (event.key.code == sf::Keyboard::H) {
           if (display_fractal == false) {
             display_fractal = true;
@@ -3124,56 +3129,66 @@ int main(int argc, char **argv) {
             display_fractal = false;
           }
         }
-      }
 
-      if (event.key.code == sf::Keyboard::Z) {
-        update_and_draw = false;
-        for (unsigned int tix = 0; tix < num_threads; ++tix) {
-          thread_asked_to_reset[tix] = true;
+        else if (event.key.code == sf::Keyboard::Z) {
+          update_and_draw = false;
+          cout << " Z update paused " << endl;
+
+          for (unsigned int tix = 0; tix < num_threads; ++tix) {
+            thread_asked_to_reset[tix] = true;
+          }
+          LoadLast(p_model, pgui);
+          update_and_draw = true;
         }
-        LoadLast(p_model, pgui);
-        update_and_draw = true;
-      }
 
-      if (event.key.code == sf::Keyboard::P) {
+        else if (event.key.code == sf::Keyboard::P) {
           if (update_and_draw == false) {
             update_and_draw = true;
+            frames = 0;
+            start = clock_s.restart();
           } else {
             update_and_draw = false;
-          }
-       }
+            cout << " P update paused " << endl;
 
-        if (event.key.code == sf::Keyboard::S) {
+            frames = 0;
+            start = clock_s.restart();
+          }
+        }
+
+        else if (event.key.code == sf::Keyboard::S) {
           save_screenshot(window, FRAC[p_model->current_fractal].name,
                           modelview, p_model, pgui, display_gui, "none");
         }
 
-        if (event.type == sf::Event::KeyPressed) {
-          if (event.key.code == sf::Keyboard::E) {
-            window.close();
-            break;
-          } else if (event.key.code == sf::Keyboard::N) {
-            update_and_draw = false;
-            for (unsigned int tix = 0; tix < num_threads; ++tix) {
-              thread_asked_to_reset[tix] = true;
-            }
-            signalLoadNextEscape(p_model, pgui);
-            update_and_draw = true;
-          } else if (event.key.code == sf::Keyboard::C) {
-            if (FRAC[p_model->current_fractal].cuda_mode == true)
-              FRAC[p_model->current_fractal].cuda_mode = false;
-            else
-              FRAC[p_model->current_fractal].cuda_mode = true;
-          } else if (event.key.code == sf::Keyboard::F) {
-            // sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
-            // window.setSize(sf::Vector2u{screenDimensions.x,
-            // screenDimensions.y});
-            window.create(sf::VideoMode(screenDimensions.x, screenDimensions.y),
-                          "Fractals!", sf::Style::Fullscreen);
-            window.setSize(
-                sf::Vector2u{screenDimensions.x, screenDimensions.y});
+        if (event.key.code == sf::Keyboard::E) {
+          window.close();
+          break;
+        } else if (event.key.code == sf::Keyboard::N) {
+          update_and_draw = false;
+          cout << " N update paused " << endl;
+
+          for (unsigned int tix = 0; tix < num_threads; ++tix) {
+            thread_asked_to_reset[tix] = true;
           }
+          signalLoadNextEscape(p_model, pgui);
+          update_and_draw = true;
         }
+
+        else if (event.key.code == sf::Keyboard::C) {
+          if (FRAC[p_model->current_fractal].cuda_mode == true)
+            FRAC[p_model->current_fractal].cuda_mode = false;
+          else
+            FRAC[p_model->current_fractal].cuda_mode = true;
+        } else if (event.key.code == sf::Keyboard::F) {
+          // sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
+          // window.setSize(sf::Vector2u{screenDimensions.x,
+          // screenDimensions.y});
+          window.create(sf::VideoMode(screenDimensions.x, screenDimensions.y),
+                        "Fractals!", sf::Style::Fullscreen);
+          window.setSize(sf::Vector2u{screenDimensions.x, screenDimensions.y});
+        }
+      }
+      
 
         // Handle Mouse
         // Zoom the whole sim if mouse wheel moved
@@ -3258,7 +3273,7 @@ int main(int argc, char **argv) {
           }
         }
 
-        // Handle the control coming from the gui
+        // Clear the control coming from the gui
         pgui->handleEvent(event);
       }
       ++frames;

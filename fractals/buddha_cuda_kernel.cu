@@ -71,19 +71,19 @@ void cudaPrintDeviceProperties(cudaDeviceProp & devProp) {
     printf("Major revision number:         %d\n",  devProp.major);
     printf("Minor revision number:         %d\n",  devProp.minor);
     printf("Name:                          %s\n",  devProp.name);
-    printf("Total global memory:           %lu\n",  devProp.totalGlobalMem);
-    printf("Total shared memory per block: %lu\n",  devProp.sharedMemPerBlock);
+    printf("Total global memory:           %llu\n",  devProp.totalGlobalMem);
+    printf("Total shared memory per block: %llu\n",  devProp.sharedMemPerBlock);
     printf("Total registers per block:     %d\n",  devProp.regsPerBlock);
     printf("Warp size:                     %d\n",  devProp.warpSize);
-    printf("Maximum memory pitch:          %lu\n",  devProp.memPitch);
+    printf("Maximum memory pitch:          %llu\n",  devProp.memPitch);
     printf("Maximum threads per block:     %d\n",  devProp.maxThreadsPerBlock);
     for (int i = 0; i < 3; ++i)
     printf("Maximum dimension %d of block:  %d\n", i, devProp.maxThreadsDim[i]);
     for (int i = 0; i < 3; ++i)
     printf("Maximum dimension %d of grid:   %d\n", i, devProp.maxGridSize[i]);
     printf("Clock rate:                    %d\n",  devProp.clockRate);
-    printf("Total constant memory:         %lu\n",  devProp.totalConstMem);
-    printf("Texture alignment:             %lu\n",  devProp.textureAlignment);
+    printf("Total constant memory:         %llu\n",  devProp.totalConstMem);
+    printf("Texture alignment:             %llu\n",  devProp.textureAlignment);
     printf("Concurrent copy and execution: %s\n",  (devProp.deviceOverlap ? "Yes" : "No"));
     printf("Number of multiprocessors:     %d\n",  devProp.multiProcessorCount);
     printf("Kernel execution timeout:      %s\n",  (devProp.kernelExecTimeoutEnabled ? "Yes" : "No"));
@@ -119,9 +119,9 @@ int cuda_vec_add(unsigned int w, unsigned int h) {
   cout << "CUDA Test: vector add" << endl;
   const int n = w*h;
 
-  vector<float> h_a(n, 1.1);
-  vector<float> h_b(n, 2.2);
-  vector<float> h_c(n, 0.0);
+  vector<float> h_a(n, 1.1f);
+  vector<float> h_b(n, 2.2f);
+  vector<float> h_c(n, 0.0f);
 
   float *d_a, *d_b, *d_c;
   cudaMalloc(&d_a, n*sizeof(float));
@@ -576,27 +576,27 @@ int cuda_generate_buddhabrot_hits(unsigned int w, unsigned int h, SupportedFract
    // The need for this code probably shows we need to redo our arrays
    redHits.resize(w);
    for (auto &v : redHits) v.resize(h);
-   for (int i = 0; i < w; ++i)
+   for (unsigned int i = 0; i < w; ++i)
    {
-     for (int j = 0; j < h; ++j) {
+     for (unsigned int j = 0; j < h; ++j) {
        redHits[i][j] = rH[i+j*w];
      }
    }
    
    greenHits.resize(w);
    for (auto &v : greenHits) v.resize(h);
-   for (int i = 0; i < w; ++i)
+   for (unsigned int i = 0; i < w; ++i)
    {
-     for (int j = 0; j < h; ++j) {
+     for (unsigned int j = 0; j < h; ++j) {
        greenHits[i][j] = gH[i+j*w];
      }
    }
    
    blueHits.resize(w);
    for (auto &v : blueHits) v.resize(h);
-      for (int i = 0; i < w; ++i)
+      for (unsigned int i = 0; i < w; ++i)
    {
-     for (int j = 0; j < h; ++j) {
+     for (unsigned int j = 0; j < h; ++j) {
        blueHits[i][j] = bH[i+j*w];
      }
    }

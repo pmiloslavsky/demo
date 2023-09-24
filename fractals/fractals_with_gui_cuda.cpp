@@ -466,8 +466,8 @@ inline void get_iteration_color(const int iter_ix, const int iters_max,
     yi = abs(modf(zfinal.imag() * 2, &ri));
     // xi = abs(zfinal.real() - (long long)zfinal.real());
     // yi = abs(zfinal.imag() - (long long)zfinal.imag());
-    sf::Color color = NSR.escape_image.getPixel(xi * (R.escape_image_w - 1),
-                                                yi * (R.escape_image_h - 1));
+    sf::Color color = NSR.escape_image.getPixel((unsigned int)(xi * (R.escape_image_w - 1)),
+                                                (unsigned int)(yi * (R.escape_image_h - 1)));
     *p_rcolor = color.r;
     *p_gcolor = color.g;
     *p_bcolor = color.b;
@@ -506,9 +506,9 @@ inline void get_iteration_color(const int iter_ix, const int iters_max,
       color = tinycolormap::GetColor(
           i / static_cast<double>(R.color_cycle_size), R.palette);
 
-    *p_rcolor = 255 * color.r();
-    *p_gcolor = 255 * color.g();
-    *p_bcolor = 255 * color.b();
+    *p_rcolor = (int)(255 * color.r());
+    *p_gcolor = (int)(255 * color.g());
+    *p_bcolor = (int)(255 * color.b());
 #endif
     return;
   }
@@ -558,9 +558,9 @@ inline void get_iteration_color(const int iter_ix, const int iters_max,
       color = tinycolormap::GetColor(
           i / static_cast<double>(R.color_cycle_size), R.palette);
 
-    *p_rcolor = 255 * color.r();
-    *p_gcolor = 255 * color.g();
-    *p_bcolor = 255 * color.b();
+    *p_rcolor = (int)(255 * color.r());
+    *p_gcolor = (int)(255 * color.g());
+    *p_bcolor = (int)(255 * color.b());
   } else if (R.color_algo == ColoringAlgo::SMOOTH) {
     double smooth = ((iter_ix + 1 - log(log2(abs(zfinal)))));  // 0 -> iters_max
     tinycolormap::Color color(0.0, 0.0, 0.0);
@@ -569,9 +569,9 @@ inline void get_iteration_color(const int iter_ix, const int iters_max,
     else
       color = tinycolormap::GetColor(smooth / iters_max, R.palette);
 
-    *p_rcolor = 255 * color.r();
-    *p_gcolor = 255 * color.g();
-    *p_bcolor = 255 * color.b();
+    *p_rcolor = (int)(255 * color.r());
+    *p_gcolor = (int)(255 * color.g());
+    *p_bcolor = (int)(255 * color.b());
   }
   return;
 
@@ -663,9 +663,9 @@ inline void get_iteration_interior_color(const complex<double> &zstart,
         color = tinycolormap::GetColor(
             i / static_cast<double>(RI.color_cycle_size), RI.palette);
 
-      *p_rcolor = 255 * color.r();
-      *p_gcolor = 255 * color.g();
-      *p_bcolor = 255 * color.b();
+      *p_rcolor = (unsigned int)(255 * color.r());
+      *p_gcolor = (unsigned int)(255 * color.g());
+      *p_bcolor = (unsigned int)(255 * color.b());
       return;
     } break;
     case InteriorColoringAlgo::USE_IMAGE: {
@@ -680,58 +680,62 @@ inline void get_iteration_interior_color(const complex<double> &zstart,
       // yi = abs(zstart.imag() - (long long)zstart.imag());
       double xp = (xi) * (R.escape_image_w - 1);
       double yp = (yi) * (R.escape_image_h - 1);
-      sf::Color color = NSR.escape_image.getPixel(xp, yp);
+      sf::Color color = NSR.escape_image.getPixel((unsigned int)xp, (unsigned int)yp);
       *p_rcolor = color.r;
       *p_gcolor = color.g;
       *p_bcolor = color.b;
       return;
     } break;
     case InteriorColoringAlgo::TRIG: {
-      *p_rcolor = 255 * (cos(zfinal.imag() + zfinal.real())) * 0.1 *
+      *p_rcolor = (int)(255 * (cos(zfinal.imag() + zfinal.real())) * 0.1 *
                   ((interior_color_adjust / R.displayed_zoom) *
-                   (distancer + distancei))  / (iters_max);
-      *p_gcolor = 255 * (sin(zfinal.real() + zfinal.real())) * 0.1 *
+                   (distancer + distancei))  / (iters_max));
+      *p_gcolor = (int)(255 * (sin(zfinal.real() + zfinal.real())) * 0.1 *
                   ((interior_color_adjust / R.displayed_zoom) *
-                   (distancer + distancei))  / (iters_max);
-      *p_bcolor = 255 * (atan(zfinal.imag() + zfinal.real())) * 0.1 *
+                   (distancer + distancei))  / (iters_max));
+      *p_bcolor = (int)(255 * (atan(zfinal.imag() + zfinal.real())) * 0.1 *
                   ((interior_color_adjust / R.displayed_zoom) *
-                   (distancer + distancei)) / (iters_max);
+                   (distancer + distancei)) / (iters_max));
       return;
     } break;
     case InteriorColoringAlgo::TRIG2: {
       return;
     } break;
     case InteriorColoringAlgo::DIST: {
-      *p_rcolor = interior_color_adjust * 255 * (distancer) / (iters_max);
-      *p_gcolor = interior_color_adjust * 255 * (distancei) / (iters_max);
-      *p_bcolor = interior_color_adjust * 255 * (distancer + distancei) / (iters_max);
+      *p_rcolor = (int)(interior_color_adjust * 255 * (distancer) / (iters_max));
+      *p_gcolor = (int)(interior_color_adjust * 255 * (distancei) / (iters_max));
+      *p_bcolor = (int)(interior_color_adjust * 255 * (distancer + distancei) /
+                        (iters_max));
       return;
     } break;
     case InteriorColoringAlgo::DIST2: {
-      *p_rcolor = 255.0 * (cos(distancer + distancei)) *
-                  ((1.0/interior_color_adjust) *
-                   (distancer + distancei)) /
-                  (iters_max);
-      *p_gcolor = 255.0 * (sin(distancer + distancei)) *
-                  ((1.0 / interior_color_adjust) *
-                   (distancer + distancei)) /
-                  (iters_max);
-      *p_bcolor = 255.0 * (atan(distancer + distancei)) *
-                  ((1.0 / interior_color_adjust) *
-                   (distancer + distancei)) /
-                  (iters_max);
+      *p_rcolor =
+          (int)(255.0 * (cos(distancer + distancei)) *
+                ((1.0 / interior_color_adjust) * (distancer + distancei)) /
+                (iters_max));
+      *p_gcolor =
+          (int)(255.0 * (sin(distancer + distancei)) *
+                ((1.0 / interior_color_adjust) * (distancer + distancei)) /
+                (iters_max));
+      *p_bcolor =
+          (int)(255.0 * (atan(distancer + distancei)) *
+                ((1.0 / interior_color_adjust) * (distancer + distancei)) /
+                (iters_max));
       return;
     } break;
     case InteriorColoringAlgo::TEMP: {
-      *p_rcolor = 255.0 * (cos(distancer) + sin(distancei)) *
-                  ((1.0/interior_color_adjust) * (distancer + distancei)) /
-                  (iters_max);
-      *p_gcolor = 255.0 * (sin(distancer) + cos(distancei)) *
-                  ((1.0/interior_color_adjust) * (distancer + distancei)) /
-                  (iters_max);
-      *p_bcolor = 255.0 * ((distancer + distancei)) *
-                  ((1.0/interior_color_adjust) * (distancer + distancei)) /
-                  (iters_max);
+      *p_rcolor =
+          (int)(255.0 * (cos(distancer) + sin(distancei)) *
+                ((1.0 / interior_color_adjust) * (distancer + distancei)) /
+                (iters_max));
+      *p_gcolor =
+          (int)(255.0 * (sin(distancer) + cos(distancei)) *
+                ((1.0 / interior_color_adjust) * (distancer + distancei)) /
+                (iters_max));
+      *p_bcolor =
+          (int)(255.0 * ((distancer + distancei)) *
+                ((1.0 / interior_color_adjust) * (distancer + distancei)) /
+                (iters_max));
       return;
       return;
     } break;
@@ -938,7 +942,7 @@ void newton_z6_iterations_to_escape(double x, double y, unsigned int iters_max,
 }
 
 void generate_buddhabrot_trail(const complex<double> &c, unsigned int iters_max,
-                               vector<complex<double>> &trail, int power,
+                               vector<complex<double>> &trail, double power,
                                complex<double> zconst, double escape_r,
                                bool julia, bool anti, unsigned long long &in,
                                unsigned long long &out) {
@@ -1325,8 +1329,8 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
           (c.imag() >= miny)) {
         // depending on the cast here you might get a faint gridline in your
         // image so be careful
-        int x = ((c.real() - minx) * R.original_width) / (maxx - minx);
-        int y = ((c.imag() - miny) * R.original_height) / (maxy - miny);
+        int x = (int)(((c.real() - minx) * R.original_width) / (maxx - minx));
+        int y = (int)(((c.imag() - miny) * R.original_height) / (maxy - miny));
 
         colorTrailHits[x][y]++;
       }
@@ -1534,19 +1538,19 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
         // sqrt normalized coloring - more detail
         double rratio =
             static_cast<double>(255) / sqrt(static_cast<double>(maxred));
-        int rcolor = sqrt(redTrailHits[i][j]) * rratio;
+        int rcolor = (int)(sqrt(redTrailHits[i][j]) * rratio);
         pcolor = pcolor + sf::Color(rcolor, 0, 0);
         hitsums += redTrailHits[i][j];
 
         double gratio =
             static_cast<double>(255) / sqrt(static_cast<double>(maxgreen));
-        int gcolor = sqrt(greenTrailHits[i][j]) * gratio;
+        int gcolor = (int)(sqrt(greenTrailHits[i][j]) * gratio);
         pcolor = pcolor + sf::Color(0, gcolor, 0);
         hitsums += greenTrailHits[i][j];
 
         double bratio =
             static_cast<double>(255) / sqrt(static_cast<double>(maxblue));
-        int bcolor = sqrt(blueTrailHits[i][j]) * bratio;
+        int bcolor = (int)(sqrt(blueTrailHits[i][j]) * bratio);
         pcolor = pcolor + sf::Color(0, 0, bcolor);
         hitsums += blueTrailHits[i][j];
 
@@ -1582,10 +1586,10 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
     bool reset_detected = false;
 
     // Subdivide x range by tix and num_threads
-    unsigned int xrange = R.original_width / num_threads;
+    unsigned int xrange = (unsigned int)(R.original_width / num_threads);
     unsigned int xs = tix * xrange;
     unsigned int xe = (tix + 1) * xrange;
-    if (tix == num_threads - 1) xe = R.original_width;
+    if (tix == num_threads - 1) xe = (unsigned int)R.original_width;
 
     for (unsigned int i = xs; i < xe; i++) {
       for (unsigned int j = 0; j < R.original_height; j++) {
@@ -1643,7 +1647,7 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
 
       if (reset_detected == true) break;
     }
-    hitsums = R.original_width * R.original_height;
+    hitsums = (unsigned long long)(R.original_width * R.original_height);
 
     return reset_detected;
   }
@@ -1846,7 +1850,7 @@ void signalFractalMenu(shared_ptr<FractalModel> p_model,
                        shared_ptr<tgui::Gui> pgui, const tgui::String &selected) {
   for (size_t i = 0; i < FRAC.size(); ++i) {
     if (selected == FRAC[i].name) {
-      p_model->current_fractal = i;
+      p_model->current_fractal = (unsigned int)i;
     }
   }
   updateGuiElements(pgui, p_model);
@@ -1875,7 +1879,7 @@ void signalPower(shared_ptr<FractalModel> p_model,
 
 void signalMIters(shared_ptr<FractalModel> p_model,
 		  shared_ptr<tgui::Gui> pgui, int iter_ix, const tgui::String &value) {
-  unsigned int input = 2.0;
+  unsigned int input = 2;
   try {
     input = std::stoi(value.toStdString());
   }
@@ -1960,7 +1964,7 @@ void signalColorBox(const int selected) {
 }
 
 void signalColorCycleBox(const int selected) {
-  R.color_cycle_size = 8 * pow(2, selected);
+  R.color_cycle_size = (int)(8 * pow(2, selected));
 }
 
 void signalCAlgoBox(const int selected) {
@@ -2000,7 +2004,7 @@ void signalIntColorBox(const int selected) {
 }
 
 void signalIntColorCycleBox(const int selected) {
-  RI.color_cycle_size = 8 * pow(2, selected);
+  RI.color_cycle_size = (int)(8 * pow(2, selected));
 }
 
 void signalIntCAlgoBox(const int selected) {
@@ -2652,7 +2656,7 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
 
   lbox = tgui::ListBox::create();
   lbox->setPosition("parent.left + 900", "parent.bottom - 100");
-  lbox->setSize(100.f, 100.f);
+  lbox->setSize(100.f, 80.f);
   lbox->addItem("MULTICYCLE");
   lbox->addItem("SMOOTH");
   lbox->addItem("USE_IMAGE");
@@ -2690,8 +2694,8 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   cbox->onChange(signalIntButton);
 
   lbox = tgui::ListBox::create();
-  lbox->setPosition("parent.left + 1100", "parent.bottom - 100");
-  lbox->setSize(100.f, 100.f);
+  lbox->setPosition("parent.left + 1200", "parent.bottom - 270");
+  lbox->setSize(100.f, 160.f);
   lbox->addItem("SOLID");
   lbox->addItem("MULTICYCLE");
   lbox->addItem("USE_IMAGE");
@@ -2712,8 +2716,10 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   editBox->setDefaultText("dec triple");
   pgui->add(editBox, "interior_color_adjust");
   editBox->onTextChange(signalIntColorAdj, p_model, pgui);
+  editBox->setDefaultText("dec triple");
 
   pgui->add(menu);  // to be on top
+
 }
 
 // When model changes resulting in gui changes
@@ -2789,12 +2795,12 @@ void updateCurrentGuiElements(shared_ptr<tgui::Gui> &pgui,
       to_string(p_model->stats[p_model->current_fractal].in_set) + " : " +
       to_string(100.0 * p_model->stats[p_model->current_fractal].rejected /
                 (p_model->stats[p_model->current_fractal].total)) +
-      "\%" + " : " +
+      "%" + " : " +
       to_string(p_model->stats[p_model->current_fractal].escaped_set /
                 (static_cast<double>(
                     p_model->stats[p_model->current_fractal].in_set +
                     p_model->stats[p_model->current_fractal].escaped_set))) +
-      "\% total");
+      "% total");
 
   // Params column
   current = pgui->get<tgui::Label>("power_label");
@@ -2964,7 +2970,7 @@ int main(int argc, char **argv) {
 
   sf::View modelview;
   sf::Vector2u viewD(screenDimensions.x, screenDimensions.y);
-  modelview.setSize(viewD.x, viewD.y);
+  modelview.setSize((float)viewD.x, (float)viewD.y);
   R.displayed_zoom = 1.0;
   R.requested_zoom = 1.0;
   R.current_height = screenDimensions.y;
@@ -3002,7 +3008,7 @@ int main(int argc, char **argv) {
   R.light_angle = 45;
   R.light_height = 1.5;
 
-  modelview.setCenter(screenDimensions.x / 2.0, screenDimensions.y / 2.0);
+  modelview.setCenter((float)screenDimensions.x / 2.0f, (float)screenDimensions.y / 2.0f);
   window.setView(modelview);
 
   // create the fractal model (i.e. Model)
@@ -3175,7 +3181,7 @@ int main(int argc, char **argv) {
           if (event.mouseWheelScroll.wheel == sf::Mouse::VerticalWheel) {
             SaveLast(p_model);
             double newzoom =
-                get_new_zoom(modelview, event.mouseWheelScroll.delta);
+                get_new_zoom(modelview, (int)event.mouseWheelScroll.delta);
             cout << "New zoom: " << newzoom << endl;
             p_model->zoomFractal(newzoom);
             for (unsigned int tix = 0; tix < num_threads; ++tix) {
@@ -3240,10 +3246,10 @@ int main(int argc, char **argv) {
           // Hopefully this filters out menu clicks
           if (abs(crop_end_x - crop_start_x) > 10) {
             selection.setSize(
-                sf::Vector2f(abs(crop_start_x - event.mouseMove.x),
-                             abs(crop_start_y - event.mouseMove.y)));
+                sf::Vector2f(abs((float)crop_start_x - event.mouseMove.x),
+                             abs((float)crop_start_y - event.mouseMove.y)));
             selection.setFillColor(sf::Color::Transparent);
-            selection.setPosition(crop_start_x, crop_start_y);
+            selection.setPosition((float)crop_start_x, (float)crop_start_y);
 
             // set a 5-pixel wide orange outline
             selection.setOutlineThickness(5);

@@ -55,7 +55,7 @@ def os_setup():
     os.chdir(r"fractals_cuda/x64/Release")
     print("Currently in dir: ", os.getcwd())
 
-def refresh_fractal_key(input_key_name):
+def read_fractal_key(input_key_name):
     """Use ctypes to create a python data structure from the binary file."""
     g = open(input_key_name,"rb")
     output_key = SavedFractal()
@@ -65,7 +65,7 @@ def refresh_fractal_key(input_key_name):
 
 def fileio_setup():
     """Set up input files, output files and temporary filenames."""
-    global key_version, seedkey_name, changedkey_name, png_basename, frame_basename, final_basename
+    global key_version, seedkey_name, changedkey_name, png_basename, frame_basename, final_basename, key_location
     key_version = ".fractal_key_version_1"
     # full file names
     seedkey_name="movie_base" + key_version
@@ -74,27 +74,29 @@ def fileio_setup():
     frame_basename="shadow_"
     png_basename="movie"
     final_basename="shadow"
+    key_location="../../../"
     
-    fkey = refresh_fractal_key(seedkey_name)
+    fkey = read_fractal_key(key_location + seedkey_name)
     print("\n\n{} data layout from ctypes:".format(key_version))
     for field_name, field_type in fkey._fields_:
         print(field_name, getattr(fkey, field_name))
 
-def create_shadow_frames(end, seedkey_name):
+def create_evolved_frames(end, seedkey_name):
     count = end - 1
     if end > 50:
         if (end - 1) % 50 != 0:
             return
 
-    changedkey = refresh_fractal_key(seedkey_name)
+    currentkey = read_fractal_key(key_location + seedkey_name)
 
     for j in range(0,end):
         """Create each png frame of the gif"""
-        if j !=0 :
-            changedkey = refresh_fractal_key(changedkey_name)
+        if j != 0 :
+            currentkey = read_fractal_key(changedkey_name)
+            print("Reading key: ",changedkey_name)
 
         framekey_name=frame_basename + str(j) + key_version
-        f = open(framekey_name,"wb")
+        f = open(key_location + framekey_name,"wb")
         #changedkey.current_max_iters0=1500
         #changedkey.current_escape_r=50
 
@@ -105,9 +107,9 @@ def create_shadow_frames(end, seedkey_name):
         
         # zoom
         if count > 50:
-            changedkey.requested_zoom=changedkey.requested_zoom/(1.0 + (1/50)) #zoom in fast
+            currentkey.requested_zoom=currentkey.requested_zoom/(1.0 + (1/50)) #zoom in fast
         else:
-            changedkey.requested_zoom=changedkey.requested_zoom/(1.0 + (0.1/count)) #zoom in slowly
+            currentkey.requested_zoom=currentkey.requested_zoom/(1.0 + (0.1/count)) #zoom in slowly
         
 
         # rotate light
@@ -120,15 +122,17 @@ def create_shadow_frames(end, seedkey_name):
         radius=2
         x = radius * math.cos(angle)
         y = radius * math.sin(angle)
-        changedkey.light_pos_r = x
-        changedkey.light_pos_i = y
+        currentkey.light_pos_r = x
+        currentkey.light_pos_i = y
 
-        f.write(changedkey)
+        f.write(currentkey)
         f.close()
+        print("Wrote evolved key: ",key_location + framekey_name)
         pngname=png_basename + str(j) + ".png"
         hide = "hide"   # hide the C++ GUI
-        subprocess.run(['fractals_cuda.exe', 'save_and_exit', changedkey_name, pngname, hide], shell=True)
-        
+        key_name = key_location + framekey_name
+        print("Running fractal generation from : ",key_name)
+        subprocess.run(['fractals_cuda.exe', 'save_and_exit', key_name, pngname, hide], shell=True)
         # this exports the new changedkey into a file
 
 
@@ -158,9 +162,13 @@ def main():
     os_setup()
     fileio_setup()
 
+    #starts with movie_base.fractal_key_version_1 in demo/fractals directory
+    #finishes with 3 output files in fractals_cuda/x64/Release
+    # check into top level dir if they look good
+    
     #total frames to go around circle with light
-    total_frames=3
-    create_shadow_frames(total_frames, seedkey_name)
+    total_frames=30
+    create_evolved_frames(total_frames, seedkey_name)
 
     create_gif(total_frames, 100)
 
@@ -170,7 +178,7 @@ def main():
     imgs = sorted(glob.glob(png_basename+"*.png"), key=os.path.getmtime)
     for i in range(len(imgs)):
         os.remove(imgs[i]) 
-        framekey_name=frame_basename + str(i) + key_version
+        framekey_name=key_location + frame_basename + str(i) + key_version
         os.remove(framekey_name)
     os.remove(changedkey_name)
 

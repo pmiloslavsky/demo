@@ -409,11 +409,24 @@ vector<SupportedFractal> FRAC = {
 };
 
 
+// std::filesystem::path::preferred_separator
+//  / works on windows also
+std::string separator{"/"};
 
 const int FRACTAL_VERSION{1};
 
+//directory_name
 std::string key_version =
     std::string{"fractal_key_version_"} + to_string(FRACTAL_VERSION);
+
+#ifdef _WINDOWS
+std::string keys_location = std::string{".."} + separator + std::string{".."} +
+                            separator + std::string{".."} + separator;
+#else
+std::string keys_location = std::string { "" }
+#endif
+
+
 // Should be trivially_copyable/serializable
 class SavedFractal {
  public:
@@ -2113,52 +2126,13 @@ uint32_t crc32c(uint32_t crc, const unsigned char *buf, size_t len) {
   return ~crc;
 }
 
-// std::filesystem::path::preferred_separator
-//  / works on windows also
-std::string separator{"/"};
-
-void signalImportKeys(shared_ptr<FractalModel> p_model,
-                      shared_ptr<tgui::Gui> pgui) {
-  updateGuiElements(pgui, p_model);
-
-  std::string filename;
-
-  if (!fs::is_directory(key_version) || !fs::exists(key_version)) {
-    fs::create_directory(key_version);
-  }
-
-  // The keys are saved either in the linux or the windows place
-  // but they are imported from both places when you push import
-
-  // copy the keys from the linux location if it exists
-  // ../../../fractal_key_version_1
-  filename = std::string{".."} + separator + std::string{".."} + separator +
-             std::string{".."} + separator + key_version;
-  if (fs::is_directory(filename)) {
-    for (auto &p : fs::directory_iterator(filename)) {
-      if (!fs::exists(key_version + separator + p.path().filename().string())) {
-        fs::copy_file(p.path(),
-                      key_version + separator + p.path().filename().string());
-      }
-    }
-  }
-
-  // copy the keys for the windows location if it exists
-  // fractals_cuda/x64/Release/fractal_key_version_1
-  filename = std::string{"fractals_cuda"} + separator + std::string{"x64"} +
-             separator + std::string{"Release"} + separator + key_version;
-  if (fs::is_directory(filename)) {
-    for (auto &p : fs::directory_iterator(filename)) {
-      filename = p.path().string();
-      if (!fs::exists(key_version + separator + p.path().filename().string())) {
-        fs::copy_file(p.path(),
-                      key_version + separator + p.path().filename().string());
-      }
-    }
-  }
-
-  setGuiElementsFromModel(pgui, p_model);
-}
+  //if (fs::is_directory(filename)) {
+  //for (auto &p : fs::directory_iterator(filename)) {
+  //  if (!fs::exists(key_version + separator + p.path().filename().string())) {
+  //    fs::copy_file(p.path(),
+  //                  key_version + separator + p.path().filename().string());
+  //  }
+  //}
 
 void signalSaveKey(shared_ptr<FractalModel> p_model, shared_ptr<tgui::Gui> pgui,
                    std::string infname = "") {
@@ -2188,10 +2162,10 @@ void signalSaveKey(shared_ptr<FractalModel> p_model, shared_ptr<tgui::Gui> pgui,
   std::string filename;
   std::ofstream key;
 
-  // save the keys into either the windows location or the linux location
-  // import will pick it up from both
-  if (!fs::is_directory(key_version) || !fs::exists(key_version)) {
-    fs::create_directory(key_version);
+  // save the keys 
+  if (!fs::is_directory(keys_location + key_version) ||
+      !fs::exists(keys_location + key_version)) {
+    fs::create_directory(keys_location + key_version);
   }
 
   uint32_t crc =
@@ -2200,7 +2174,7 @@ void signalSaveKey(shared_ptr<FractalModel> p_model, shared_ptr<tgui::Gui> pgui,
   if (infname != "") {
     filename = infname + "." + key_version;
   } else {
-    filename = key_version + separator + FRAC[p_model->current_fractal].name +
+    filename = keys_location + key_version + separator + FRAC[p_model->current_fractal].name +
                "_" + to_string(crc) + "." + key_version;
   }
   key.open(filename.c_str(), ios::out | ios::binary);
@@ -2331,7 +2305,7 @@ void signalLoadNextKey(shared_ptr<FractalModel> p_model,
   int ix = 0;
 
   key_count = 0;
-  for (auto &p : fs::directory_iterator(key_version)) {
+  for (auto &p : fs::directory_iterator(keys_location + key_version)) {
     std::cout << p.path() << '\n';
     key_count++;
   }
@@ -2346,7 +2320,7 @@ void signalLoadNextKey(shared_ptr<FractalModel> p_model,
   last_loaded_key_ix = try_frac_ix;
 
   std::string filename;
-  for (auto &p : fs::directory_iterator(key_version)) {
+  for (auto &p : fs::directory_iterator(keys_location + key_version)) {
     if (ix == try_frac_ix) {
       filename = p.path().string();
       break;
@@ -2603,13 +2577,6 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   current->setPosition("parent.left + 400", "parent.bottom - 50");
   current->setTextSize(14);
   pgui->add(current, "saved_fractal_label");
-
-  button = tgui::Button::create();
-  button->setPosition("parent.left + 600", "parent.bottom - 200");
-  button->setText("Import Keys");
-  button->setSize(120, 30);
-  pgui->add(button, "ImportKeys");
-  button->onPress(signalImportKeys, p_model, pgui);
   
   button = tgui::Button::create();
   button->setPosition("parent.left + 600", "parent.bottom - 150");
@@ -2659,8 +2626,8 @@ void createGuiElements(shared_ptr<tgui::Gui> pgui,
   cbox->onChange(signalButton);
 
   lbox = tgui::ListBox::create();
-  lbox->setPosition("parent.left + 900", "parent.bottom - 100");
-  lbox->setSize(100.f, 80.f);
+  lbox->setPosition("parent.left + 900", "parent.bottom - 120");
+  lbox->setSize(100.f, 100.f);
   lbox->addItem("MULTICYCLE");
   lbox->addItem("SMOOTH");
   lbox->addItem("USE_IMAGE");
@@ -3023,8 +2990,6 @@ int main(int argc, char **argv) {
   // p_model->cudaTest();
   if (!save_and_exit) p_model->cudaPresent();
 
-  if (!save_and_exit) update_and_draw = true;
-
   // Create the worker threads:
   cout << "Machine supports " << thread::hardware_concurrency()
        << " simultaneous threads" << endl;
@@ -3086,6 +3051,9 @@ int main(int argc, char **argv) {
       }
       exit(-1);
     }
+  }
+  for (unsigned int tix = 0; tix < num_threads; ++tix) {
+    thread_asked_to_reset[tix] = true;
   }
   update_and_draw = true;
 

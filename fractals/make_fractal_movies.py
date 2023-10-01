@@ -170,7 +170,7 @@ def main():
     
     create_evolved_frames()
 
-    create_gif(args.tg)
+    create_gif()
 
     create_movie(5, final_basename + "_slow")
     create_movie(30, final_basename + "_fast")

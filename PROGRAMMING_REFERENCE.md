@@ -22,6 +22,7 @@ Table of Contents:
 	- [4.5. Embedding:](#45-embedding)
 	- [4.6. Debugging:](#46-debugging)
 	- [4.7. Package issues](#47-package-issues)
+	- [4.8. Examining configuration](#48-examining-configuration)
 - [5. Debugging,Analysis and Performance Tuning](#5-debugginganalysis-and-performance-tuning)
 	- [5.1. Automated](#51-automated)
 	- [5.2. GDB (Linux or AIX)](#52-gdb-linux-or-aix)
@@ -161,6 +162,8 @@ Tokens: https://github.com/python/cpython/blob/main/Python/generated_cases.c.h
 * on windows use py instead of python
 * pip freeze   shows everything installed by pip
 * pip install  uninstall   cache purge
+## 4.8. Examining configuration
+* To see how python was configured look at sysconfg module: CONFIG_ARGS or python3 -m sysconfig
 # 5. Debugging,Analysis and Performance Tuning
 ## 5.1. Automated
 * valgrind
@@ -474,6 +477,7 @@ dnf install emacs-nox tar tcsh
 * ListDlls  dlls in a process   /cygdrive/c/users/pmilosla/Downloads/ListDlls/Listdlls64.exe python.exe
 * process Explorer http://live.sysinternals.com/  procexp for when you cant see pids in task manager
 * DLL dependancy walker: https://github.com/lucasg/Dependencies
+* Get-NetIPConfiguration -detailed
 ### 6.3.1. CLI compilation and linking
 * open Visual studio native x64 shell
 * copy in subordinate DLLs your DLL will need (may need to set PATH for run time DLL search)

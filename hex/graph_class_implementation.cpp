@@ -13,6 +13,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <memory>
 
 //#define DTRACE_INTEGRATION (1)
 // DTRACE

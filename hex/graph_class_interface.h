@@ -4,7 +4,6 @@
 #define GCI_INCLUDED
 
 #include <string>
-#include <memory>
 
 using namespace std;
 

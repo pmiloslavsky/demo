@@ -7,6 +7,7 @@
 #include <random>
 #include <thread>
 #include <vector>
+#include <memory>
 
 #include "graph_class_interface.h"
 

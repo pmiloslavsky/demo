@@ -172,6 +172,7 @@ Tokens: https://github.com/python/cpython/blob/main/Python/generated_cases.c.h
 * SIGSEGV: http://unknownroad.com/rtfm/gdbtut/gdbsegfault.html
 * Cheat sheets: https://darkdust.net/files/GDB%20Cheat%20Sheet.pdf
 *               https://cs.brown.edu/courses/cs033/docs/guides/gdb.pdf
+*               https://beej.us/guide/bggdb/
 * step into s  step over n   finish   dir  b   d 1(delete first breakpoint) 
 * p $r3 $eax  p/x $r3  x/8xw 0x110075770+27048 ([x]/(number)(format)(unit_size=bhwg) <address>)
 * gdb tui   layout split asm src regs   layout next     focus next
@@ -191,12 +192,16 @@ Tokens: https://github.com/python/cpython/blob/main/Python/generated_cases.c.h
 * multiproc child
 * stop on load "pythonint.so"
 * step,next,continue
+* print variable in hex     &x/x  h,x,X
+* stop at 6920
 * stop in PyInit_pythonint
-* use /nethome/pmilosla/perforce/projects/python_new/modules/pythonint
+* use /nethome/pmilosla/perforce/iris/latest/modules/pythonint
 * sudo dbx /home/pmilosla/iris/IBMCLANGD/bin/irisdb /home/pmilosla/iris/IBMCLANGD/mgr/user/core
 * https://www.ibm.com/docs/en/aix/7.2?topic=overview-register-usage-conventions
 * stepi listi stepi 4   p $r21
 * (dbx) listi 0x100919884,0x100919994
+* list FunctionName
+* list 7000,7100
 * https://www.ibm.com/docs/en/aix/7.1?topic=d-dbx-command
 ## 5.4. GDB or DBX AIX binary?
 * To see if binary was compiled with -ggdb do: sudo nm -X64 binary | grep "\.dwstr"
@@ -221,6 +226,7 @@ Tokens: https://github.com/python/cpython/blob/main/Python/generated_cases.c.h
 * proctree on AIX
 ## 5.7. What is in the executable?
 * ldd
+* otool -L (mac)
 * file
 * objdump   AIX: dump -X64 -t
 * strings -a

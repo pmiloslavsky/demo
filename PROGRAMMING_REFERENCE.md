@@ -215,7 +215,7 @@ Tokens: https://github.com/python/cpython/blob/main/Python/generated_cases.c.h
 * sudo perf record -F 999 -g -p 2277501 --call-graph dwarf    (creates perf.data file)
 * sudo perf report
 ## 5.6. What is the process doing?
-* lsof
+* lsof  (procfiles on AIX)
 * pmap   procmap on AIX
 * truss
 * strace

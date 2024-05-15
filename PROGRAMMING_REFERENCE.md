@@ -42,6 +42,7 @@ Table of Contents:
 		- [6.1.2. system administration](#612-system-administration)
 		- [6.1.3. Core files on ubuntu](#613-core-files-on-ubuntu)
 		- [6.1.4. Linux Kernel crashes](#614-linux-kernel-crashes)
+		- [6.1.5. Red Hat](#615-red-hat)
 	- [6.2. AIX](#62-aix)
 		- [6.2.1. system administration](#621-system-administration)
 			- [6.2.1.1. processors and configuration](#6211-processors-and-configuration)
@@ -180,6 +181,7 @@ Tokens: https://github.com/python/cpython/blob/main/Python/generated_cases.c.h
 * ptype       ptype /o  (offsets)
 * p *(struct node *) 0x00000000004004fc
 * x addr   x/h addr    x/20h addr
+* info symbol 98765432109876543210 - to see why whats in a register crashes you
 * gdb -batch -ex "disassemble/rs mainsub" mux.o | more
 * If CTRL-C crashes gdb -> kill -TRAP <pid> from another window
 * Sometimes you should do     (gdb)handle SIGUSR1 pass
@@ -228,9 +230,12 @@ Tokens: https://github.com/python/cpython/blob/main/Python/generated_cases.c.h
 * ldd
 * otool -L (mac)
 * file
-* objdump   AIX: dump -X64 -t
+* objdump   AIX: dump -X64 -t   dump -X64 -Hp to see libpath
 * strings -a
 * restore -qxvf libc++.rte.16.1.0.10.bff to see whats in it
+* ProcessMonitor (windows)
+* Open Developer Command Prompt for VS2019 dumpbin /dependents (windows)
+* dumpbin /IMPORTS:python3.dll pythonint.pyd to see whats being used from a DLL
 ## 5.8. Signals
 * kill -l lists all signals
 * echo $? gives 128+signum that says what killed you
@@ -279,6 +284,9 @@ for example wayland:
 dmesg
 journalctl -b -1 -e
 journalctl --list-boots
+### 6.1.5. Red Hat
+sudo su
+subscription-manager register
 ## 6.2. AIX
 ### 6.2.1. system administration
 * PTFs come from IBM's "Fix Central", while the GA images (with the embedded licenses) come from either Passport Advantage 
@@ -316,6 +324,7 @@ Whereas in TL1 SP1 you would see output as
   define OPENSSL_CONFIGURED_API 30000
 * topas
 * nmon   n,t, 0,1,2,3,4
+* svmon -P 26018054 -O summary=basic,unit=MB
 * sudo   slibclean
 * df -Pg  disk space left
 * oslevel -s (what TL version)

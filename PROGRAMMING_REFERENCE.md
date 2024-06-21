@@ -245,6 +245,8 @@ Tokens: https://github.com/python/cpython/blob/main/Python/generated_cases.c.h
 * gcc -dumpmachine
 * gcc -march=native -Q --help=target
 * gcc -march=aarch64-redhat-linux -Q --help=target
+* comm -13 <(gcc -march=x86-64-v4 -Q --help=target | grep -F '[enabled]' | sort) <(gcc -march=znver4 -Q --help=target | grep -F '[enabled]' | sort)
+* echo | gcc -v -E - 2>&1 | grep cc1
 ## 5.10. Huge Pages:
 https://docs.intersystems.com/irislatest/csp/docbook/DocBook.UI.Page.cls?KEY=ARES
 AIX: sudo vmstat -Pall

@@ -23,62 +23,65 @@ Table of Contents:
 	- [4.6. Debugging:](#46-debugging)
 	- [4.7. Package issues](#47-package-issues)
 	- [4.8. Examining configuration](#48-examining-configuration)
-- [5. Debugging,Analysis and Performance Tuning](#5-debugginganalysis-and-performance-tuning)
-	- [5.1. Automated](#51-automated)
-	- [5.2. GDB (Linux or AIX)](#52-gdb-linux-or-aix)
-		- [5.2.1. Reverse debugging](#521-reverse-debugging)
-	- [5.3. dbx (AIX)](#53-dbx-aix)
-	- [5.4. GDB or DBX AIX binary?](#54-gdb-or-dbx-aix-binary)
-	- [5.5. Profiling](#55-profiling)
-		- [5.5.1. Sample session:](#551-sample-session)
-	- [5.6. What is the process doing?](#56-what-is-the-process-doing)
-	- [5.7. What is in the executable?](#57-what-is-in-the-executable)
-	- [5.8. Signals](#58-signals)
-	- [5.9. gcc target options -march vs -mnative](#59-gcc-target-options--march-vs--mnative)
-	- [5.10. Huge Pages:](#510-huge-pages)
-- [6. OS specific](#6-os-specific)
-	- [6.1. Linux](#61-linux)
-		- [6.1.1. how to install perf on ubuntu](#611-how-to-install-perf-on-ubuntu)
-		- [6.1.2. system administration](#612-system-administration)
-		- [6.1.3. Core files on ubuntu](#613-core-files-on-ubuntu)
-		- [6.1.4. Linux Kernel crashes](#614-linux-kernel-crashes)
-		- [6.1.5. Red Hat](#615-red-hat)
-	- [6.2. AIX](#62-aix)
-		- [6.2.1. system administration](#621-system-administration)
-			- [6.2.1.1. processors and configuration](#6211-processors-and-configuration)
-			- [6.2.1.2. Disk expansion](#6212-disk-expansion)
-			- [6.2.1.3. Upgrading to a new TL level:](#6213-upgrading-to-a-new-tl-level)
-			- [6.2.1.4. Compilers:](#6214-compilers)
-		- [6.2.2. Cloud server preparation](#622-cloud-server-preparation)
-	- [6.3. Windows](#63-windows)
-		- [6.3.1. CLI compilation and linking](#631-cli-compilation-and-linking)
-		- [6.3.2. Debugging python modules](#632-debugging-python-modules)
-	- [6.4. Mac OS](#64-mac-os)
-		- [6.4.1. system administration](#641-system-administration)
-	- [6.5. Containers](#65-containers)
-		- [6.5.1. Docker Basic Commands](#651-docker-basic-commands)
-		- [6.5.2. podman](#652-podman)
-- [7. Unix tips](#7-unix-tips)
-	- [7.1. Common Unix Commands in different UNIX OS:](#71-common-unix-commands-in-different-unix-os)
-	- [7.2. Why is computer slow?](#72-why-is-computer-slow)
-	- [7.3. Save terminal session with tmux](#73-save-terminal-session-with-tmux)
-- [8. Editors](#8-editors)
-	- [8.1. Emacs](#81-emacs)
-		- [8.1.1. .emacs file:](#811-emacs-file)
-		- [8.1.2. .dir-locals.el file:](#812-dir-localsel-file)
-	- [8.2. visual studio code](#82-visual-studio-code)
-- [9. Books](#9-books)
-- [10. ICU/Unicode](#10-icuunicode)
-- [11. REST APIs/JSON](#11-rest-apisjson)
-- [12. SQL](#12-sql)
-	- [12.1. Cheat Sheet](#121-cheat-sheet)
-- [13. Statistical Analysis and Machine Learning](#13-statistical-analysis-and-machine-learning)
-	- [13.1. Fundamentals of ML](#131-fundamentals-of-ml)
-	- [13.2. Statistical measures in python:](#132-statistical-measures-in-python)
-		- [13.2.1. Plotting:](#1321-plotting)
-		- [13.2.2. Fitting:](#1322-fitting)
-		- [13.2.3. Sampling:](#1323-sampling)
-		- [13.2.4. Learning](#1324-learning)
+- [5. Rust](#5-rust)
+	- [5.1. docs](#51-docs)
+- [6. Debugging,Analysis and Performance Tuning](#6-debugginganalysis-and-performance-tuning)
+	- [6.1. Automated](#61-automated)
+	- [6.2. GDB (Linux or AIX)](#62-gdb-linux-or-aix)
+		- [6.2.1. Reverse debugging](#621-reverse-debugging)
+	- [6.3. dbx (AIX)](#63-dbx-aix)
+	- [6.4. GDB or DBX AIX binary?](#64-gdb-or-dbx-aix-binary)
+	- [6.5. Profiling](#65-profiling)
+		- [6.5.1. Sample session:](#651-sample-session)
+	- [6.6. What is the process doing?](#66-what-is-the-process-doing)
+	- [6.7. What is in the executable?](#67-what-is-in-the-executable)
+	- [6.8. Signals](#68-signals)
+	- [6.9. gcc target options -march vs -mnative](#69-gcc-target-options--march-vs--mnative)
+	- [6.10. Huge Pages:](#610-huge-pages)
+- [7. OS specific](#7-os-specific)
+	- [7.1. Linux](#71-linux)
+		- [7.1.1. how to install perf on ubuntu](#711-how-to-install-perf-on-ubuntu)
+		- [7.1.2. system administration](#712-system-administration)
+		- [7.1.3. Core files on ubuntu](#713-core-files-on-ubuntu)
+		- [7.1.4. Linux Kernel crashes](#714-linux-kernel-crashes)
+		- [7.1.5. Red Hat](#715-red-hat)
+	- [7.2. AIX](#72-aix)
+		- [7.2.1. system administration](#721-system-administration)
+			- [7.2.1.1. processors and configuration](#7211-processors-and-configuration)
+			- [7.2.1.2. Disk expansion](#7212-disk-expansion)
+			- [7.2.1.3. Upgrading to a new TL level:](#7213-upgrading-to-a-new-tl-level)
+			- [7.2.1.4. Compilers:](#7214-compilers)
+		- [7.2.2. Cloud server preparation](#722-cloud-server-preparation)
+	- [7.3. Windows](#73-windows)
+		- [7.3.1. CLI compilation and linking](#731-cli-compilation-and-linking)
+		- [7.3.2. Debugging python modules](#732-debugging-python-modules)
+	- [7.4. Mac OS](#74-mac-os)
+		- [7.4.1. system administration](#741-system-administration)
+	- [7.5. Containers](#75-containers)
+		- [7.5.1. Docker Basic Commands](#751-docker-basic-commands)
+		- [7.5.2. podman](#752-podman)
+- [8. Unix tips](#8-unix-tips)
+	- [8.1. Common Unix Commands in different UNIX OS:](#81-common-unix-commands-in-different-unix-os)
+	- [8.2. Why is computer slow?](#82-why-is-computer-slow)
+	- [8.3. Save terminal session with tmux](#83-save-terminal-session-with-tmux)
+- [9. Editors](#9-editors)
+	- [9.1. Emacs](#91-emacs)
+		- [9.1.1. .emacs file:](#911-emacs-file)
+		- [9.1.2. .dir-locals.el file:](#912-dir-localsel-file)
+	- [9.2. visual studio code](#92-visual-studio-code)
+- [10. Books](#10-books)
+- [11. ICU/Unicode](#11-icuunicode)
+- [12. REST APIs/JSON](#12-rest-apisjson)
+- [13. SQL](#13-sql)
+	- [13.1. Cheat Sheet](#131-cheat-sheet)
+- [14. Statistical Analysis and Machine Learning](#14-statistical-analysis-and-machine-learning)
+	- [14.1. Fundamentals of ML](#141-fundamentals-of-ml)
+	- [14.2. Statistical measures in python:](#142-statistical-measures-in-python)
+		- [14.2.1. Plotting:](#1421-plotting)
+		- [14.2.2. Fitting:](#1422-fitting)
+		- [14.2.3. Sampling:](#1423-sampling)
+		- [14.2.4. Learning](#1424-learning)
+	- [14.3. HNSW,ANN,pgvector](#143-hnswannpgvector)
 
 
 # 1. C/C++
@@ -165,11 +168,21 @@ Tokens: https://github.com/python/cpython/blob/main/Python/generated_cases.c.h
 * pip install  uninstall   cache purge
 ## 4.8. Examining configuration
 * To see how python was configured look at sysconfg module: CONFIG_ARGS or python3 -m sysconfig
-# 5. Debugging,Analysis and Performance Tuning
-## 5.1. Automated
+# 5. Rust
+## 5.1. docs
+* pmilosla@pmilosla-ubuntu24:rust> pwd
+  /home/pmilosla/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/share/doc/rust
+  pmilosla@pmilosla-ubuntu24:rust> python3 -m http.server
+  Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
+* For Rust, this is worth doing (probably can skip the Android related stuff):*
+https://google.github.io/comprehensive-rust/
+* There's also "The Rust Book" which is available online or in book form (feel free to expense that if you ended up buying it):
+https://doc.rust-lang.org/stable/book/
+# 6. Debugging,Analysis and Performance Tuning
+## 6.1. Automated
 * valgrind
 * cachegrind (find cache thrashing)
-## 5.2. GDB (Linux or AIX)
+## 6.2. GDB (Linux or AIX)
 * SIGSEGV: http://unknownroad.com/rtfm/gdbtut/gdbsegfault.html
 * Cheat sheets: https://darkdust.net/files/GDB%20Cheat%20Sheet.pdf
 *               https://cs.brown.edu/courses/cs033/docs/guides/gdb.pdf
@@ -186,11 +199,11 @@ Tokens: https://github.com/python/cpython/blob/main/Python/generated_cases.c.h
 * If CTRL-C crashes gdb -> kill -TRAP <pid> from another window
 * Sometimes you should do     (gdb)handle SIGUSR1 pass
 * b vec_op_varith<int64_t>
-### 5.2.1. Reverse debugging
+### 6.2.1. Reverse debugging
 * There is a record and replay mode:  https://sourceware.org/gdb/onlinedocs/gdb/Process-Record-and-Replay.html
 * and there is also native reverse debugging https://www.sourceware.org/gdb/news/reversible.html
 * To do reverse debugging you have to do (gdb) record before you do (gdb)rs  (reverse-step) 
-## 5.3. dbx (AIX)
+## 6.3. dbx (AIX)
 * multiproc child
 * stop on load "pythonint.so"
 * step,next,continue
@@ -205,18 +218,18 @@ Tokens: https://github.com/python/cpython/blob/main/Python/generated_cases.c.h
 * list FunctionName
 * list 7000,7100
 * https://www.ibm.com/docs/en/aix/7.1?topic=d-dbx-command
-## 5.4. GDB or DBX AIX binary?
+## 6.4. GDB or DBX AIX binary?
 * To see if binary was compiled with -ggdb do: sudo nm -X64 binary | grep "\.dwstr"
 -	For -ggdb, by default it will use non-inline strings, means it will use `.dwstr` section and strings in `.dwinfo` section will use offsets to the `dwstr` section.
 -	For -gdbx, by default it will use inline strings, means, it will not use `.dwstr` section, all strings in `.dwinfo` section will be inlined in the `.dwinfo` section.
-## 5.5. Profiling
+## 6.5. Profiling
 * with perf: https://www.brendangregg.com/FlameGraphs/cpuflamegraphs.html
 * with valgrind: https://developer.mantidproject.org/ProfilingWithValgrind.html
-### 5.5.1. Sample session:
+### 6.5.1. Sample session:
 * start your process doing a heavy loop of what you are interested in
 * sudo perf record -F 999 -g -p 2277501 --call-graph dwarf    (creates perf.data file)
 * sudo perf report
-## 5.6. What is the process doing?
+## 6.6. What is the process doing?
 * lsof  (procfiles on AIX)
 * pmap   procmap on AIX
 * truss
@@ -226,7 +239,7 @@ Tokens: https://github.com/python/cpython/blob/main/Python/generated_cases.c.h
 * pldd  (procldd -F on AIX)
 * genld -ld (AIX)
 * proctree on AIX
-## 5.7. What is in the executable?
+## 6.7. What is in the executable?
 * ldd
 * otool -L (mac)
 * file
@@ -236,30 +249,30 @@ Tokens: https://github.com/python/cpython/blob/main/Python/generated_cases.c.h
 * ProcessMonitor (windows)
 * Open Developer Command Prompt for VS2019 dumpbin /dependents (windows)
 * dumpbin /IMPORTS:python3.dll pythonint.pyd to see whats being used from a DLL
-## 5.8. Signals
+## 6.8. Signals
 * kill -l lists all signals
 * echo $? gives 128+signum that says what killed you
 * sudo kill -TRAP 10486072 to the process gdb is debugging causes gdb to break
-## 5.9. gcc target options -march vs -mnative
+## 6.9. gcc target options -march vs -mnative
 * gcc -v
 * gcc -dumpmachine
 * gcc -march=native -Q --help=target
 * gcc -march=aarch64-redhat-linux -Q --help=target
 * comm -13 <(gcc -march=x86-64-v4 -Q --help=target | grep -F '[enabled]' | sort) <(gcc -march=znver4 -Q --help=target | grep -F '[enabled]' | sort)
 * echo | gcc -v -E - 2>&1 | grep cc1
-## 5.10. Huge Pages:
+## 6.10. Huge Pages:
 https://docs.intersystems.com/irislatest/csp/docbook/DocBook.UI.Page.cls?KEY=ARES
 AIX: sudo vmstat -Pall
-# 6. OS specific
-## 6.1. Linux
+# 7. OS specific
+## 7.1. Linux
 * Search kernel source: https://elixir.bootlin.com/linux/v5.14.10/source
 * Search kernel Docs: https://www.kernel.org/doc/html/latest/search.html
-### 6.1.1. how to install perf on ubuntu
+### 7.1.1. how to install perf on ubuntu
 * sudo apt-get update
 * sudo apt-get dist-upgrade
 * sudo apt-get install --reinstall linux-tools-common linux-tools-generic linux-tools-`uname -r`
 * sudo perf top
-### 6.1.2. system administration
+### 7.1.2. system administration
 * apt list --installed
 * yum update yum install yum-utils  yum provides gtar  yum info tar-1.33-1.ppc repoquery -l tar-1.33-1.ppc
 * dnf is replacing yum
@@ -270,7 +283,7 @@ AIX: sudo vmstat -Pall
 *  If you have fatal conflicts you may need to wget packages and do rpm -Uvh *.rpm
 *  If you have conflicting packages and what to wipe dnf and start fresh do this:
 *  https://community.ibm.com/community/user/power/blogs/jan-harris1/2022/05/25/destroyrpms
-### 6.1.3. Core files on ubuntu
+### 7.1.3. Core files on ubuntu
 * if you dont want to struggle with apport you can do this:
 	sudo emacs /etc/security/limits.conf to have:
 	*		 -	 core		 -1
@@ -281,16 +294,16 @@ AIX: sudo vmstat -Pall
 	# Controls whether core dumps will append the PID to the core filename.
 	kernel.core_uses_pid = 1
 	sudo sysctl --system
-### 6.1.4. Linux Kernel crashes
+### 7.1.4. Linux Kernel crashes
 for example wayland:
 dmesg
 journalctl -b -1 -e
 journalctl --list-boots
-### 6.1.5. Red Hat
+### 7.1.5. Red Hat
 sudo su
 subscription-manager register
-## 6.2. AIX
-### 6.2.1. system administration
+## 7.2. AIX
+### 7.2.1. system administration
 * PTFs come from IBM's "Fix Central", while the GA images (with the embedded licenses) come from either Passport Advantage 
   (software sales) or ESS (hardware bundles). https://www.ibm.com/support/pages/fix-list-xl-cc-aix
 * command security
@@ -344,7 +357,7 @@ Whereas in TL1 SP1 you would see output as
 * If you have an AIX problem you can type script /tmp/problem.log and do the commands and when finished type exit to generate a log file
 * smit failures leave /smit.log around
 
-#### 6.2.1.1. processors and configuration
+#### 7.2.1.1. processors and configuration
 * lscfg -lproc\*
 * lparstat -i | grep CPU
 * also lparstat without args (shows smt4 sometimes)
@@ -353,7 +366,7 @@ Whereas in TL1 SP1 you would see output as
 * sudo pmcycles -m
 * sudo smtctl
 * lsmcode -c
-#### 6.2.1.2. Disk expansion
+#### 7.2.1.2. Disk expansion
 * lsvg rootvg
 * df -g
 * lspv
@@ -383,7 +396,7 @@ Whereas in TL1 SP1 you would see output as
 * exportvg datavg
 * rmdev -dl hdisk1
 * importvg hdiskN
-#### 6.2.1.3. Upgrading to a new TL level:
+#### 7.2.1.3. Upgrading to a new TL level:
 Terminology:
 oslevel -s
 7300-00-01-2148
@@ -436,12 +449,12 @@ cd /usr/sys/inst.images/installp/ppc
 ls -lart   (make sure you have new files  that suma got)
 smitty update_all
 shutdown -Fr
-#### 6.2.1.4. Compilers:
+#### 7.2.1.4. Compilers:
 * preprocessor defines: ibm-clang++_r -dM -E - < /dev/null
 * dissasembly /opt/IBM/xlc/16.1.0/exe/dis  produces a .s file silently
 * -blibpath
 * -blibsuff:so
-### 6.2.2. Cloud server preparation
+### 7.2.2. Cloud server preparation
 setenv CLOUD xx.xx.xx.xx
 setenv IRIS IRIS-2023.2.0LDEV.133.0-ppc64.tar.gz
 ssh -i id_rsa root@$CLOUD
@@ -489,13 +502,13 @@ emgr -e testifix2.230116.epkg.Z
 dnf update
 dnf install emacs-nox tar tcsh
 /opt/freeware/bin/tar  now exists
-## 6.3. Windows
+## 7.3. Windows
 * procmon (https://docs.microsoft.com/en-us/sysinternals/downloads/procmon) can show what ddls are being loaded (you need to filter on pid or name)
 * ListDlls  dlls in a process   /cygdrive/c/users/pmilosla/Downloads/ListDlls/Listdlls64.exe python.exe
 * process Explorer http://live.sysinternals.com/  procexp for when you cant see pids in task manager
 * DLL dependancy walker: https://github.com/lucasg/Dependencies
 * Get-NetIPConfiguration -detailed
-### 6.3.1. CLI compilation and linking
+### 7.3.1. CLI compilation and linking
 * open Visual studio native x64 shell
 * copy in subordinate DLLs your DLL will need (may need to set PATH for run time DLL search)
 * cl -c /Zi /W3 test.cpp
@@ -503,19 +516,19 @@ dnf install emacs-nox tar tcsh
 * & 'C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\MSBuild\Current\Bin\MSBuild' .\XXXtest.vcxproj -p:Configuration="Debug" -p:Platform="x64" -maxcpucount
 * /P to keep preprocessor
 * /showIncludes or <ShowIncludes>true</ShowIncludes> to see whats being included
-### 6.3.2. Debugging python modules
+### 7.3.2. Debugging python modules
 * Recompile your windows .pyd extension with debug See here: https://docs.microsoft.com/en-us/visualstudio/python/working-with-c-cpp-python-in-visual-studio?view=vs-2022    and here: https://stackoverflow.com/questions/28805401/debugging-my-python-c-extension-lead-to-pythreadstate-get-no-current-thread and here:
 https://stackoverflow.com/questions/66162568/lnk1104cannot-open-file-python39-d-lib
 * Click on your 3.9.5 python installer and install the debug libraries symbols. Copy python39_d.dll and python39_d.pdb to where your application is. (instance/bin)
 * Get the 3.9.5 source code from here for later: https://www.python.org/downloads/source/
 * start python3 do os.getpid(), Use procmon to start debugging it since task manager doesnt work https://docs.microsoft.com/en-us/sysinternals/downloads/procmon
 
-## 6.4. Mac OS
-### 6.4.1. system administration
+## 7.4. Mac OS
+### 7.4.1. system administration
 xcodebuild -version
 sw_vers
-## 6.5. Containers
-### 6.5.1. Docker Basic Commands
+## 7.5. Containers
+### 7.5.1. Docker Basic Commands
 Install docker:
 https://docs.docker.com/engine/install/ubuntu/#installation-methods
 Hello world doesn’t work at first – eventually it started working for me
@@ -537,7 +550,7 @@ sudo docker network inspect bridge
 sudo docker network inspect host
 sudo docker exec -it iris ls -la /usr/irissys/bin/libirisHLL.so
 ```
-### 6.5.2. podman
+### 7.5.2. podman
 bash
 ps -p $$
 . /xxx/.podman_setup
@@ -570,17 +583,17 @@ dnf install gdb strace
 
 strace -p $$
 
-# 7. Unix tips
-## 7.1. Common Unix Commands in different UNIX OS:
+# 8. Unix tips
+## 8.1. Common Unix Commands in different UNIX OS:
 * A Sysadmin's Unixersal Translator (ROSETTA STONE) : http://bhami.com/rosetta.html
 * !-1 last command
 * bindkey "^R" i-search-back            to make CTRL-R reverse search work in tcsh
-## 7.2. Why is computer slow?
+## 8.2. Why is computer slow?
 * top
 * free
 * dstat
 * iostat
-## 7.3. Save terminal session with tmux
+## 8.3. Save terminal session with tmux
 * sudo apt install tmux
 * tmux
 * export TERM=xterm-256color
@@ -589,13 +602,13 @@ strace -p $$
 * tmux attach-session -t 0
 * CTRL-B D  (detach)
 
-# 8. Editors
-## 8.1. Emacs
+# 9. Editors
+## 9.1. Emacs
 * M-: is eval  you can then type what hook
 * M-x is execute
 * ESC is meta key in helm
 * emacs -nw starts emacs in non windowed mode (macs homebrew)
-### 8.1.1. .emacs file:
+### 9.1.1. .emacs file:
 ;; Added by Package.el.  This must come before configurations of
 ;; installed packages.  Don't delete this line.  If you don't want it,
 ;; just comment it out by adding a semicolon to the start of the line.
@@ -690,7 +703,7 @@ strace -p $$
   (add-hook hook (lambda () (flyspell-mode 1))))
 
 
-### 8.1.2. .dir-locals.el file:
+### 9.1.2. .dir-locals.el file:
 
 
 ((c-mode . ((c-file-style . "kernel")))
@@ -702,22 +715,22 @@ strace -p $$
 
 
 
-## 8.2. visual studio code
+## 9.2. visual studio code
 * view -> command     Markdown All in One Add/update section numbers  open preview to the side
-# 9. Books
+# 10. Books
 * (Stroustrop’s paper about C++ evolution) https://dl.acm.org/doi/abs/10.1145/3386320
 * Fedor G Pikus Hands on Design Patterns with C++
-# 10. ICU/Unicode
+# 11. ICU/Unicode
 * Example code: https://begriffs.com/posts/2019-05-23-unicode-icu.html#changing-case
-# 11. REST APIs/JSON
+# 12. REST APIs/JSON
 * CRUD up some nouns (create/read/update/delete) (post/get/put/delete) 
-# 12. SQL
-## 12.1. Cheat Sheet
+# 13. SQL
+## 13.1. Cheat Sheet
 * https://dataschool.com/learn-sql/sql-cheat-sheet/
-# 13. Statistical Analysis and Machine Learning
-## 13.1. Fundamentals of ML
+# 14. Statistical Analysis and Machine Learning
+## 14.1. Fundamentals of ML
 * https://github.com/ageron/handson-ml2
-## 13.2. Statistical measures in python:
+## 14.2. Statistical measures in python:
 ```
 popSD = numpy.std(population)
 
@@ -763,7 +776,7 @@ Area in standard deviation:
 
               'std =', round(area, 4))
 ```
-### 13.2.1. Plotting:
+### 14.2.1. Plotting:
 pylab.plot   pylab.hist   pylab.table
 ```
     pylab.errorbar(xVals, sizeMeans,
@@ -772,7 +785,7 @@ pylab.plot   pylab.hist   pylab.table
 
                    label = '95% Confidence Interval')
 ```
-### 13.2.2. Fitting:
+### 14.2.2. Fitting:
 ```
 def genFits(xVals, yVals, degrees):
 
@@ -786,7 +799,7 @@ def genFits(xVals, yVals, degrees):
 
 estYVals = pylab.polyval(model, xVals)
 ```
-### 13.2.3. Sampling:
+### 14.2.3. Sampling:
 ```
 random.sample(population, sampleSize)
 
@@ -798,7 +811,7 @@ If the samples are not random and independent don’t make conclusions……
 
 Survivor bias, non response bias, cherry picking
 ```
-### 13.2.4. Learning
+### 14.2.4. Learning
 Clustering (kNearestNeighbor) is Unsupervised Learning
 Classification (Logistic Regresion and k-means(greedy)) is Supervised Learning:
 Logistic Regression comes in 2 kinds:
@@ -867,3 +880,5 @@ In a regression classification for a two-class problem using a probability algor
 Normally the threshold for two class is 0.5. Above this threshold, the algorithm classifies in one class and below in the other class.
 
 Accuracy, Sensitivity, Specificity, Pos. Predictive Value, Neg Predictive Value
+## 14.3. HNSW,ANN,pgvector
+

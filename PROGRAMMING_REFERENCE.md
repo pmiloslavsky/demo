@@ -81,7 +81,8 @@ Table of Contents:
 		- [14.2.2. Fitting:](#1422-fitting)
 		- [14.2.3. Sampling:](#1423-sampling)
 		- [14.2.4. Learning](#1424-learning)
-	- [14.3. HNSW,ANN,pgvector](#143-hnswannpgvector)
+	- [14.3. postgre](#143-postgre)
+	- [14.4. HNSW,ANN,pgvector](#144-hnswannpgvector)
 
 
 # 1. C/C++
@@ -276,6 +277,9 @@ AIX: sudo vmstat -Pall
 * apt list --installed
 * yum update yum install yum-utils  yum provides gtar  yum info tar-1.33-1.ppc repoquery -l tar-1.33-1.ppc
 * dnf is replacing yum
+* dnf package downgrade:
+- sudo dnf --showduplicates list tar
+- sudo dnf install tar-1.33-1.ppc
 * sudo rpm -ivh python3-3.7.11-1.rpm
 * yum list installed | grep python
 * repoquery -l rh-python38-python-devel
@@ -880,5 +884,15 @@ In a regression classification for a two-class problem using a probability algor
 Normally the threshold for two class is 0.5. Above this threshold, the algorithm classifies in one class and below in the other class.
 
 Accuracy, Sensitivity, Specificity, Pos. Predictive Value, Neg Predictive Value
-## 14.3. HNSW,ANN,pgvector
+## 14.3. postgre
+download postgre and pgadmin, it will come with psql, default port is 5432
+sudo -u postgres psql
+SELECT version();  now();
+\l     list all databases
+\c colors   switch db context to colors db
+CREATE TABLE colors(ColorID int, ColorName char(20));
+INSERT INTO colors VALUES(1,'red'),(2,'blue'),(3,'green');
+select * from colors;
+
+## 14.4. HNSW,ANN,pgvector
 

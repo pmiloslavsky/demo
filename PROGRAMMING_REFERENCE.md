@@ -44,7 +44,8 @@ Table of Contents:
 		- [7.1.2. system administration](#712-system-administration)
 		- [7.1.3. Core files on ubuntu](#713-core-files-on-ubuntu)
 		- [7.1.4. Linux Kernel crashes](#714-linux-kernel-crashes)
-		- [7.1.5. Red Hat](#715-red-hat)
+		- [7.1.5. Ubuntu in a Windows laptop:](#715-ubuntu-in-a-windows-laptop)
+		- [7.1.6. Red Hat](#716-red-hat)
 	- [7.2. AIX](#72-aix)
 		- [7.2.1. system administration](#721-system-administration)
 			- [7.2.1.1. processors and configuration](#7211-processors-and-configuration)
@@ -303,7 +304,33 @@ for example wayland:
 dmesg
 journalctl -b -1 -e
 journalctl --list-boots
-### 7.1.5. Red Hat
+### 7.1.5. Ubuntu in a Windows laptop:
+/etc/default/grub
+Then look for a line like this in the opened file:
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"
+It may have other options there as well, but just remove quiet splash and:
+sudo update-grub
+
+/etc/gdm3/custom.conf
+
+apt install ubuntu-desktop
+
+sudo journalctl -b -1 -e will show the end of the log of the previous boot
+
+sudo /usr/sbin/dhcpcd ens33 renew dhcp address
+
+/usr/bin/vmhgfs-fuse .host:/ /mnt/hgfs/VMSHARE -o subtype=vmhgfs-fuse
+
+Turn vm 3d acceleration off
+powercfg /powerthrottling disable /path "C:\Program Files (x86)\VMware\VMware Workstation\x64\vmware-vmx.exe"
+powercfg /powerthrottling disable /path " c:\intersystems\IRIS\LATEST\bin\Iristerm.exe"
+powercfg /powerthrottling /list
+
+settings->system->dislay->graphics
+entries for both vmware.exe and vmware-vmx.exe (its in a subdirectory)
+Both entries specify that vmware must run only on RTX2000 and not the cpu GPU.
+
+### 7.1.6. Red Hat
 sudo su
 subscription-manager register
 ## 7.2. AIX

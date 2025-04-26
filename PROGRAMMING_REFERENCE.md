@@ -84,6 +84,9 @@ Table of Contents:
 		- [14.2.4. Learning](#1424-learning)
 	- [14.3. postgre](#143-postgre)
 	- [14.4. HNSW,ANN,pgvector](#144-hnswannpgvector)
+	- [14.5. AI and language models](#145-ai-and-language-models)
+		- [14.5.1. Reference Reading](#1451-reference-reading)
+		- [14.5.2. Colaboration:](#1452-colaboration)
 
 
 # 1. C/C++
@@ -168,6 +171,7 @@ Tokens: https://github.com/python/cpython/blob/main/Python/generated_cases.c.h
 * on windows use py instead of python
 * pip freeze   shows everything installed by pip
 * pip install  uninstall   cache purge
+* pip show psutil
 ## 4.8. Examining configuration
 * To see how python was configured look at sysconfg module: CONFIG_ARGS or python3 -m sysconfig
 # 5. Rust
@@ -241,6 +245,7 @@ https://doc.rust-lang.org/stable/book/
 * pldd  (procldd -F on AIX)
 * genld -ld (AIX)
 * proctree on AIX
+* iptrace AIX https://unixhealthcheck.com/blog?id=306
 ## 6.7. What is in the executable?
 * ldd
 * otool -L (mac)
@@ -371,7 +376,7 @@ Whereas in TL1 SP1 you would see output as
 * topas
 * nmon   n,t, 0,1,2,3,4
 * svmon -P 26018054 -O summary=basic,unit=MB
-* sudo   slibclean
+* sudo   slibclean    -> genkld    to see is shared libs still loaded, also genld -ld
 * df -Pg  disk space left
 * oslevel -s (what TL version)
 * yum list installed | grep python
@@ -384,9 +389,12 @@ Whereas in TL1 SP1 you would see output as
 * dump -h libcrypto.a | grep :       to see what versions it supports
 * errpnt -a
 * ar -X64 -tv /usr/lib/libssl.a How to see whats in an AIX archive bundle
-* objdump -dS (from binutils in toolbox)
+* objdump -dS (from binutils in toolbox sudo dnf install binutils)
 * If you have an AIX problem you can type script /tmp/problem.log and do the commands and when finished type exit to generate a log file
 * smit failures leave /smit.log around
+* serial number for support cases: lscfg -vp|grep Machine/Cabinet
+* use the snap tool to report system state to ibm. If you have a core file do 'snapcore <core> <program_exe>' .  
+* to start dbx under LIBPATH do  sudo dbx -E "LIBPATH=../lib:../stubdata:../tools/ctestfw:$LIBPATH" ../bin/genrb
 
 #### 7.2.1.1. processors and configuration
 * lscfg -lproc\*
@@ -539,6 +547,7 @@ dnf install emacs-nox tar tcsh
 * process Explorer http://live.sysinternals.com/  procexp for when you cant see pids in task manager
 * DLL dependancy walker: https://github.com/lucasg/Dependencies
 * Get-NetIPConfiguration -detailed
+* Sysinternals Suite can be gottein in the microsoft store: https://apps.microsoft.com/detail/9p7knl5rwt25?rtc=1&hl=en-US&gl=US
 ### 7.3.1. CLI compilation and linking
 * open Visual studio native x64 shell
 * copy in subordinate DLLs your DLL will need (may need to set PATH for run time DLL search)
@@ -923,3 +932,16 @@ select * from colors;
 
 ## 14.4. HNSW,ANN,pgvector
 
+## 14.5. AI and language models
+
+### 14.5.1. Reference Reading
+* https://developers.google.com/machine-learning/crash-course/classification/accuracy-precision-recall
+* https://medium.com/@mikeusru/common-metrics-for-evaluating-natural-language-processing-nlp-models-e84190063b5f
+* https://pandas.pydata.org/docs/
+* https://docs.scrapy.org/en/latest/ web scraping
+* https://huggingface.co/blog/setfit few shot learning (data with no labels)
+
+### 14.5.2. Colaboration:
+* https://huggingface.co/
+* https://colab.research.google.com/
+* 

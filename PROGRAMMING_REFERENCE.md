@@ -87,6 +87,8 @@ Table of Contents:
 	- [14.5. AI and language models](#145-ai-and-language-models)
 		- [14.5.1. Reference Reading](#1451-reference-reading)
 		- [14.5.2. Colaboration:](#1452-colaboration)
+		- [14.5.3. APIs](#1453-apis)
+		- [14.5.4. Basics](#1454-basics)
 
 
 # 1. C/C++
@@ -940,8 +942,20 @@ select * from colors;
 * https://pandas.pydata.org/docs/
 * https://docs.scrapy.org/en/latest/ web scraping
 * https://huggingface.co/blog/setfit few shot learning (data with no labels)
+* https://huggingface.co/spaces/NyxKrage/LLM-Model-VRAM-Calculator
+* https://symbl.ai/developers/blog/a-guide-to-quantization-in-llms/
+* https://mljourney.com/what-are-the-key-differences-between-traditional-rag-and-agentic-rag/
+* 
 
 ### 14.5.2. Colaboration:
 * https://huggingface.co/
 * https://colab.research.google.com/
-* 
+
+### 14.5.3. APIs
+* Use haystack and llamaindex to support your full agent workflow 
+
+### 14.5.4. Basics
+* Precision: true positives out of all all positives TP/TP+FP (FP to zero). 
+  Focusing on this metric means you want to drive FP, *incorrect detections to zero*.
+* Recall (sensitivity, true positive rate): correct predictions out of all positives TP/TP+FN  (FN to zero) 
+  low recall means you are missing true cases, add more examples of positives. Focusing on this metric means you want to drive false negatives, *misses of positive cases*, to zero.

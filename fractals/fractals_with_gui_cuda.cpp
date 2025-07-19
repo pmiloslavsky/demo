@@ -475,8 +475,10 @@ inline void get_iteration_color(const int iter_ix, const int iters_max,
     yi = abs(modf(zfinal.imag() * 2, &ri));
     // xi = abs(zfinal.real() - (long long)zfinal.real());
     // yi = abs(zfinal.imag() - (long long)zfinal.imag());
-    sf::Color color = NSR.escape_image.getPixel((unsigned int)(xi * (R.escape_image_w - 1)),
-                                                (unsigned int)(yi * (R.escape_image_h - 1)));
+    sf::Color color = NSR.escape_image.getPixel(sf::Vector2u(
+                                     (unsigned int)(xi * (R.escape_image_w - 1)),
+                                     (unsigned int)(yi * (R.escape_image_h - 1))
+                                     ));
     *p_rcolor = color.r;
     *p_gcolor = color.g;
     *p_bcolor = color.b;
@@ -689,7 +691,7 @@ inline void get_iteration_interior_color(const complex<double> &zstart,
       // yi = abs(zstart.imag() - (long long)zstart.imag());
       double xp = (xi) * (R.escape_image_w - 1);
       double yp = (yi) * (R.escape_image_h - 1);
-      sf::Color color = NSR.escape_image.getPixel((unsigned int)xp, (unsigned int)yp);
+      sf::Color color = NSR.escape_image.getPixel(sf::Vector2u((unsigned int)xp, (unsigned int)yp));
       *p_rcolor = color.r;
       *p_gcolor = color.g;
       *p_bcolor = color.b;
@@ -1086,7 +1088,7 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
 
     original_view_width = view_width;
     original_view_height = view_height;
-    image.create(view_width, view_height, sf::Color(0, 0, 0));
+    image = sf::Image{ sf::Vector2u(view_width, view_height), sf::Color(0, 0, 0) };
 
     if (FRAC[current_fractal].probabalistic != true)
       panFractal(view_width / 2.0, view_height / 2.0);
@@ -1097,6 +1099,7 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
     for (auto &v : color) v.resize(IMAGE_HEIGHT);
 
     stats[current_fractal].next_second_start = chrono::steady_clock::now();
+
   }
 
   ~FractalModel() {}
@@ -1583,12 +1586,12 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
         // pcolor = pcolor + sf::Color(0,0,bcolor);
         // hitsums += blueTrailHits[i][j];
 
-        image.setPixel(i, j, pcolor);
+        image.setPixel(sf::Vector2u(i, j), pcolor);
       }
     }
 
     texture.loadFromImage(image);
-    sprite.setTexture(texture);
+    sprite.emplace(texture);
 
     // sprite.setOrigin(800,600);
     // sprite.rotate(90.f);
@@ -1674,12 +1677,12 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
     // for every pixel
     for (unsigned int i = 0; i < R.original_width; i++) {
       for (unsigned int j = 0; j < R.original_height; j++) {
-        image.setPixel(i, j, color[i][j]);
+        image.setPixel(sf::Vector2u(i, j), color[i][j]);
       }
     }
 
     texture.loadFromImage(image);
-    sprite.setTexture(texture);
+    sprite.emplace(texture);
   }
 
   void calculateZoomWindow(double newzoom) {
@@ -1814,7 +1817,9 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
     states.texture = NULL;
 
     // draw the image (just one for now - could do multiple fractals blended)
-    target.draw(sprite, states);
+    if (sprite.has_value()) {
+        target.draw(*sprite, states);
+    }
   }
 
  public:
@@ -1843,7 +1848,7 @@ class FractalModel : public sf::Drawable, public sf::Transformable {
   double original_view_height;
   sf::Image image;
   sf::Texture texture;
-  sf::Sprite sprite;
+  std::optional<sf::Sprite> sprite;
 
   // merged hits from threads
   vector<vector<unsigned long long>> redTrailHits;
@@ -2861,8 +2866,7 @@ void save_screenshot(sf::RenderWindow &window, string name, sf::View &modelview,
   if (display_gui) pgui->draw();
 
   sf::Vector2u windowSize = window.getSize();
-  sf::Texture texture;
-  texture.create(windowSize.x, windowSize.y);
+  sf::Texture texture(sf::Vector2u(windowSize.x, windowSize.y));
   // texture.create(IMAGE_WIDTH, IMAGE_HEIGHT);
   texture.update(window);
   sf::Image screenshot = texture.copyToImage();
@@ -2918,7 +2922,7 @@ int main(int argc, char **argv) {
 
   sf::Vector2u screenDimensions(IMAGE_WIDTH, IMAGE_HEIGHT);
   sf::RenderWindow window;
-  window.create(sf::VideoMode(screenDimensions.x, screenDimensions.y),
+  window.create(sf::VideoMode(sf::Vector2u(screenDimensions.x, screenDimensions.y)),
                 "Fractals!", sf::Style::None);  // sf::Style::Fullscreen
   if (hide) window.setVisible(false);
 
@@ -2940,7 +2944,7 @@ int main(int argc, char **argv) {
 
   sf::View modelview;
   sf::Vector2u viewD(screenDimensions.x, screenDimensions.y);
-  modelview.setSize((float)viewD.x, (float)viewD.y);
+  modelview.setSize(sf::Vector2f((float)viewD.x, (float)viewD.y));
   R.displayed_zoom = 1.0;
   R.requested_zoom = 1.0;
   R.current_height = screenDimensions.y;
@@ -2978,7 +2982,7 @@ int main(int argc, char **argv) {
   R.light_angle = 45;
   R.light_height = 1.5;
 
-  modelview.setCenter((float)screenDimensions.x / 2.0f, (float)screenDimensions.y / 2.0f);
+  modelview.setCenter(sf::Vector2f((float)screenDimensions.x / 2.0f, (float)screenDimensions.y / 2.0f));
   window.setView(modelview);
 
   // create the fractal model (i.e. Model)
@@ -3073,14 +3077,13 @@ int main(int argc, char **argv) {
   int frames = 0;
 
   while (window.isOpen()) {
-    sf::Event event;
-    while (window.pollEvent(event)) {
-      if (event.type == sf::Event::Closed) window.close();  // breaks out above
+    while (const std::optional event = window.pollEvent()) {
+      if (event->is<sf::Event::Closed>()) window.close();  // breaks out above
 
       // Handle keyboard control commands
 
-      if (event.type == sf::Event::KeyPressed) {
-        if (event.key.code == sf::Keyboard::G) {
+      if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>()) {
+        if (keyPressed->scancode == sf::Keyboard::Scancode::G) {
           if (display_gui == false) {
             display_gui = true;
             display_all_widgets(pgui, true);
@@ -3090,7 +3093,7 @@ int main(int argc, char **argv) {
           }
         }
 
-        if (event.key.code == sf::Keyboard::H) {
+        if (keyPressed->scancode == sf::Keyboard::Scancode::H) {
           if (display_fractal == false) {
             display_fractal = true;
           } else {
@@ -3098,7 +3101,7 @@ int main(int argc, char **argv) {
           }
         }
 
-        else if (event.key.code == sf::Keyboard::Z) {
+        if (keyPressed->scancode == sf::Keyboard::Scancode::Z) {
           update_and_draw = false;
           cout << " Z update paused " << endl;
 
@@ -3109,7 +3112,7 @@ int main(int argc, char **argv) {
           update_and_draw = true;
         }
 
-        else if (event.key.code == sf::Keyboard::P) {
+        if (keyPressed->scancode == sf::Keyboard::Scancode::P) {
           if (update_and_draw == false) {
             update_and_draw = true;
             frames = 0;
@@ -3123,15 +3126,16 @@ int main(int argc, char **argv) {
           }
         }
 
-        else if (event.key.code == sf::Keyboard::S) {
+        if (keyPressed->scancode == sf::Keyboard::Scancode::S) {
           save_screenshot(window, FRAC[p_model->current_fractal].name,
                           modelview, p_model, pgui, display_gui, "none");
         }
 
-        if (event.key.code == sf::Keyboard::E) {
+        if (keyPressed->scancode == sf::Keyboard::Scancode::E) {
           window.close();
           break;
-        } else if (event.key.code == sf::Keyboard::N) {
+        } 
+        if (keyPressed->scancode == sf::Keyboard::Scancode::N) {
           update_and_draw = false;
           cout << " N update paused " << endl;
 
@@ -3142,64 +3146,64 @@ int main(int argc, char **argv) {
           update_and_draw = true;
         }
 
-        else if (event.key.code == sf::Keyboard::C) {
+        if (keyPressed->scancode == sf::Keyboard::Scancode::C) {
           if (FRAC[p_model->current_fractal].cuda_mode == true)
             FRAC[p_model->current_fractal].cuda_mode = false;
           else
             FRAC[p_model->current_fractal].cuda_mode = true;
-        } else if (event.key.code == sf::Keyboard::F) {
+        } 
+
+        if (keyPressed->scancode == sf::Keyboard::Scancode::F) {
           // sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
           // window.setSize(sf::Vector2u{screenDimensions.x,
           // screenDimensions.y});
-          window.create(sf::VideoMode(screenDimensions.x, screenDimensions.y),
-                        "Fractals!", sf::Style::Fullscreen);
+          window.create(sf::VideoMode(sf::Vector2u(screenDimensions.x, screenDimensions.y)),
+                        "Fractals!", sf::State::Fullscreen);
           window.setSize(sf::Vector2u{screenDimensions.x, screenDimensions.y});
         }
-      }
+      } //keypressed
       
 
         // Handle Mouse
         // Zoom the whole sim if mouse wheel moved
-        if (event.type == sf::Event::MouseWheelScrolled) {
-          if (event.mouseWheelScroll.wheel == sf::Mouse::VerticalWheel) {
+        if (const auto* scrollEvent = event->getIf<sf::Event::MouseWheelScrolled>()) {
             SaveLast(p_model);
             double newzoom =
-                get_new_zoom(modelview, (int)event.mouseWheelScroll.delta);
+                get_new_zoom(modelview, (int)scrollEvent->delta);
             cout << "New zoom: " << newzoom << endl;
             p_model->zoomFractal(newzoom);
             for (unsigned int tix = 0; tix < num_threads; ++tix) {
               thread_asked_to_reset[tix] = true;
             }
-          }
         }
 
         // record center for right mouse button and crop for left
-        if (event.type == sf::Event::MouseButtonPressed) {
-          if (event.mouseButton.button == sf::Mouse::Right) {
+        if (const auto* mouseButton = event->getIf<sf::Event::MouseButtonPressed>()) {
+            if (mouseButton->button == sf::Mouse::Button::Right) {
             // Pan
             SaveLast(p_model);
             cout << "New center: ";
-            cout << "x: " << event.mouseButton.x;
-            cout << " y: " << event.mouseButton.y << endl;
-            p_model->panFractal(event.mouseButton.x, event.mouseButton.y);
+            cout << "x: " << mouseButton->position.x;
+            cout << " y: " << mouseButton->position.y << endl;
+            p_model->panFractal(mouseButton->position.x, mouseButton->position.y);
             for (unsigned int tix = 0; tix < num_threads; ++tix) {
               thread_asked_to_reset[tix] = true;
             }
-          }
+            }
 
-          if (event.mouseButton.button == sf::Mouse::Left) {
+            if (mouseButton->button == sf::Mouse::Button::Left) {
             // Crop start
             SaveLast(p_model);
-            crop_start_x = event.mouseButton.x;
-            crop_start_y = event.mouseButton.y;
-          }
+            crop_start_x = mouseButton->position.x;
+            crop_start_y = mouseButton->position.y;
+            }
         }
 
         // Crop finish
-        if (event.type == sf::Event::MouseButtonReleased) {
-          if (event.mouseButton.button == sf::Mouse::Left) {
-            crop_end_x = event.mouseButton.x;
-            crop_end_y = event.mouseButton.y;
+        if (const auto* mouseButton = event->getIf<sf::Event::MouseButtonReleased>()) {
+            if (mouseButton->button == sf::Mouse::Button::Left) {
+            crop_end_x = mouseButton->position.x;
+            crop_end_y = mouseButton->position.y;
 
             // Hopefully this filters out menu clicks
             if (abs(crop_end_x - crop_start_x) > 10) {
@@ -3224,15 +3228,17 @@ int main(int argc, char **argv) {
         }
 
         // Draw selection while button not released
-        if ((event.type == sf::Event::MouseMoved) &&
-            true == sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+        if (event->is<sf::Event::MouseMoved>() &&
+            sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+
+            const auto& mouseMove = event->getIf<sf::Event::MouseMoved>();
           // Hopefully this filters out menu clicks
           if (abs(crop_end_x - crop_start_x) > 10) {
             selection.setSize(
-                sf::Vector2f(abs((float)crop_start_x - event.mouseMove.x),
-                             abs((float)crop_start_y - event.mouseMove.y)));
+                sf::Vector2f(abs((float)crop_start_x - mouseMove->position.x),
+                             abs((float)crop_start_y - mouseMove->position.y)));
             selection.setFillColor(sf::Color::Transparent);
-            selection.setPosition((float)crop_start_x, (float)crop_start_y);
+            selection.setPosition(sf::Vector2f((float)crop_start_x, (float)crop_start_y));
 
             // set a 5-pixel wide orange outline
             selection.setOutlineThickness(5);
@@ -3242,7 +3248,9 @@ int main(int argc, char **argv) {
         }
 
         // Clear the control coming from the gui
-        pgui->handleEvent(event);
+        if (event) {
+            pgui->handleEvent(*event);  // Dereference the optional to get sf::Event&
+        }
       }
       ++frames;
 

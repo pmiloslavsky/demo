@@ -73,3 +73,14 @@ fractals/fractals_cuda/x64/Release/buddha_cuda_kernel.cu685580267.deps
 fractals/fractals_cuda/x64/Release/fractals_cuda.Build.CppClean.log
 fractals/fractals_cuda/x64/Release/vc143.pdb
 fractals/fractal_movies/shadow_green_long_zoom.gif
+/fractals/fractals_cuda/.vs
+/fractals/fractals_cuda/fractals_cuda/x64/Release/fractals_cuda.tlog
+*.dll
+*.deps
+*.cache
+*.obj
+*.recipe
+*.iobj
+*.ipdb
+*.log
+*.pdb

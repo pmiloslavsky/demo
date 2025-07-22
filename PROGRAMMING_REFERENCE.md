@@ -233,6 +233,7 @@ https://doc.rust-lang.org/stable/book/
 ## 6.5. Profiling
 * with perf: https://www.brendangregg.com/FlameGraphs/cpuflamegraphs.html
 * with valgrind: https://developer.mantidproject.org/ProfilingWithValgrind.html
+* AIX: /opt/IBM/openxlC/17.1.3/tools/ibm-gen-list --objdump=/opt/IBM/openxlC/17.1.3/libexec/ibm-llvm-objdump aeol.o https://community.ibm.com/community/user/blogs/jinsong-ji/2021/11/30/instruction-level-listing-annotation
 ### 6.5.1. Sample session:
 * start your process doing a heavy loop of what you are interested in
 * sudo perf record -F 999 -g -p 2277501 --call-graph dwarf    (creates perf.data file)
@@ -252,7 +253,7 @@ https://doc.rust-lang.org/stable/book/
 * ldd
 * otool -L (mac)
 * file
-* objdump   AIX: dump -X64 -t   dump -X64 -Hp to see libpath
+* objdump   AIX: dump -X64 -t   dump -X64 -Hp to see libpath  dump -X32_64 -Hov libzstd.a
 * strings -a
 * restore -qxvf libc++.rte.16.1.0.10.bff to see whats in it
 * ProcessMonitor (windows)
@@ -297,15 +298,19 @@ AIX: sudo vmstat -Pall
 *  https://community.ibm.com/community/user/power/blogs/jan-harris1/2022/05/25/destroyrpms
 ### 7.1.3. Core files on ubuntu
 * if you dont want to struggle with apport you can do this:
-	sudo emacs /etc/security/limits.conf to have:
-	*		 -	 core		 -1
-	sudo emacs /etc/sysctl.conf
-	#kernel.sysrq=438
-	# Core pattern (core.<executable>.<pid>.<time of core>)
-	kernel.core_pattern = /var/crash/core.%e.%p.%t
-	# Controls whether core dumps will append the PID to the core filename.
-	kernel.core_uses_pid = 1
-	sudo sysctl --system
+>	sudo emacs /etc/security/limits.conf to have:
+>	*		 -	 core		 -1
+>	sudo emacs /etc/sysctl.conf
+>	#kernel.sysrq=438
+>	# Core pattern (core.<executable>.<pid>.<time of core>)
+>	kernel.core_pattern = /var/crash/core.%e.%p.%t
+>	# Controls whether core dumps will append the PID to the core filename.
+>	kernel.core_uses_pid = 1
+>	sudo sysctl --system
+* if you do want to use apport:
+>    *  ls -lh /var/crash/
+>    *  apport-unpack /var/crash/_opt_iris_LATEST_bin_irisdb.0.crash /tmp/crash-unpacked/
+>    *  gdb /opt/iris/LATEST/bin/irisdb /tmp/crash-unpacked/CoreDump
 ### 7.1.4. Linux Kernel crashes
 for example wayland:
 dmesg
@@ -952,7 +957,7 @@ select * from colors;
 * https://colab.research.google.com/
 
 ### 14.5.3. APIs
-* Use haystack and llamaindex to support your full agent workflow 
+* Use haystack and llamaindex to support your full agent/RAG workflow 
 
 ### 14.5.4. Basics
 * Precision: true positives out of all all positives TP/TP+FP (FP to zero). 

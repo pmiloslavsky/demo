@@ -298,14 +298,16 @@ AIX: sudo vmstat -Pall
 *  https://community.ibm.com/community/user/power/blogs/jan-harris1/2022/05/25/destroyrpms
 ### 7.1.3. Core files on ubuntu
 * if you dont want to struggle with apport you can do this:
->	sudo emacs /etc/security/limits.conf to have:
->	\*		 -	 core		 -1
+>   sudo emacs /etc/security/limits.conf to have:
+>	```
+>	*		 -	 core		 -1
 >	sudo emacs /etc/sysctl.conf
->	\#kernel.sysrq=438
->	\# Core pattern (core.<executable>.<pid>.<time of core>)
+>	#kernel.sysrq=438
+>	# Core pattern (core.<executable>.<pid>.<time of core>)
 >	kernel.core_pattern = /var/crash/core.%e.%p.%t
->	\# Controls whether core dumps will append the PID to the core filename.
+>	# Controls whether core dumps will append the PID to the core filename.
 >	kernel.core_uses_pid = 1
+>   ```
 >	sudo sysctl --system
 * if you do want to use apport:
 >    *  ls -lh /var/crash/

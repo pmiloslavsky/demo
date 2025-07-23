@@ -65,30 +65,33 @@ Table of Contents:
 	- [8.1. Common Unix Commands in different UNIX OS:](#81-common-unix-commands-in-different-unix-os)
 	- [8.2. Why is computer slow?](#82-why-is-computer-slow)
 	- [8.3. Save terminal session with tmux](#83-save-terminal-session-with-tmux)
-- [9. Editors](#9-editors)
-	- [9.1. Emacs](#91-emacs)
-		- [9.1.1. .emacs file:](#911-emacs-file)
-		- [9.1.2. .dir-locals.el file:](#912-dir-localsel-file)
-	- [9.2. visual studio code](#92-visual-studio-code)
-- [10. Books](#10-books)
-- [11. ICU/Unicode](#11-icuunicode)
-- [12. REST APIs/JSON](#12-rest-apisjson)
-- [13. SQL](#13-sql)
-	- [13.1. Cheat Sheet](#131-cheat-sheet)
-- [14. Statistical Analysis and Machine Learning](#14-statistical-analysis-and-machine-learning)
-	- [14.1. Fundamentals of ML](#141-fundamentals-of-ml)
-	- [14.2. Statistical measures in python:](#142-statistical-measures-in-python)
-		- [14.2.1. Plotting:](#1421-plotting)
-		- [14.2.2. Fitting:](#1422-fitting)
-		- [14.2.3. Sampling:](#1423-sampling)
-		- [14.2.4. Learning](#1424-learning)
-	- [14.3. postgre](#143-postgre)
-	- [14.4. HNSW,ANN,pgvector](#144-hnswannpgvector)
-	- [14.5. AI and language models](#145-ai-and-language-models)
-		- [14.5.1. Reference Reading](#1451-reference-reading)
-		- [14.5.2. Colaboration:](#1452-colaboration)
-		- [14.5.3. APIs](#1453-apis)
-		- [14.5.4. Basics](#1454-basics)
+	- [8.4. nohup](#84-nohup)
+- [9. make/cmake/configure](#9-makecmakeconfigure)
+	- [9.1. cmake](#91-cmake)
+- [10. Editors](#10-editors)
+	- [10.1. Emacs](#101-emacs)
+		- [10.1.1. .emacs file:](#1011-emacs-file)
+		- [10.1.2. .dir-locals.el file:](#1012-dir-localsel-file)
+	- [10.2. visual studio code](#102-visual-studio-code)
+- [11. Books](#11-books)
+- [12. ICU/Unicode](#12-icuunicode)
+- [13. REST APIs/JSON](#13-rest-apisjson)
+- [14. SQL](#14-sql)
+	- [14.1. Cheat Sheet](#141-cheat-sheet)
+- [15. Statistical Analysis and Machine Learning](#15-statistical-analysis-and-machine-learning)
+	- [15.1. Fundamentals of ML](#151-fundamentals-of-ml)
+	- [15.2. Statistical measures in python:](#152-statistical-measures-in-python)
+		- [15.2.1. Plotting:](#1521-plotting)
+		- [15.2.2. Fitting:](#1522-fitting)
+		- [15.2.3. Sampling:](#1523-sampling)
+		- [15.2.4. Learning](#1524-learning)
+	- [15.3. postgre](#153-postgre)
+	- [15.4. HNSW,ANN,pgvector](#154-hnswannpgvector)
+	- [15.5. AI and language models](#155-ai-and-language-models)
+		- [15.5.1. Reference Reading](#1551-reference-reading)
+		- [15.5.2. Colaboration:](#1552-colaboration)
+		- [15.5.3. APIs](#1553-apis)
+		- [15.5.4. Basics](#1554-basics)
 
 
 # 1. C/C++
@@ -650,14 +653,23 @@ strace -p $$
 * tmux ls
 * tmux attach-session -t 0
 * CTRL-B D  (detach)
+## 8.4. nohup
+* nohup ./bld -v kernel//USEUNICODE &
+* nohup ./bld -v kernel > /home/pmilosla/nohup2.out 2>&1 &
+* disown -a
+* tail -f /home/pmilosla/nohup.out
 
-# 9. Editors
-## 9.1. Emacs
+# 9. make/cmake/configure
+## 9.1. cmake
+* cmake --build     https://cliutils.gitlab.io/modern-cmake/chapters/intro/running.html
+* If you use cmake --build instead of directly calling the underlying build system, you can use -v for verbose builds (CMake 3.14+), -j N for parallel builds on N cores (CMake 3.12+), and --target (any version of CMake) or -t (CMake 3.15+) to pick a target. Otherwise, these commands vary between build systems, such as VERBOSE=1 make and ninja -v. You can instead use the environment variables for these, as well, such as CMAKE_BUILD_PARALLEL_LEVEL (CMake 3.12+) and VERBOSE (CMake 3.14+).
+# 10. Editors
+## 10.1. Emacs
 * M-: is eval  you can then type what hook
 * M-x is execute
 * ESC is meta key in helm
 * emacs -nw starts emacs in non windowed mode (macs homebrew)
-### 9.1.1. .emacs file:
+### 10.1.1. .emacs file:
 ;; Added by Package.el.  This must come before configurations of
 ;; installed packages.  Don't delete this line.  If you don't want it,
 ;; just comment it out by adding a semicolon to the start of the line.
@@ -752,7 +764,7 @@ strace -p $$
   (add-hook hook (lambda () (flyspell-mode 1))))
 
 
-### 9.1.2. .dir-locals.el file:
+### 10.1.2. .dir-locals.el file:
 
 
 ((c-mode . ((c-file-style . "kernel")))
@@ -764,22 +776,22 @@ strace -p $$
 
 
 
-## 9.2. visual studio code
+## 10.2. visual studio code
 * view -> command     Markdown All in One Add/update section numbers  open preview to the side
-# 10. Books
+# 11. Books
 * (Stroustrop’s paper about C++ evolution) https://dl.acm.org/doi/abs/10.1145/3386320
 * Fedor G Pikus Hands on Design Patterns with C++
-# 11. ICU/Unicode
+# 12. ICU/Unicode
 * Example code: https://begriffs.com/posts/2019-05-23-unicode-icu.html#changing-case
-# 12. REST APIs/JSON
+# 13. REST APIs/JSON
 * CRUD up some nouns (create/read/update/delete) (post/get/put/delete) 
-# 13. SQL
-## 13.1. Cheat Sheet
+# 14. SQL
+## 14.1. Cheat Sheet
 * https://dataschool.com/learn-sql/sql-cheat-sheet/
-# 14. Statistical Analysis and Machine Learning
-## 14.1. Fundamentals of ML
+# 15. Statistical Analysis and Machine Learning
+## 15.1. Fundamentals of ML
 * https://github.com/ageron/handson-ml2
-## 14.2. Statistical measures in python:
+## 15.2. Statistical measures in python:
 ```
 popSD = numpy.std(population)
 
@@ -825,7 +837,7 @@ Area in standard deviation:
 
               'std =', round(area, 4))
 ```
-### 14.2.1. Plotting:
+### 15.2.1. Plotting:
 pylab.plot   pylab.hist   pylab.table
 ```
     pylab.errorbar(xVals, sizeMeans,
@@ -834,7 +846,7 @@ pylab.plot   pylab.hist   pylab.table
 
                    label = '95% Confidence Interval')
 ```
-### 14.2.2. Fitting:
+### 15.2.2. Fitting:
 ```
 def genFits(xVals, yVals, degrees):
 
@@ -848,7 +860,7 @@ def genFits(xVals, yVals, degrees):
 
 estYVals = pylab.polyval(model, xVals)
 ```
-### 14.2.3. Sampling:
+### 15.2.3. Sampling:
 ```
 random.sample(population, sampleSize)
 
@@ -860,7 +872,7 @@ If the samples are not random and independent don’t make conclusions……
 
 Survivor bias, non response bias, cherry picking
 ```
-### 14.2.4. Learning
+### 15.2.4. Learning
 Clustering (kNearestNeighbor) is Unsupervised Learning
 Classification (Logistic Regresion and k-means(greedy)) is Supervised Learning:
 Logistic Regression comes in 2 kinds:
@@ -929,7 +941,7 @@ In a regression classification for a two-class problem using a probability algor
 Normally the threshold for two class is 0.5. Above this threshold, the algorithm classifies in one class and below in the other class.
 
 Accuracy, Sensitivity, Specificity, Pos. Predictive Value, Neg Predictive Value
-## 14.3. postgre
+## 15.3. postgre
 download postgre and pgadmin, it will come with psql, default port is 5432
 sudo -u postgres psql
 SELECT version();  now();
@@ -939,11 +951,11 @@ CREATE TABLE colors(ColorID int, ColorName char(20));
 INSERT INTO colors VALUES(1,'red'),(2,'blue'),(3,'green');
 select * from colors;
 
-## 14.4. HNSW,ANN,pgvector
+## 15.4. HNSW,ANN,pgvector
 
-## 14.5. AI and language models
+## 15.5. AI and language models
 
-### 14.5.1. Reference Reading
+### 15.5.1. Reference Reading
 * https://developers.google.com/machine-learning/crash-course/classification/accuracy-precision-recall
 * https://medium.com/@mikeusru/common-metrics-for-evaluating-natural-language-processing-nlp-models-e84190063b5f
 * https://pandas.pydata.org/docs/
@@ -954,14 +966,14 @@ select * from colors;
 * https://mljourney.com/what-are-the-key-differences-between-traditional-rag-and-agentic-rag/
 * 
 
-### 14.5.2. Colaboration:
+### 15.5.2. Colaboration:
 * https://huggingface.co/
 * https://colab.research.google.com/
 
-### 14.5.3. APIs
+### 15.5.3. APIs
 * Use haystack and llamaindex to support your full agent/RAG workflow 
 
-### 14.5.4. Basics
+### 15.5.4. Basics
 * Precision: true positives out of all all positives TP/TP+FP (FP to zero). 
   Focusing on this metric means you want to drive FP, *incorrect detections to zero*.
 * Recall (sensitivity, true positive rate): correct predictions out of all positives TP/TP+FN  (FN to zero) 

@@ -683,6 +683,7 @@ CL=nnnnnnn DEST="shelf_${CL}_backup"; mkdir -p "$DEST"; p4 -ztag describe -S -s 
 * ESC is meta key in helm
 * emacs -nw starts emacs in non windowed mode (macs homebrew)
 ### 12.1.1. .emacs file:
+'''
 ;; Added by Package.el.  This must come before configurations of
 ;; installed packages.  Don't delete this line.  If you don't want it,
 ;; just comment it out by adding a semicolon to the start of the line.
@@ -775,7 +776,7 @@ CL=nnnnnnn DEST="shelf_${CL}_backup"; mkdir -p "$DEST"; p4 -ztag describe -S -s 
  
 (dolist (hook '(text-mode-hook))
   (add-hook hook (lambda () (flyspell-mode 1))))
-
+'''
 
 ### 12.1.2. .dir-locals.el file:
 
